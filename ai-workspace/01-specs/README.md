@@ -76,7 +76,9 @@ requisitos se cumplen. Cada test cita el requisito que comprueba.
 
 ## Convenciones comunes de la API
 
-Valen para todas las specs, que solo detallan lo que les es propio.
+Valen para todas las specs, que solo detallan lo que les es propio. Las
+alternativas y el motivo de cada una están en
+[ADR-006](../02-arquitectura/ADR-006-convenciones-transversales-de-la-api.md).
 
 - **Formato**: JSON, con nombres de campo en inglés y `snake_case`.
 - **Dinero**: enteros en céntimos de euro, en campos acabados en `_cents`.
@@ -143,8 +145,10 @@ Valen para todas las specs, que solo detallan lo que les es propio.
 
 - **Excepción a `application/problem+json`: la comprobación previa de
   CORS.** El `OPTIONS` que el navegador envía antes de un `POST` lo atiende
-  el middleware de CORS y queda fuera de la regla del `405`: con un origen
-  admitido responde `200` con sus cabeceras CORS, y con uno no admitido,
-  `400` sin cabeceras CORS y sin el cuerpo de error de la API. *Por qué*:
-  esa respuesta la consume el navegador, no el frontend. El detalle está en
-  SPEC-03 (2.7).
+  el middleware de CORS y queda fuera de la regla del `405`: si la admite
+  responde `200` con sus cabeceras CORS, y si la rechaza responde con su
+  respuesta estándar, sin el cuerpo de error de la API y, cuando el origen
+  no está admitido, sin `access-control-allow-origin`. *Por qué*: esa
+  respuesta la consume el navegador, no el frontend. Un `OPTIONS` que no
+  es una comprobación previa responde `405`, como cualquier otro método no
+  admitido. El detalle está en SPEC-03 (2.7).

@@ -48,6 +48,8 @@ la sesión 01).
 | 16:01 | `710917b` | Correcciones en las cuatro specs, el índice, `supuestos.md` y `requisitos.md` |
 | 16:03 | `2469bd0` | ADR-005, criterio de los ADR y apartado «Modelo de datos» en el índice de arquitectura, y nota en ADR-004 |
 | 16:08 | *(este commit)* | Respuesta a la evaluación (`04-calidad/respuesta-evaluacion-specs-02.md`) y esta bitácora, que entra por primera vez en un commit |
+| 16:06 | — | El commit anterior es `ef9f05c`. **Corrección de horas**: las tres filas anteriores a esta y la de las 15:56 las escribió la IA con horas estimadas, sin mirar el reloj. Las horas reales de los commits, según `git log --format=%ci`, son 16:02 (`710917b`), 16:03 (`2469bd0`) y 16:05 (`ef9f05c`), no 16:01, 16:03 y 16:08; la de la lectura (15:56) es aproximada. Las filas se dejan como se escribieron. Sin commit, a la espera de la revisión del Tech Lead |
+| 16:15 | — | Revisión del Tech Lead: aprobadas P-01 a P-14 y decididas Q-01 a Q-04 (apartado 3). Relectura de ADR-002 |
 
 **Cómo se guardó el informe.** El subagente devuelve su informe como texto;
 no escribe el fichero. La IA lo transcribió a
@@ -183,6 +185,46 @@ mínimos que eliminan el defecto descrito.
 «spec antes que código»; con la aprobación en bloque deja de chocar y no
 hizo falta cambiarla. La IA no instaló `python-stdnum`: la decisión dice
 comprobarlo «cuando se instale».
+
+### Correcciones de la segunda evaluación · Revisión (16:15)
+
+Aclaraciones del Tech Lead: el fichero del directorio ignorado `.private/`
+modificado a las 15:43:50 es suyo, privado y ajeno a la prueba, y no hay que
+tenerlo en cuenta; el cambio en disco de esta bitácora que la IA dio por
+externo contenía solo la fila de las horas, escrita por la propia IA.
+
+| # | La IA | El Tech Lead | Motivo |
+|---|---|---|---|
+| z1 | Añadió catorce precisiones, P-01 a P-14, y las dejó en los commits `710917b` y `2469bd0` sin aprobación previa, avisándolo al entregar | **Aprobadas las catorce** | — |
+| z2 | Q-01: dejó «sin especificar» un `OPTIONS` que no es comprobación previa | **Decidido**: responde `405` `method_not_allowed` | — |
+| z3 | Q-02: avisó de que «`400` sin cabeceras CORS» podía no coincidir con el middleware estándar | **Cambiado**: sin código a medida. La comprobación previa rechazada se queda con el comportamiento estándar del middleware de CORS; un test fija exactamente su estado y sus cabeceras, y lo que se exige es que no lleve `access-control-allow-origin`. Actualizar la regla | — |
+| z4 | Q-03: señaló decisiones que afectan a más de una spec y no tienen ADR, sin crear ninguno | **ADR-006 «Convenciones transversales de la API»**: errores genéricos y `problem+json`, identificadores, fechas, constante única de países e historial dentro de la ficha, con alternativas y motivo. El bloque de aprobación se queda en el índice de specs | El bloque de aprobación es proceso, no arquitectura |
+| z5 | Q-04: dejó sin fijar la semilla de CA-19 | **Semilla 20261112** | — |
+| z6 | Declaró que no había releído ADR-002 | **Releerlo** y comprobar que encaja con SPEC-04 (200 ms, `v2` de Frankfurter, estados); corregir lo que no encaje | — |
+
+Pidió dos commits (specs y bitácora, incluida la fila de las horas; y
+ADR-006) y, después, sin implementar nada, la propuesta de diseño de
+`scripts/check.py` y del hook `PreToolUse` que bloquea la escritura de
+código sin spec aprobada, parando a esperar su revisión.
+
+**Relectura de ADR-002 (z6)**: encaja con SPEC-04 y la IA **no cambió
+nada**. Los 200 ms coinciden (ADR-002 «Decisión», SPEC-04 2.5 y E-18). Los
+estados coinciden: ADR-002 exige estados de carga y de error y que un fallo
+no deje el importe anterior como válido, que es lo que detallan SPEC-04 2.5,
+E-20 y E-21. ADR-002 no nombra Frankfurter ni su versión: dice «la API
+pública (A8)», así que no contradice la `v2`; esa decisión está en ADR-003.
+Dos cosas que la IA vio y dejó como están, por no ser desajustes: ADR-002
+no remite a ADR-003, y cita SPEC-02/CA-08, que a su vez remite a
+SPEC-03/CA-03.
+
+**Precisión de la IA al aplicar z3, sin aprobar (P-15)**: la segunda mitad
+de Q-01 (comprobación previa de un origen admitido con un método o una
+cabecera no admitidos) no tenía decisión propia; la IA le aplicó la de z3.
+Detalle en el apartado 3 de la segunda respuesta.
+
+**Sobre el «cambio externo»**: la IA avisó de un cambio en disco ajeno a
+ella sin mirar antes qué había cambiado. Era su propia fila. Bastaba un
+`git diff` antes de decirlo.
 
 ## 4. Comprobaciones hechas en la sesión
 

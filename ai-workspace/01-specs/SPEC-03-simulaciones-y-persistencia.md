@@ -170,19 +170,25 @@ las rutas, y queda **fuera de la regla del `405`** (4.3). Es la petición
 `OPTIONS` que el navegador envía por su cuenta, con las cabeceras `Origin`
 y `Access-Control-Request-Method`, antes de un `POST` con cuerpo JSON:
 
-- Con un origen admitido: `200`, con las cabeceras CORS que admiten ese
-  origen, los métodos y `content-type`.
-- Con un origen no admitido: `400`, sin cabeceras CORS.
+- **Admitida** (origen, método y cabecera admitidos): `200`, con las
+  cabeceras CORS que admiten ese origen, los métodos y `content-type`.
+- **Rechazada** (por el origen, por el método o por la cabecera): la
+  respuesta es **la estándar del middleware de CORS del framework, sin
+  código a medida**. Lo único que esta spec exige de ella es que, si el
+  origen no está admitido, **no lleve `access-control-allow-origin`**. Su
+  estado y sus cabeceras exactos los fija un test con la versión fijada
+  del framework, para que un cambio de versión no pase inadvertido. Se
+  espera un `400`; **no está verificado**.
 
-Ese `400` es una **excepción documentada a `application/problem+json`**
-(A14): no lleva el cuerpo de error de la API. *Por qué*: esa respuesta la
-consume el navegador, no el frontend, que nunca llega a leerla.
+La comprobación previa rechazada es una **excepción documentada a
+`application/problem+json`** (A14): no lleva el cuerpo de error de la API.
+*Por qué*: esa respuesta la consume el navegador, no el frontend, que nunca
+llega a leerla.
 
-**Sin especificar**: un `OPTIONS` que no es una comprobación previa (sin
-`Origin` o sin `Access-Control-Request-Method`) y una comprobación previa de
-un origen admitido que pide un método o una cabecera no admitidos. Ninguna
-decisión los cubre; están planteados al Tech Lead en
-`04-calidad/respuesta-evaluacion-specs-02.md`.
+**Un `OPTIONS` que no es una comprobación previa** (sin `Origin` o sin
+`Access-Control-Request-Method`) no lo atiende el middleware: llega a las
+rutas y responde `405` `method_not_allowed`, como cualquier otro método no
+admitido (4.3).
 
 **`GET /health`** (A13). Comprueba que el backend está levantado y que la
 base de datos responde a una consulta trivial. No lee ni escribe datos de
@@ -244,7 +250,8 @@ casos de prueba, para que no queden sin demostrar.
 | E-28 | Si recibe `GET /health` y la base de datos no responde, entonces el sistema deberá responder `503` con el código `service_unavailable`, sin trazas ni detalles internos. | A13 |
 | E-29 | Si una petición a cualquier endpoint incurre en uno de los errores genéricos de las convenciones comunes, entonces el sistema deberá responder en `application/problem+json` con el estado y el `code` de esa tabla, sin trazas ni detalles internos; si incurre en varios a la vez, deberá responder con el de mayor precedencia: `415`, después `400` y después `422`. | A14 |
 | E-30 | Cuando recibe una comprobación previa `OPTIONS` con un `Origin` incluido en `CORS_ORIGINS`, el sistema deberá responder `200` con las cabeceras CORS que admiten ese origen, en lugar de `405`. | A16 |
-| E-31 | Si recibe una comprobación previa `OPTIONS` con un `Origin` que no está en `CORS_ORIGINS`, entonces el sistema deberá responder `400` sin cabeceras CORS. | A16 |
+| E-31 | Si recibe una comprobación previa `OPTIONS` con un `Origin` que no está en `CORS_ORIGINS`, entonces el sistema deberá rechazarla con la respuesta estándar del middleware de CORS, que no deberá llevar la cabecera `access-control-allow-origin`. | A16 |
+| E-33 | Si recibe un `OPTIONS` que no es una comprobación previa, entonces el sistema deberá responder `405` con el código `method_not_allowed`. | A14 |
 
 ## 4. Contratos
 
@@ -331,8 +338,10 @@ convención común del índice; aquí interesa porque es lo que hace comprobable
 A18: `PUT`, `PATCH` y `DELETE` sobre `/customers`, `/customers/{id}` y
 `/simulations`, y también `GET /simulations`, que no existe.
 
-**Excepción**: `OPTIONS`. La comprobación previa de CORS la atiende el
-middleware antes de llegar a las rutas y no responde `405` (2.7).
+**Excepción**: la comprobación previa de CORS, que es un `OPTIONS` con
+`Origin` y `Access-Control-Request-Method`. La atiende el middleware antes
+de llegar a las rutas y no responde `405` (2.7). Cualquier otro `OPTIONS`
+sí responde `405`.
 
 ### 4.4 `GET /health`
 
@@ -448,7 +457,8 @@ inserta con esa fecha de forma directa.
 | `GET /meta` con `Origin: http://localhost:4200` | `CORS_ORIGINS=http://a.example,http://b.example` | Respuesta sin `access-control-allow-origin` |
 | `GET /meta` con `Origin: http://b.example` | `CORS_ORIGINS=http://a.example,http://b.example` | `access-control-allow-origin: http://b.example` |
 | `OPTIONS /customers` de comprobación previa, con `Origin: http://localhost:4200`, `Access-Control-Request-Method: POST` y `Access-Control-Request-Headers: content-type` | `CORS_ORIGINS` sin definir | `200`, no `405`, con `access-control-allow-origin: http://localhost:4200`, `POST` en `access-control-allow-methods` y `content-type` en `access-control-allow-headers` |
-| La misma comprobación previa, con `Origin: http://otro.example` | `CORS_ORIGINS` sin definir | `400`, sin ninguna cabecera `access-control-*`; no se exige `application/problem+json` |
+| La misma comprobación previa, con `Origin: http://otro.example` | `CORS_ORIGINS` sin definir | Rechazo estándar del middleware, sin `access-control-allow-origin`; el test compara el estado y todas las cabeceras con los valores fijados al implementar. No se exige `application/problem+json` |
+| La misma comprobación previa, con `Origin: http://localhost:4200` y `Access-Control-Request-Method: DELETE` | `CORS_ORIGINS` sin definir | Rechazo estándar del middleware; el test compara el estado y todas las cabeceras con los valores fijados al implementar |
 | Una petición con `Origin: http://localhost:4200` que provoca un fallo inesperado (como el de 5.7) | `CORS_ORIGINS` sin definir | `500` `internal_error` con `access-control-allow-origin: http://localhost:4200` |
 | `GET /health` | Base de datos accesible | `200` `{"status":"ok"}` |
 | `GET /health` | Base de datos inaccesible | `503` `service_unavailable`, sin trazas |
@@ -465,6 +475,7 @@ inserta con esa fecha de forma directa.
 | `POST /simulations?debug=1` con `Content-Type: application/json` y el cuerpo `{"customer_id":` | `400` `malformed_request`: gana al `422` |
 | `GET /clientes` o `GET /customers/1/extra` | `404` `not_found` |
 | `GET /simulations`, `POST /customers/1`, `DELETE /meta` | `405` `method_not_allowed` |
+| `OPTIONS /customers` sin `Origin`, y `OPTIONS /customers` con `Origin: http://localhost:4200` pero sin `Access-Control-Request-Method` | `405` `method_not_allowed`: no es una comprobación previa |
 | `POST /simulations?debug=1` con un cuerpo válido | `422` `validation_error`, con `unknown_field` en el campo `debug`; no se guarda nada |
 | Un fallo inesperado, provocado en el test con un repositorio que lanza una excepción | `500` `internal_error`; el cuerpo no contiene trazas, nombres de ficheros ni el texto de la excepción |
 
@@ -486,16 +497,16 @@ inserta con esa fecha de forma directa.
 | CA-12 | Un test arranca la aplicación con una ruta de base de datos inexistente y comprueba que se crea con las tres tablas; la arranca de nuevo y comprueba que los datos guardados siguen ahí. Otro test comprueba que, sin `DATABASE_PATH`, la configuración da la ruta `backend/data/saas-o-matic.db`, sin llegar a crear el fichero. | E-22, E-32 |
 | CA-13 | Un test sustituye la conexión por una que registra las sentencias y comprueba que ningún valor de la petición aparece en el SQL ejecutado, solo en sus parámetros. | E-23 |
 | CA-14 | El OpenAPI generado declara para `POST /simulations`, `GET /customers/{id}` y `GET /health` los campos, tipos y códigos de estado del apartado 4. | E-01, E-12, E-27 |
-| CA-15 | Tests de integración reproducen las siete filas de CORS de 5.6 (las cuatro de `GET /meta`, las dos comprobaciones previas y el `500`), arrancando la aplicación con cada valor de `CORS_ORIGINS`. | E-24, E-25, E-26, E-30, E-31 |
+| CA-15 | Tests de integración reproducen las ocho filas de CORS de 5.6 (las cuatro de `GET /meta`, las tres comprobaciones previas y el `500`), arrancando la aplicación con cada valor de `CORS_ORIGINS`. En las dos comprobaciones previas rechazadas, el test compara el estado y el conjunto completo de cabeceras con valores escritos en el propio test. | E-24, E-25, E-26, E-30, E-31 |
 | CA-16 | Tests de integración reproducen las dos filas de `GET /health` de 5.6; la base de datos inaccesible se simula con una conexión que falla. El cuerpo del `503` no contiene trazas ni rutas de ficheros. | E-27, E-28 |
-| CA-17 | Tests de integración reproducen cada fila de 5.7, comprobando el estado, el `Content-Type` `application/problem+json` y el `code`. | E-29 |
+| CA-17 | Tests de integración reproducen cada fila de 5.7, comprobando el estado, el `Content-Type` `application/problem+json` y el `code`. | E-29, E-33 |
 
 ## 7. Decisiones de diseño
 
 Aprobadas las diez por el Tech Lead el 2026-11-12, con un cambio: el
 historial se ordena solo por `id` descendente (2.4), no por fecha como
-proponía la IA. D-02, D-06 y D-07 se registran además como ADR-004. El
-criterio de qué decisiones llevan ADR está en `02-arquitectura/README.md`.
+proponía la IA. D-02, D-06 y D-07 se registran además como ADR-004, y D-01,
+que cambia el contrato de SPEC-01, en ADR-006. El criterio de qué decisiones llevan ADR está en `02-arquitectura/README.md`.
 
 | Id | Decisión | Aprobado | Alternativa descartada y coste |
 |---|---|---|---|
@@ -542,3 +553,4 @@ La fecha límite de A3 y A4 es la del índice de specs: viernes 13 de noviembre 
 | 2026-11-12 | Revisión del Tech Lead: aprobadas D-01 a D-10; el historial se ordena solo por `id` descendente (2.4, E-13 y tabla 5.3, con una fila nueva de fecha atrasada) |
 | 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: aplicados los cambios cruzados del apartado 8 (H-01); A4 y A16 en la cabecera (H-02); `405` para cualquier método no admitido, y el requisito E-29, la tabla 5.7 y CA-17 para los errores genéricos del índice (H-03); `customer_id` de 1 a 9223372036854775807 (H-04); nuevo apartado 2.7 «Operación del backend» con CORS y `GET /health`, E-24 a E-28, 4.4, 5.6, CA-15 y CA-16 (H-05); E-21 cubre el subtotal y la posición de los tramos (H-11); remisión a ADR-004 (H-20); columna `country` en `simulations` y precisión de `created_at` (H-23) |
 | 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: aprobación en bloque con SPEC-01 y SPEC-02 (N-01); `CHECK` de los límites de los tramos, con E-21 y tres filas en 5.5 (N-04); `OPTIONS` fuera de la regla del `405`, con E-30 y E-31, y cabeceras CORS también en el `500`, con E-24 y tres filas en 5.6 (N-05); el DDL vive en el `schema.sql` del backend (N-07); `application/json` con parámetros, precedencia `415` > `400` > `422` y valor por defecto de `DATABASE_PATH`, con E-29, E-32, tres filas en 5.7 y CA-12 (N-13); E-16 cubre el país guardado (N-17) |
+| 2026-11-12 | Decisiones del Tech Lead sobre las cuestiones abiertas de la segunda respuesta: un `OPTIONS` que no es comprobación previa responde `405`, con E-33 y una fila en 5.7 (Q-01); la comprobación previa rechazada se queda con la respuesta estándar del middleware, sin código a medida, y solo se exige que no lleve `access-control-allow-origin`, con E-31, 2.7, 5.6 y CA-15 (Q-02); D-01 se registra en ADR-006 (Q-03) |

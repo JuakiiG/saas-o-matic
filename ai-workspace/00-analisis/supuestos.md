@@ -242,9 +242,9 @@ por campo. El código va en inglés y el mensaje en español, y el frontend
 decide por el código. *Por qué*: es un estándar, y un formato único simplifica
 el frontend y los tests.
 
-Única excepción: el `400` con que el middleware de CORS rechaza la
-comprobación previa (`OPTIONS`) de un origen no admitido. Esa respuesta la
-consume el navegador y no el frontend (SPEC-03, 2.7).
+Única excepción: la respuesta con que el middleware de CORS rechaza una
+comprobación previa (`OPTIONS`). Esa respuesta la consume el navegador y no
+el frontend (SPEC-03, 2.7).
 
 ### A16 · Autenticación
 

@@ -17,7 +17,8 @@ N-08 (H-14), N-14 (H-20) y N-15 (H-06).
 
 Lo que esta respuesta **no** demuestra: sigue sin haber código, tests ni
 oráculo. Las correcciones son de documentos y nadie independiente las ha
-vuelto a evaluar. Quedan además cuatro cuestiones abiertas (apartado 3).
+vuelto a evaluar. Al escribirla quedaban cuatro cuestiones abiertas, que el
+Tech Lead decidió después (apartado 3).
 
 ## 1. Respuesta por hallazgo
 
@@ -49,8 +50,9 @@ Donde el Tech Lead no dio un motivo aparte, figura el del propio hallazgo.
 Las decisiones dejaban detalles sin fijar. La IA los concretó y los lista
 aquí para que el Tech Lead los confirme o los cambie.
 
-**Estado: ninguna está aprobada.** Están ya en los commits `710917b` y
-`2469bd0`.
+**Estado**: al escribir esta respuesta ninguna estaba aprobada, y estaban ya
+en los commits `710917b` y `2469bd0`. **El Tech Lead aprobó las catorce,
+P-01 a P-14, el 2026-11-12 a las 16:15.**
 
 | # | Hallazgo | Precisión de la IA | Dónde |
 |---|---|---|---|
@@ -79,6 +81,25 @@ Casos que las decisiones no cubren. La IA **no** los ha resuelto.
 | Q-02 | **«`400` sin cabeceras CORS»**: la IA recuerda, **sin haberlo verificado**, que el middleware de CORS estándar del framework, al rechazar una comprobación previa, omite `access-control-allow-origin` pero puede incluir otras cabeceras `access-control-*` (métodos, caducidad). Si es así, cumplir la spec al pie de la letra exige código a medida, o bien precisar la regla como «sin `access-control-allow-origin`». Se comprueba al implementar | SPEC-03, E-31 y 5.6 |
 | Q-03 | **El criterio nuevo de los ADR frente a decisiones ya tomadas**: hay decisiones que afectan a más de una spec y no tienen ADR. Las que la IA ha visto: el historial dentro de la ficha (SPEC-03/D-01, que cambia el contrato de SPEC-01), la constante única de países (SPEC-01 y SPEC-02), las convenciones comunes de errores del índice y el bloque de aprobación de N-01. La IA no ha creado ADR para ninguna | `02-arquitectura/README.md` |
 | Q-04 | **El valor de la semilla de CA-19** y la composición del conjunto aleatorio (P-02) | SPEC-01, CA-19 |
+
+**Decididas por el Tech Lead el 2026-11-12 a las 16:15**:
+
+| # | Decisión | Dónde se aplicó |
+|---|---|---|
+| Q-01 | Un `OPTIONS` que no es una comprobación previa responde `405` `method_not_allowed` | SPEC-03: 2.7, 4.3, E-33, una fila en 5.7, CA-17 · índice |
+| Q-02 | Sin código a medida. La comprobación previa rechazada se queda con el comportamiento estándar del middleware de CORS; un test fija exactamente su estado y sus cabeceras, y lo que se exige es que no lleve `access-control-allow-origin` | SPEC-03: 2.7, E-31, dos filas en 5.6, CA-15 · índice · `supuestos.md`: A14 |
+| Q-03 | ADR-006 «Convenciones transversales de la API»: errores genéricos y `problem+json`, identificadores, fechas, constante única de países e historial dentro de la ficha. El bloque de aprobación es proceso, no arquitectura, y se queda en el índice de specs | `02-arquitectura/`: ADR-006 y README · índice de specs · SPEC-03: apartado 7 |
+| Q-04 | Semilla `20261112` | SPEC-01: CA-19 |
+
+**Precisión de la IA al aplicar Q-02, sin aprobar (P-15)**: la segunda mitad
+de Q-01 (una comprobación previa de un origen admitido que pide un método o
+una cabecera no admitidos) no tenía decisión propia. La IA le aplicó la de
+Q-02: respuesta estándar del middleware, fijada por un test. La exigencia
+de no llevar `access-control-allow-origin` se escribió solo para el origen
+no admitido, que es el caso de la decisión; la IA no sabe qué cabeceras
+devuelve el middleware cuando el origen sí está admitido y lo rechazado es
+el método. El estado esperado del rechazo (`400`) figura en SPEC-03 como
+**no verificado**.
 
 ## 4. Lo que sigue sin verificar
 
@@ -110,7 +131,9 @@ con `[...s].length`; `'\tAB'.trim()` da `AB`.
 
 | Asunto | Cuándo |
 |---|---|
-| Aprobar o cambiar P-01 a P-14 y decidir Q-01 a Q-04 | A decidir por el Tech Lead |
+| ~~Aprobar o cambiar P-01 a P-14 y decidir Q-01 a Q-04~~ | Hecho el 2026-11-12 a las 16:15 |
+| Aprobar o cambiar P-15 | A decidir por el Tech Lead |
+| Fijar en un test el estado y las cabeceras de la comprobación previa rechazada | Al implementar CORS |
 | Decidir A2 a A5 | Viernes 13 de noviembre de 2026, 10:00 |
 | Aprobar el bloque backend (SPEC-01, SPEC-02 y SPEC-03) y, aparte, SPEC-04 | Tras lo anterior |
 | Comprobar el comportamiento real de `python-stdnum` | Cuando se instale |
