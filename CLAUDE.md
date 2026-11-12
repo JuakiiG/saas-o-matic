@@ -25,9 +25,12 @@ al tocar esa parte del repo.
 3. **Un test nunca se relaja, se salta ni se borra para que pase.** Si un test
    parece erróneo, se avisa al Tech Lead y decide él.
 4. **Oráculo único**: `uv run scripts/check.py`, desde la raíz, ejecuta tests,
-   lint, tipos, cobertura y límites de tamaño de backend y frontend. Una tarea
-   solo está terminada si termina en verde. *(Pendiente: el script se crea con
-   el esqueleto del backend.)*
+   lint, tipos, cobertura y límites de tamaño de backend y frontend, además
+   del control de specs y la higiene del repo. Una tarea solo está terminada
+   si termina en verde. Lo que todavía no tiene código que comprobar sale
+   como `INACTIVO`, nunca como correcto, y se activa solo cuando aparece ese
+   código: un verde con comprobaciones inactivas solo dice que lo activo
+   está bien.
    *Por qué un script de Python con metadatos en línea (PEP 723) y no `make`:
    `uv` y Node ya son requisitos del proyecto, no hace falta un `pyproject`
    en la raíz y funciona igual en Windows, macOS y Linux.*
@@ -73,9 +76,18 @@ scripts/    herramientas del repo (oráculo)
 | Parámetros de una función | 5 |
 | Plantilla de componente Angular | 120 líneas |
 
-Los comprueba el oráculo con ruff, ESLint y un recuento de líneas *(lo
-implementa el oráculo, pendiente)*. Una regla que el oráculo no comprueba no
-se anuncia aquí como garantizada. Si algo no cabe, se divide por
+Qué comprueba hoy el oráculo y qué no:
+
+- **Activo**: las 250 líneas por fichero (Python, TypeScript y JavaScript de
+  `backend/`, `frontend/` y `scripts/`), las 120 líneas de las plantillas
+  `.html` del frontend y, en Python, las 40 líneas por función y los 5
+  parámetros (sin contar `self` ni `cls`).
+- **Inactivo hasta que exista el frontend**: las 40 líneas por función y los
+  5 parámetros en TypeScript, que comprobará ESLint.
+- **No comprobado**: una plantilla escrita dentro del `.ts` del componente.
+
+Una regla que el oráculo no comprueba no se anuncia aquí como garantizada.
+Si algo no cabe, se divide por
 responsabilidad; no se sube el límite ni se silencia la regla. *Por qué: los
 ficheros grandes son el fallo típico del código generado y lo que más
 dificulta revisarlo.*

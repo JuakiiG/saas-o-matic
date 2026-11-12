@@ -57,6 +57,8 @@ la sesión 01).
 | 16:33 | — | Tests del hook y del oráculo escritos y ejecutados en rojo |
 | 16:38 | `5d0df9f` | Oráculo `scripts/check.py`, módulos de `scripts/oracle/`, script del hook y sus 63 tests. Oráculo en verde antes del commit. El hook aún no está registrado. Hora tomada de `git log --format=%ci` |
 | 16:45 | *(este commit)* | Registro del hook en `.claude/settings.json` y esta bitácora. **La IA para aquí, sin la prueba en vivo.** La hora de esta fila es aproximada: se escribió antes de hacer el commit |
+| 16:51 | — | El commit anterior es `bf9457e`. **Corrección de hora**, pedida por el Tech Lead: su hora real, según `git log --format=%ci`, es 16:39, no 16:45. La fila anterior se deja como se escribió. Revisión del oráculo y del hook por el Tech Lead (apartado 3) |
+| 16:53 | *(este commit)* | `repositories/` puede importar de `domain/`: tabla de capas del oráculo, su test y `backend.md`; `CLAUDE.md` actualizado. Oráculo en verde antes del commit. La hora es la del reloj al escribir la fila, antes del commit; la real queda en `git log` |
 
 **Cómo se guardó el informe.** El subagente devuelve su informe como texto;
 no escribe el fichero. La IA lo transcribió a
@@ -353,6 +355,38 @@ estándar que hacen entrada o salida o leen el reloj; solo exige que lo
 importado sea de la biblioteca estándar, como dice SPEC-02/CA-09.
 `CLAUDE.md` sigue diciendo que el oráculo está «pendiente»; la IA no lo ha
 tocado.
+
+### Oráculo y hook · Revisión (16:51)
+
+| # | La IA | El Tech Lead | Motivo |
+|---|---|---|---|
+| ab1 | Añadió once precisiones al implementar, I-01 a I-11, y las dejó en el commit `5d0df9f` sin aprobación previa, avisándolo al entregar | **Aprobadas todas salvo I-08** | — |
+| ab2 | I-08: leyó `backend.md` de forma estricta y prohibió que `repositories/` importase de `domain/` | **Descartado**: `repositories/` sí puede importar de `domain/`. Lo prohibido es que `domain/` importe de cualquier otra capa y que `sqlite3` salga de `repositories/`. Cambiar la regla, su test y `backend.md` | Los repositorios devuelven objetos del dominio |
+| ab3 | Avisó de que `CLAUDE.md` seguía dando por pendientes el oráculo y los límites, sin tocarlo | **Actualizarlo**: el oráculo y los límites ya existen y se comprueban | — |
+| ab4 | Avisó de que la fila del último commit llevaba una hora aproximada (16:45) y no la corrigió | **Corregirla con una fila nueva** | — |
+
+Pidió oráculo en verde, commit y parar.
+
+**Cómo se aplicó ab2**, con TDD: primero se añadió al test el caso de un
+repositorio que importa de `domain/`, y falló por aserción (`'FALLO' !=
+'OK'`, 1 fallo de 63); después se cambió la tabla de capas y los 63 tests
+pasaron. Se añadieron además cinco casos que deben seguir fallando:
+`repositories/` importando de `api/`, y `domain/` importando de
+`repositories/`, de `services/`, de `api/` y `sqlite3`.
+
+**Precisiones de la IA al aplicar ab3, sin aprobar**:
+
+- `CLAUDE.md` dice ahora qué límites comprueba hoy el oráculo, cuáles están
+  inactivos y cuál **no se comprueba**: una plantilla escrita dentro del
+  `.ts` del componente. El oráculo solo cuenta las plantillas `.html`. La IA
+  lo escribió así porque el propio `CLAUDE.md` pide no anunciar como
+  garantizada una regla que el oráculo no comprueba.
+- El punto 4 de `CLAUDE.md` explica qué significa `INACTIVO` y que un verde
+  con comprobaciones inactivas solo cubre lo activo.
+- En `backend.md` se añadieron el umbral del 90 % de ramas de todo el
+  backend (decisión aa3) y la regla de `sqlite3`, que el oráculo ya
+  comprobaba y no estaba escrita en las reglas.
+- `CLAUDE.md` no menciona el hook; nadie lo ha pedido y la IA no lo añadió.
 
 ## 4. Comprobaciones hechas en la sesión
 

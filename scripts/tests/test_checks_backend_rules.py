@@ -57,8 +57,9 @@ class LayersTest(unittest.TestCase):
             ("backend/app/api/customers.py", "from app.services import customers\nfrom app.domain import tax_id\n"),
             ("backend/app/services/quotes.py", "from app.domain import pricing\nfrom app.repositories import customers\n"),
             ("backend/app/repositories/customers.py", "import sqlite3\n"),
+            ("backend/app/repositories/customers.py", "import sqlite3\nfrom app.domain import customer\n"),
         ):
-            with self.subTest(name=name):
+            with self.subTest(name=name, text=text):
                 self.assertEqual(self.check(name, text).status, report.OK)
 
     def test_forbidden_directions_fail(self) -> None:
@@ -68,6 +69,11 @@ class LayersTest(unittest.TestCase):
             ("backend/app/services/quotes.py", "import sqlite3\n"),
             ("backend/app/api/customers.py", "import sqlite3\n"),
             ("backend/app/repositories/customers.py", "from app.services import quotes\n"),
+            ("backend/app/repositories/customers.py", "from app.api import schemas\n"),
+            (DOMAIN, "from app.repositories import customers\n"),
+            (DOMAIN, "from app.services import quotes\n"),
+            (DOMAIN, "from app.api import schemas\n"),
+            (DOMAIN, "import sqlite3\n"),
         ):
             with self.subTest(name=name, text=text):
                 self.assertEqual(self.check(name, text).status, report.FAIL)

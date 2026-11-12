@@ -15,12 +15,13 @@ from oracle import report
 BLOCK = "Backend"
 APP = ("backend", "app")
 DOMAIN_PACKAGE = "app.domain"
-# `.claude/rules/backend.md`: api -> services -> domain, and services -> repositories.
+# `.claude/rules/backend.md`: api -> services -> domain, services -> repositories and
+# repositories -> domain (they return domain objects). The domain imports no other layer.
 ALLOWED_LAYERS: dict[str, tuple[str, ...]] = {
     "api": ("api", "services", "domain"),
     "services": ("services", "domain", "repositories"),
     "domain": ("domain",),
-    "repositories": ("repositories",),
+    "repositories": ("repositories", "domain"),
 }
 SQL_MODULE = "sqlite3"
 SQL_LAYER = "repositories"

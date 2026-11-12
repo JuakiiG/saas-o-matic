@@ -18,8 +18,12 @@ backend/tests/
   integration/   API y repositorios contra una base de datos temporal
 ```
 
-Las dependencias van en un solo sentido: `api → services → domain` y
-`services → repositories`.
+Las dependencias van en un solo sentido: `api → services → domain`,
+`services → repositories` y `repositories → domain`. Lo comprueba el oráculo.
+
+- **`repositories/` puede importar de `domain/`**, porque devuelve objetos
+  del dominio. No importa de `services/` ni de `api/`.
+- **`sqlite3` solo se importa en `repositories/`.**
 
 - **`domain/` no importa FastAPI, Pydantic, `sqlite3` ni nada de las otras
   capas**, y no hace entrada/salida ni lee el reloj. *Por qué: así las reglas
@@ -54,9 +58,9 @@ Las dependencias van en un solo sentido: `api → services → domain` y
 
 - `ruff` (lint y formato) y `mypy --strict` sin avisos. Todas las funciones
   llevan anotaciones de tipo.
-- `domain/` se cubre al 100 % de ramas; el oráculo falla por debajo de ese
-  umbral (`--cov-branch --cov-fail-under=100`) *(lo implementa el oráculo,
-  pendiente)*.
+- `domain/` se cubre al 100 % de ramas y el backend entero al 90 % de ramas;
+  el oráculo falla por debajo de esos umbrales. Esas comprobaciones están
+  inactivas hasta que exista `backend/pyproject.toml`.
 
 ## Tests (pytest)
 
