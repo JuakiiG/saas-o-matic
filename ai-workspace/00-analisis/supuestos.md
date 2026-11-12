@@ -189,7 +189,7 @@ y el guardado dejan de coincidir. Alternativas y consecuencias en ADR-002.
 
 ### A10 · Identificador fiscal fuera de España
 
-Para otros países se normaliza (mayúsculas, sin espacios ni guiones) y se
+Para otros países se normaliza (mayúsculas, sin espacios, guiones ni puntos) y se
 comprueba solo el formato general: alfanumérico y de longitud acotada. *Por
 qué*: el encargo exige el algoritmo de control solo para España. Implementar
 los de cada país es alcance no pedido.
