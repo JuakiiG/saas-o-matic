@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-12 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | *(sesión abierta)* |
+| **Resultado** | Segunda evaluación independiente, hecha con el subagente `evaluador` real: los 26 hallazgos de la primera quedan resueltos (22) o resueltos en parte (4), con 17 hallazgos nuevos, todos respondidos y corregidos. ADR-005 y ADR-006. Oráculo `scripts/check.py` y hook `PreToolUse` del control de specs, con 63 tests y probados en vivo. Las cuatro specs siguen en `borrador` y no hay ninguna línea de código de aplicación |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -61,6 +61,7 @@ la sesión 01).
 | 16:53 | *(este commit)* | `repositories/` puede importar de `domain/`: tabla de capas del oráculo, su test y `backend.md`; `CLAUDE.md` actualizado. Oráculo en verde antes del commit. La hora es la del reloj al escribir la fila, antes del commit; la real queda en `git log` |
 | 17:05 | — | El commit anterior es `ca1c81a` (16:52 según `git log`). Prueba en vivo del hook: cuatro `Write` bloqueados y un `Edit` sobre el estado de SPEC-02 que pidió confirmación y el Tech Lead rechazó (apartado 3). Comprobado con `ls`, `git status` y el oráculo |
 | 17:07 | *(este commit)* | Prueba en vivo anotada en esta bitácora. Hora del reloj al escribir la fila |
+| 17:08 | *(commit de cierre)* | El commit anterior es `0c1b05f` (17:06 según `git log`). El Tech Lead ordena cerrar la sesión: campo «Resultado», cierre y tareas pendientes de esta bitácora |
 
 **Cómo se guardó el informe.** El subagente devuelve su informe como texto;
 no escribe el fichero. La IA lo transcribió a
@@ -456,6 +457,26 @@ permitido para código (hace falta aprobar de verdad un bloque), ni el hook
 sobre `NotebookEdit`, ni qué ocurre si el comando del hook no arranca, ni
 nada fuera de Windows.
 
+### Cierre de la sesión (17:08)
+
+Lo que queda al cerrar:
+
+- Las cuatro specs siguen en `borrador`. Dependen de A2 a A5, que se deciden
+  el viernes 13 de noviembre de 2026 a las 10:00. SPEC-01, SPEC-02 y SPEC-03
+  se aprueban juntas; SPEC-04, aparte.
+- Las correcciones de la segunda evaluación y ADR-005 y ADR-006 no han
+  pasado por otra evaluación independiente.
+- No existe código de aplicación ni tests de aplicación. El oráculo está en
+  verde con 11 comprobaciones activas y 12 inactivas: nada del backend ni
+  del frontend está comprobado, porque no existe.
+- El hook está probado en vivo para `Write` con `deny`. No lo están el
+  camino permitido para código, `NotebookEdit`, el fallo de arranque del
+  comando ni otros sistemas operativos.
+- Sin aprobar: las precisiones que la IA añadió a `CLAUDE.md` y a
+  `backend.md` al aplicar la revisión de las 16:51 (commit `ca1c81a`).
+- El resultado esperado de CA-19 sigue siendo una hipótesis: `python-stdnum`
+  no se ha instalado.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -519,8 +540,12 @@ nada fuera de Windows.
 
 | Tarea | Cuándo |
 |---|---|
-| Aprobar o cambiar las precisiones P-01 a P-14 y decidir Q-01 a Q-04 de la segunda respuesta | A decidir por el Tech Lead |
-| Aclarar quién modificó a las 15:43:50 el fichero del directorio ignorado `.private/` | Cuando el Tech Lead lo vea |
+| ~~Aprobar o cambiar las precisiones P-01 a P-14 y decidir Q-01 a Q-04 de la segunda respuesta~~ | Hecho a las 16:15; P-15, a las 16:30 |
+| ~~Aclarar quién modificó a las 15:43:50 el fichero del directorio ignorado `.private/`~~ | Aclarado por el Tech Lead a las 16:15: es suyo |
+| Aprobar o cambiar las precisiones de `CLAUDE.md` y `backend.md` del commit `ca1c81a` | A decidir por el Tech Lead |
+| Decidir si se cierra el hueco del hook cuando su comando no arranca (campo `onFailure`, sin verificar) | A decidir por el Tech Lead |
+| Probar en vivo el camino permitido del hook | Al aprobar el bloque backend |
+| Fijar en un test el estado y las cabeceras de la comprobación previa de CORS rechazada | Al implementar CORS |
 | Decidir A2 a A5 | Viernes 13 de noviembre de 2026, 10:00 |
 | Aprobar el bloque backend (SPEC-01, SPEC-02 y SPEC-03) y, aparte, SPEC-04 | Tras lo anterior |
 | Comprobar el comportamiento real de `python-stdnum` | Cuando se instale |
