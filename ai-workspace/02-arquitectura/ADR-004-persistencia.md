@@ -81,6 +81,15 @@ ejecuta `PRAGMA foreign_keys = ON` (ADR-001); la simulación y sus tramos se
 guardan en una sola transacción; el historial se ordena por `id`
 descendente, que refleja el orden real de inserción.
 
+**Añadido el 2026-11-12**, tras la segunda evaluación independiente, sin
+cambiar ninguna de las tres decisiones:
+
+- Entre los invariantes del punto 2 están también los límites de cada
+  tramo: `from_users >= 1` y `to_users IS NULL OR to_users >= from_users`
+  (SPEC-03, 2.6 y E-21).
+- El `schema.sql` del punto 3 vive en el backend y es la única copia del
+  DDL; `02-arquitectura/README.md` muestra el modelo y enlaza a él.
+
 ## Consecuencias
 
 A favor:
