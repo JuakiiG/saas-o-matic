@@ -50,6 +50,13 @@ la sesión 01).
 | 16:08 | *(este commit)* | Respuesta a la evaluación (`04-calidad/respuesta-evaluacion-specs-02.md`) y esta bitácora, que entra por primera vez en un commit |
 | 16:06 | — | El commit anterior es `ef9f05c`. **Corrección de horas**: las tres filas anteriores a esta y la de las 15:56 las escribió la IA con horas estimadas, sin mirar el reloj. Las horas reales de los commits, según `git log --format=%ci`, son 16:02 (`710917b`), 16:03 (`2469bd0`) y 16:05 (`ef9f05c`), no 16:01, 16:03 y 16:08; la de la lectura (15:56) es aproximada. Las filas se dejan como se escribieron. Sin commit, a la espera de la revisión del Tech Lead |
 | 16:15 | — | Revisión del Tech Lead: aprobadas P-01 a P-14 y decididas Q-01 a Q-04 (apartado 3). Relectura de ADR-002 |
+| 16:17 | `5346ccb` | Decisiones Q-01, Q-02 y Q-04 en SPEC-03, SPEC-01, el índice y A14; respuesta actualizada; esta bitácora, con la fila de las horas. Hora tomada de `git log --format=%ci` |
+| 16:18 | `22835b9` | ADR-006 y su fila en el índice de arquitectura. Entre `5346ccb` y este commit, el índice de specs enlazaba a un ADR-006 que aún no existía |
+| 16:20 | — | Propuesta de diseño de `scripts/check.py` y del hook `PreToolUse`, presentada en la conversación, sin crear ningún fichero. Antes se leyó `.claude/settings.json` y se consultaron las versiones instaladas (uv 0.12.13, Node 24.18.0, Python 3.12.0). Sin commit, a la espera de la revisión del Tech Lead |
+| 16:30 | — | Revisión del diseño por el Tech Lead (apartado 3). Lanzado un subagente de consulta de documentación (`claude-code-guide`) para contrastar el protocolo de los hooks |
+| 16:33 | — | Tests del hook y del oráculo escritos y ejecutados en rojo |
+| 16:38 | `5d0df9f` | Oráculo `scripts/check.py`, módulos de `scripts/oracle/`, script del hook y sus 63 tests. Oráculo en verde antes del commit. El hook aún no está registrado. Hora tomada de `git log --format=%ci` |
+| 16:45 | *(este commit)* | Registro del hook en `.claude/settings.json` y esta bitácora. **La IA para aquí, sin la prueba en vivo.** La hora de esta fila es aproximada: se escribió antes de hacer el commit |
 
 **Cómo se guardó el informe.** El subagente devuelve su informe como texto;
 no escribe el fichero. La IA lo transcribió a
@@ -226,6 +233,127 @@ Detalle en el apartado 3 de la segunda respuesta.
 ella sin mirar antes qué había cambiado. Era su propia fila. Bastaba un
 `git diff` antes de decirlo.
 
+### Diseño del oráculo y del hook · Revisión (16:30)
+
+La IA presentó el diseño en la conversación: un hook `PreToolUse` que
+bloquea `Write`, `Edit` y `NotebookEdit` sobre `backend/**` y `frontend/**`
+(tests incluidos) mientras su bloque de specs no esté `aprobada`, y pide
+confirmación para tocar el propio hook, `settings.json` o el estado de una
+spec; y un oráculo `scripts/check.py` con comprobaciones activas desde ya
+(código sin spec, coherencia de specs, tamaños, reglas silenciadas, tests
+saltados, tests propios) e inactivas hasta que exista el código (backend,
+pureza del dominio, trazabilidad, frontend, Playwright). El Tech Lead lo
+aprobó.
+
+| # | La IA | El Tech Lead | Motivo |
+|---|---|---|---|
+| aa1 | Propuso no permitir el esqueleto (`pyproject.toml`, configuración) antes de aprobar el bloque | **De acuerdo** | — |
+| aa2 | Propuso confirmación humana para cambiar el estado de una spec y para tocar el hook o `settings.json` | **Sí** | — |
+| aa3 | Preguntó si había umbral de cobertura fuera de `domain/` | **Decidido**: 100 % de ramas en `domain/`, 90 % de ramas en todo el backend y 80 % de líneas en el frontend, con fallo por debajo | — |
+| aa4 | Trazabilidad: falla si un test cita un requisito inexistente; los requisitos sin test solo se listan hasta el cierre de cada bloque | **Como propone** | — |
+| aa5 | `unittest` para los tests de `scripts/`, sin dependencia nueva | **Sí** | — |
+| aa6 | P-15 (la comprobación previa rechazada por método o cabecera sigue la decisión de Q-02) | **Aprobada** | — |
+| aa7 | No había propuesto comprobar la higiene del repo | **Añadido**: bloque «higiene del repo», activo desde ya: ningún commit con trailer de coautoría ni firma de herramienta, ningún CRLF en ficheros versionados de texto y `.private/` nunca versionado | — |
+| aa8 | Dijo que escribía de memoria el protocolo de los hooks y que lo contrastaría antes de implementar | **Ordenado**: contrastarlo con la documentación oficial (entrada JSON, código de salida o JSON de decisión, `deny`/`ask`, variable con la raíz del proyecto, cuándo se cargan) y anotar la fuente | — |
+
+Pidió implementar con TDD (tests del hook y del oráculo en rojo, después el
+código, oráculo en verde y commit), los pasos 1 y 3 del plan de pruebas,
+registrar el hook en `.claude/settings.json` en el último commit y **parar
+ahí, sin la prueba en vivo**: reiniciará la sesión para que se cargue el
+hook. Pidió ver la salida real del oráculo.
+
+**Protocolo de los hooks, contrastado con la documentación (aa8).** Lo leyó
+un subagente de consulta (`claude-code-guide`) el 2026-11-12 en tres páginas
+de la documentación oficial de Claude Code: la referencia de hooks
+(<https://code.claude.com/docs/en/hooks>), la guía de hooks
+(<https://code.claude.com/docs/en/hooks-guide>) y la de ajustes
+(<https://code.claude.com/docs/en/settings>). La IA no leyó las páginas
+directamente: trabaja con el informe del subagente, que distingue las frases
+literales de las que le llegaron resumidas.
+
+| Punto | Lo que dice la documentación, según el informe | Grado |
+|---|---|---|
+| Entrada | Un objeto JSON por la entrada estándar con `tool_name`, `tool_input` y `tool_use_id`, además de los campos comunes. `Write` trae `file_path` y `content`; `Edit`, `file_path`, `old_string`, `new_string` | Literal |
+| Rutas | `tool_input.file_path` llega siempre absoluta; en Windows, con barras invertidas | Literal |
+| Salida 0 | Se aplica el JSON impreso, si lo hay. Sin JSON, la llamada sigue el flujo normal de permisos: salir con 0 no la aprueba | Literal |
+| Salida 2 | Bloquea; el modelo ve la salida de error como motivo | Literal |
+| Otros códigos | Error **no bloqueante**: la llamada continúa | Literal |
+| JSON de decisión | `hookSpecificOutput` con `hookEventName`, `permissionDecision` (`allow`, `deny`, `ask`, `defer`) y `permissionDecisionReason`. El motivo lo ve el modelo en `deny` y el usuario en `ask`. Los campos `decision` y `reason` de nivel superior están obsoletos | Literal |
+| Raíz del proyecto | Variable de entorno `CLAUDE_PROJECT_DIR`; en el comando, entre comillas dobles | Literal el ejemplo |
+| Shell en Windows | Por defecto `bash` (Git Bash); PowerShell si no hay Git Bash, y allí `$CLAUDE_PROJECT_DIR` sin `$env:` vale nulo | Resumido |
+| Cuándo se cargan | Claude Code vigila los ficheros de ajustes y aplica los cambios de `hooks` a la sesión en curso sin reiniciar; si no aparecen en unos segundos, reiniciar | Literal |
+| Tiempo máximo | 600 s por defecto para un comando; si se agota, no bloquea | Resumido |
+
+No documentado en lo leído: los campos de `NotebookEdit`, si el `matcher`
+distingue mayúsculas y si `MultiEdit` sigue existiendo.
+
+**Dos cosas que la IA tenía mal o no sabía y cambian el diseño**:
+
+- Creía que los hooks se cargan solo al arrancar. La documentación dice que
+  se recargan en caliente: el hook puede quedar activo en esta misma sesión
+  en cuanto se registre. La prueba en vivo se deja igualmente para después
+  del reinicio, como ordenó el Tech Lead.
+- Un hook que falla con un código distinto de 0 y de 2 **deja pasar la
+  escritura**. Por eso el script captura cualquier error y termina en 2.
+  Queda un hueco que el script no puede cerrar: si el comando ni siquiera
+  arranca (falta `uv`, o no hay Git Bash y la variable no se expande), la
+  escritura pasa. El informe menciona, resumido y no literal, un campo
+  `onFailure: "block"` que lo cerraría; la IA **no lo ha usado** porque no
+  está verificado. El segundo cerrojo es el oráculo.
+
+**TDD (16:30–16:38)**:
+
+1. **Rojo**: los siete módulos de test, escritos antes que el código,
+   fallaron: `Ran 7 tests … FAILED (errors=7)`, todos por
+   `ModuleNotFoundError` (`oracle`, `hooks`). Es un rojo de importación, no
+   de aserción: demuestra que los tests se escribieron antes, no que cada
+   uno falle por el motivo correcto.
+2. **Verde**: escrito el código, `Ran 63 tests … OK` a la primera.
+3. Como 63 tests en verde a la primera no dicen si los tests detectan algo,
+   la IA rompió dos reglas en memoria, sin tocar ficheros: con la tabla de
+   bloques vacía fallan 21 de 21 tests del control y del hook (15 fallos y 6
+   errores); con el patrón de firmas inutilizado fallan 2 de 9 tests de
+   higiene. No es una prueba de mutación completa.
+
+**Paso 3 del plan de pruebas (el atajo por Bash)**: se creó
+`backend/app/probe.py` con una redirección de Bash, que el hook no ve. El
+oráculo terminó en rojo, con código 1 y la línea `backend/app/probe.py:
+falta aprobar SPEC-01 (borrador), SPEC-02 (borrador), SPEC-03 (borrador)`.
+Se borró el fichero y su carpeta, y el oráculo volvió a verde.
+
+**El comando del hook, ejecutado a mano** con la variable
+`CLAUDE_PROJECT_DIR` puesta por la IA y cargas JSON generadas con Python:
+una escritura en `backend/app/probe.py` devuelve `deny` y código 0; una
+edición de `.claude/settings.json`, `ask` y código 0; una escritura en
+`ai-workspace/`, nada y código 0; una entrada que no es JSON, código 2 y el
+motivo por la salida de error. **Error propio**: el primer intento de esta
+prueba estaba mal montado (el JSON iba mal escapado desde el shell y el
+código de salida que se imprimía era el de otro comando); se repitió bien.
+Esto no es la prueba en vivo: quien llamó al script fue la IA, no Claude
+Code.
+
+**Precisiones de la IA al implementar, sin aprobar**:
+
+| # | Precisión |
+|---|---|
+| I-01 | Piden confirmación también `scripts/oracle/specgate.py` (la regla que usa el hook) y `.claude/settings.local.json`, además del hook y de `settings.json` |
+| I-02 | En `01-specs/` pide confirmación cualquier escritura cuyo texto nuevo contenga la palabra «aprobada», no solo la fila de estado. Una edición del índice que la mencione también pregunta |
+| I-03 | El hook bloquea (código 2) si una herramienta de edición no trae ruta o la entrada no se entiende. Una herramienta que no es de edición la deja pasar |
+| I-04 | Límite de parámetros: no cuentan `self` ni `cls`. El límite de 40 líneas se aplica también a las funciones de los tests; el de 250 líneas por fichero, no |
+| I-05 | Son tests, para el límite de 250: lo que está bajo `tests/` o `e2e/`, `test_*.py`, `*.spec.ts` y `*.test.ts` |
+| I-06 | Una regla silenciada vale si en la misma línea, tras la marca, hay un motivo introducido por `--`, `#` o `//` |
+| I-07 | Higiene: firma de herramienta es una línea `Co-Authored-By:`, el texto «Generated with» o el emoji de robot. El CRLF se mira en el índice y en el árbol de trabajo. `.private/` se exige ignorado, sin seguimiento y ausente del historial de todas las ramas |
+| I-08 | Capas: lectura estricta de `backend.md`. `repositories/` no puede importar de `domain/`, porque la regla solo nombra `api → services → domain` y `services → repositories`. Si los repositorios deben devolver objetos del dominio, hay que cambiarlo |
+| I-09 | El oráculo llama a cuatro scripts de `npm` que el proyecto del frontend tendrá que definir: `lint`, `build`, `test:ci` (con el 80 % de líneas) y `e2e`. Los límites de función y de parámetros en TypeScript quedan a cargo de ESLint |
+| I-10 | El 100 % de ramas de `domain/` se comprueba con `coverage report --include=app/domain/* --fail-under=100` tras el `pytest` |
+| I-11 | El código se divide en `scripts/oracle/` (ocho módulos), `scripts/hooks/` y `scripts/tests/`, para no pasar de 250 líneas por fichero |
+
+**No hecho**: la comprobación de pureza no prohíbe módulos de la biblioteca
+estándar que hacen entrada o salida o leen el reloj; solo exige que lo
+importado sea de la biblioteca estándar, como dice SPEC-02/CA-09.
+`CLAUDE.md` sigue diciendo que el oráculo está «pendiente»; la IA no lo ha
+tocado.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -240,8 +368,24 @@ ella sin mirar antes qué había cambiado. Era su propia fila. Bastaba un
 | Total de 20000 usuarios en SPEC-04 5.5 y casos de longitud de 5.4 | Node 24 | `121.205,70 EUR`; `'𝔸'.repeat(61)` mide 122 con `length` y 61 con `[...s].length`; `'\tAB'.trim()` da `AB` |
 | CA-19 dentro de la tabla; U+00A0 literal y CRLF en las specs | `grep` | CA-19 va en la línea siguiente a CA-18; ningún U+00A0 literal (los casos lo nombran por su código); ningún CRLF |
 | Trailers de coautoría | `git log -1 --pretty=%B \| grep -ci co-authored` tras cada commit | 0 en `27b9373`, `710917b` y `2469bd0` |
+| Oráculo | `uv run scripts/check.py`, a las 16:38 | Código de salida 0: 11 comprobaciones correctas, 0 con fallo y 12 inactivas (las ocho del backend y las cuatro del frontend) |
+| Tests del oráculo y del hook | `python -m unittest discover -s scripts/tests -t scripts` | `Ran 63 tests`, `OK` |
+| Oráculo ante código sin spec | Fichero creado con Bash en `backend/app/` | Código de salida 1, con el fichero y las tres specs pendientes; verde de nuevo al borrarlo |
+| Tamaño de los ficheros de `scripts/` | `wc -l` | El mayor, `specgate.py`, tiene 129 líneas |
 
 ## 5. No verificado
+
+- **Que Claude Code ejecute el hook y respete su decisión**: no se ha hecho
+  la prueba en vivo. Lo comprobado es el script, llamado a mano.
+- Qué ocurre si el comando del hook no arranca (sin `uv`, o sin Git Bash en
+  Windows), y si el campo `onFailure` existe.
+- Que el `matcher` `Write|Edit|MultiEdit|NotebookEdit` coincida con las
+  herramientas reales, y los campos de `NotebookEdit`.
+- El oráculo y el hook solo se han ejecutado en Windows. La portabilidad a
+  macOS y Linux está en el diseño (rutas, procesos sin shell, UTF-8), no
+  probada.
+- Los comandos del backend y del frontend del oráculo (ruff, mypy, pytest,
+  coverage, npm): están inactivos y nunca se han ejecutado.
 
 - El comportamiento real de `python-stdnum` con el CIF: el resultado
   esperado de CA-19 es una hipótesis. No se ha instalado.
