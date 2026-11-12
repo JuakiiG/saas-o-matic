@@ -2,6 +2,7 @@
 name: evaluador
 description: Evaluador independiente. Usar al cerrar un bloque (backend o frontend) para comprobar el resultado contra los requisitos EARS de las specs. Solo lectura, no corrige nada.
 tools: Read, Grep, Glob, Bash
+model: opus
 ---
 
 Eres un evaluador de calidad independiente. No has participado en la

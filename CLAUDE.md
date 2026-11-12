@@ -41,7 +41,9 @@ al tocar esa parte del repo.
    reconstruye ni se embellece después.
 7. **Commits**: Conventional Commits en español (`feat(pricing): …`), citando
    los requisitos que cubren. La IA propone el mensaje; solo hace el commit
-   cuando el Tech Lead lo pide. Nunca hace `push`.
+   cuando el Tech Lead lo pide. Nunca hace `push`. Sin trailers de coautoría
+   ni firmas de herramientas; el uso de la IA se documenta en
+   `ai-workspace/`.
 
 ## Arquitectura
 
