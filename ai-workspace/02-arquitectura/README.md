@@ -9,6 +9,7 @@
 | [ADR-003](ADR-003-api-de-divisas.md) | Tipos de cambio de la API pública Frankfurter `v2`, llamada desde el navegador | `aceptado` (2026-11-12) |
 | [ADR-004](ADR-004-persistencia.md) | Tres tablas, foto completa del cálculo en `simulation_tiers`, solo invariantes en la base de datos y sin migraciones | `aceptado` (2026-11-12) |
 | [ADR-005](ADR-005-dependencias-de-test.md) | Dependencias solo de test: `python-stdnum` para contrastar el validador fiscal y Playwright para la prueba de principio a fin y los 375 px | `aceptado` (2026-11-12) |
+| [ADR-006](ADR-006-convenciones-transversales-de-la-api.md) | Convenciones transversales de la API: errores en `problem+json` con código estable, identificadores, fechas, constante única de países e historial dentro de la ficha | `aceptado` (2026-11-12) |
 
 Cada ADR recoge el contexto, las opciones comparadas, la decisión con su
 motivo y las consecuencias, también las negativas.
@@ -16,7 +17,9 @@ motivo y las consecuencias, también las negativas.
 **Qué decisiones llevan ADR** (criterio del Tech Lead, 2026-11-12): toda
 decisión que afecte a la arquitectura o a más de una spec. Las que solo
 afectan a una spec se quedan en la tabla de decisiones de esa spec, con su
-alternativa descartada.
+alternativa descartada. Las decisiones de proceso, como el bloque de
+aprobación de las specs del backend, no son arquitectura y viven en el
+índice de specs.
 
 ## Modelo de datos
 
