@@ -59,6 +59,8 @@ la sesión 01).
 | 16:45 | *(este commit)* | Registro del hook en `.claude/settings.json` y esta bitácora. **La IA para aquí, sin la prueba en vivo.** La hora de esta fila es aproximada: se escribió antes de hacer el commit |
 | 16:51 | — | El commit anterior es `bf9457e`. **Corrección de hora**, pedida por el Tech Lead: su hora real, según `git log --format=%ci`, es 16:39, no 16:45. La fila anterior se deja como se escribió. Revisión del oráculo y del hook por el Tech Lead (apartado 3) |
 | 16:53 | *(este commit)* | `repositories/` puede importar de `domain/`: tabla de capas del oráculo, su test y `backend.md`; `CLAUDE.md` actualizado. Oráculo en verde antes del commit. La hora es la del reloj al escribir la fila, antes del commit; la real queda en `git log` |
+| 17:05 | — | El commit anterior es `ca1c81a` (16:52 según `git log`). Prueba en vivo del hook: cuatro `Write` bloqueados y un `Edit` sobre el estado de SPEC-02 que pidió confirmación y el Tech Lead rechazó (apartado 3). Comprobado con `ls`, `git status` y el oráculo |
+| 17:07 | *(este commit)* | Prueba en vivo anotada en esta bitácora. Hora del reloj al escribir la fila |
 
 **Cómo se guardó el informe.** El subagente devuelve su informe como texto;
 no escribe el fichero. La IA lo transcribió a
@@ -388,6 +390,72 @@ pasaron. Se añadieron además cinco casos que deben seguir fallando:
   comprobaba y no estaba escrita en las reglas.
 - `CLAUDE.md` no menciona el hook; nadie lo ha pedido y la IA no lo añadió.
 
+### Prueba en vivo del control de specs (17:05)
+
+Paso 2 del plan de pruebas, pedido por el Tech Lead con el hook ya
+registrado (`bf9457e`). Antes de la prueba, la sesión avisó de que había
+vuelto a leer `CLAUDE.md` al arrancar; la IA no puede comprobar por su
+cuenta si el proceso se reinició. Las cuatro specs estaban en `borrador`.
+
+**Cuatro escrituras con la herramienta `Write`.** Las cuatro fueron
+rechazadas. Mensajes literales, tal como los recibió la IA:
+
+```
+PreToolUse:Write hook error: Bloqueado: backend/app/probe.py es código del bloque backend y sus specs no están aprobadas: SPEC-01 (borrador), SPEC-02 (borrador), SPEC-03 (borrador). Spec antes que código (CLAUDE.md).
+```
+
+```
+PreToolUse:Write hook error: Bloqueado: backend/tests/test_probe.py es código del bloque backend y sus specs no están aprobadas: SPEC-01 (borrador), SPEC-02 (borrador), SPEC-03 (borrador). Spec antes que código (CLAUDE.md).
+```
+
+```
+PreToolUse:Write hook error: Bloqueado: frontend/src/app/probe.ts es código del bloque frontend y sus specs no están aprobadas: SPEC-04 (borrador). Spec antes que código (CLAUDE.md).
+```
+
+```
+PreToolUse:Write hook error: Bloqueado: frontend/src/app/probe.spec.ts es código del bloque frontend y sus specs no están aprobadas: SPEC-04 (borrador). Spec antes que código (CLAUDE.md).
+```
+
+El texto a partir de «Bloqueado:» es el motivo que escribe
+`scripts/oracle/specgate.py`; el prefijo lo pone Claude Code.
+
+**Intento de aprobar SPEC-02 con la herramienta `Edit`**, sustituyendo en su
+cabecera `` `borrador` (2026-11-12) `` por `` `aprobada` (2026-11-12) ``. La
+edición **pidió confirmación al Tech Lead y él la rechazó a propósito**: esa
+era la prueba. Mensaje literal que recibió la IA:
+
+```
+The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.
+```
+
+Lo que la IA **no vio**: el diálogo de confirmación. El motivo que el hook
+envía con la decisión `ask` se le muestra a la persona, no al modelo, así
+que la IA no puede copiar su texto ni afirmar por sí misma que la pregunta
+la provocó el hook y no el flujo normal de permisos de `Edit`. Que el
+diálogo llevara el motivo del hook lo sabe el Tech Lead, que lo vio. El
+texto esperado, según los tests y la ejecución a mano del script, es
+«ai-workspace/01-specs/spec-02-tarificacion-e-impuestos.md: el cambio
+escribe «aprobada»; aprobar una spec es del Tech Lead.».
+
+**Comprobación posterior**:
+
+- `ls -a backend frontend`: solo `.gitkeep` en cada una. No existen
+  `backend/app/`, `backend/tests/` ni `frontend/src/`.
+- Búsqueda de ficheros `probe*` y `test_probe*` en todo el repo: ninguno.
+- `git status --short --untracked-files=all`: vacío.
+- La fila `**Estado**` de las cuatro specs sigue en `` `borrador`
+  (2026-11-12) ``, y `git diff --stat` sobre `01-specs/` no muestra nada.
+- Oráculo: verde, código de salida 0, 11 correctas, 0 con fallo y 12
+  inactivas.
+
+**Qué demuestra y qué no.** Demuestra que Claude Code ejecuta el hook en
+`Write`, que respeta su `deny` y que el modelo recibe el motivo. Las
+ediciones de esta bitácora hechas después con `Edit` pasaron sin bloqueo ni
+pregunta, que es lo esperado para una ruta permitida. No demuestra el camino
+permitido para código (hace falta aprobar de verdad un bloque), ni el hook
+sobre `NotebookEdit`, ni qué ocurre si el comando del hook no arranca, ni
+nada fuera de Windows.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -409,8 +477,10 @@ pasaron. Se añadieron además cinco casos que deben seguir fallando:
 
 ## 5. No verificado
 
-- **Que Claude Code ejecute el hook y respete su decisión**: no se ha hecho
-  la prueba en vivo. Lo comprobado es el script, llamado a mano.
+- ~~Que Claude Code ejecute el hook y respete su decisión~~: comprobado para
+  `Write` y `deny` en la prueba en vivo de las 17:05 (apartado 3). Sigue sin
+  comprobar por la IA que la pregunta del `Edit` sobre SPEC-02 la provocara
+  el hook, y el camino permitido para código.
 - Qué ocurre si el comando del hook no arranca (sin `uv`, o sin Git Bash en
   Windows), y si el campo `onFailure` existe.
 - Que el `matcher` `Write|Edit|MultiEdit|NotebookEdit` coincida con las
