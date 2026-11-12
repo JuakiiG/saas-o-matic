@@ -1,0 +1,465 @@
+# SPEC-04 · Frontend y divisas
+
+| | |
+|---|---|
+| **Estado** | `borrador` (2026-11-12) |
+| **Requisitos** | R-09, R-10, R-11, R-12 y R-17 |
+| **Supuestos** | A8, A9, A13, A14, A16 y A17 (`decidido`) |
+| **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres en `borrador`; ADR-001 y ADR-002 |
+| **Bloqueos para aprobarla** | SPEC-01, SPEC-02 y SPEC-03 sin aprobar |
+
+## 1. Objetivo
+
+Definir las vistas de la aplicación web, cómo consumen la API, cómo se
+muestran los estados de carga y de error y cómo se convierten los importes a
+otra divisa para mostrarlos.
+
+**Dentro**: rutas, panel con buscador, alta de cliente, detalle con
+historial, simulador con proyección en tiempo real, selector de divisa y
+llamada a la API pública de tipos de cambio.
+
+**Fuera**: toda regla de negocio. El frontend no contiene la tarifa, los
+tipos impositivos ni el control del identificador fiscal (ADR-002); los
+contratos de la API están en SPEC-01, SPEC-02 y SPEC-03.
+
+## 2. Reglas
+
+### 2.1 Vistas y rutas
+
+| Ruta | Vista | Requisito |
+|---|---|---|
+| `/` | Panel: buscador de clientes y acceso al alta | R-10 |
+| `/clientes/nuevo` | Alta de cliente | A17 |
+| `/clientes/:id` | Detalle: datos del cliente e historial de simulaciones | R-11 |
+| `/clientes/:id/simulacion` | Simulador | R-12 |
+| cualquier otra | Página «no encontrada», con enlace al panel | — |
+
+Una cabecera común a todas las vistas lleva el nombre de la aplicación, el
+enlace al panel y el **selector de divisa**. La divisa elegida vale para
+todas las vistas y se conserva al navegar; al recargar la página vuelve a
+EUR.
+
+### 2.2 Panel y buscador
+
+- Al entrar se muestra el listado inicial (`GET /customers` sin `q`).
+- Al escribir, la búsqueda se lanza tras **300 ms** sin cambios y cancela la
+  petición anterior, de modo que una respuesta antigua nunca pisa a una más
+  reciente.
+- El campo admite 100 caracteres como máximo, el límite de la API.
+- Cada resultado muestra el nombre, el identificador fiscal, el país y el
+  plan, y enlaza con el detalle.
+- Cuatro estados visibles: cargando, error con botón «Reintentar», sin
+  resultados («No hay clientes que coincidan») y lista.
+- El frontend no filtra ni ordena: muestra lo que devuelve la API, en su
+  orden.
+
+### 2.3 Alta de cliente
+
+- Los desplegables de país y plan se rellenan con `GET /meta`. Si `/meta`
+  falla, se muestra el error con «Reintentar» y el formulario no se puede
+  enviar.
+- **Validación en el navegador, solo de ayuda**: campos obligatorios, nombre
+  de 2 a 120 caracteres tras recortar, forma básica del email e
+  identificador no vacío y de 30 caracteres como máximo. **El control del
+  identificador fiscal no se calcula en el frontend**: lo decide el backend.
+- Al enviar, el botón se desactiva hasta que llega la respuesta, para que no
+  haya dos altas.
+- Respuestas:
+
+| Respuesta | Comportamiento |
+|---|---|
+| `201` | Navega al detalle del cliente creado |
+| `422` con `errors` | Cada error se muestra junto a su campo (`field`), con el `message` del backend. El formulario conserva lo escrito |
+| `409` `customer_already_exists` | Aviso en el formulario: ya existe un cliente con ese identificador en ese país. Conserva lo escrito |
+| Otro error o sin conexión | Aviso general con «Reintentar». Conserva lo escrito |
+
+- El frontend decide **por el código**, nunca por el texto. Un código de
+  campo que no conoce se muestra igualmente junto a su campo; un `field` que
+  no existe en el formulario se muestra en el aviso general.
+
+### 2.4 Detalle del cliente
+
+- Una tarjeta con los datos del cliente: nombre, identificador fiscal, email,
+  país y plan (con los nombres de `/meta`) y fecha de alta.
+- Una tarjeta por simulación, en el orden que devuelve la API: fecha,
+  usuarios, almacenamiento, llamadas a la API, coste base, impuesto con su
+  tipo y total. El desglose por tramos va en un bloque desplegable.
+- Los importes se muestran en la divisa elegida (2.6).
+- Si `simulation_count` es mayor que el número de simulaciones recibidas, se
+  indica: «Se muestran las 50 últimas de *N*».
+- Sin simulaciones: mensaje y enlace al simulador.
+- `404`: vista «Cliente no encontrado», con enlace al panel.
+- **Responsive**: a 375 px, una columna y sin desplazamiento horizontal; en
+  escritorio, las tarjetas del historial en varias columnas.
+
+### 2.5 Simulador
+
+- **Usuarios activos**: un control deslizante de 0 a 500 y, sincronizado con
+  él, un campo numérico que admite de 0 a 100.000 (A7). Valor inicial: 10.
+- **Almacenamiento** y **llamadas a la API**: campos numéricos enteros, con
+  los límites de SPEC-03. Valor inicial: 0. Cambiarlos no pide una proyección
+  nueva, porque no tienen precio (A3).
+- **Proyección**: al cambiar los usuarios, tras **200 ms** sin cambios se
+  llama a `POST /pricing/quote`, cancelando la petición anterior (ADR-002).
+  Se muestran los tres tramos, el coste base, el impuesto con su tipo y el
+  total, en la divisa elegida.
+- Estados de la proyección:
+
+| Estado | Qué se ve |
+|---|---|
+| Cargando | Los importes anteriores se marcan como «actualizando»; no se presentan como vigentes |
+| Datos | El desglose y el total |
+| Error | Se retiran los importes; aviso con «Reintentar». **Nunca queda a la vista un importe anterior como si fuera el actual** |
+| Entrada no válida | No se llama a la API; mensaje junto al campo; se retiran los importes |
+
+- **Guardar**: llama a `POST /simulations`. El botón está desactivado
+  mientras la proyección no esté en estado «datos» para el valor actual,
+  mientras haya un campo no válido y mientras se guarda.
+- Tras un `201` se navega al detalle, donde la simulación nueva aparece la
+  primera. Lo que se muestra de ella es lo que devolvió el servidor, no la
+  proyección.
+- Un error al guardar se muestra sin perder los valores del formulario.
+
+### 2.6 Divisas
+
+- **Divisas ofrecidas**: EUR, USD, GBP y CHF. EUR es la inicial.
+- **Origen de los tipos**: la API pública Frankfurter, llamada **directamente
+  desde el navegador** (A8), en una sola petición para las tres divisas a
+  su versión vigente, la `v2`:
+  `GET https://api.frankfurter.dev/v2/rates?base=EUR&quotes=USD,GBP,CHF`.
+  La respuesta es una lista con un objeto `{date, base, quote, rate}` por
+  divisa (4.2).
+- **Cuándo**: una vez al arrancar la aplicación. Los tipos se guardan en
+  memoria durante la sesión; cambiar de divisa no hace ninguna petición.
+- **Conversión**: `importe mostrado = céntimos × tipo / 100`, redondeado a
+  dos decimales al formatear. Es el único punto del frontend con coma
+  flotante sobre dinero (ADR-002) y su resultado **nunca se guarda ni se
+  envía al backend**.
+- **Cada importe se convierte por separado**, así que en otra divisa la base
+  más el impuesto puede diferir del total en un céntimo (ejemplo en 5.1). No
+  se ajusta: junto a los importes convertidos se indica que son orientativos.
+- **Con EUR no hay conversión**: el importe sale exacto de los céntimos y no
+  depende de la API de divisas.
+- **Formato**: `Intl.NumberFormat('es-ES')` con el código de la divisa
+  (`169,40 EUR`, `188,69 USD`), a través de un único *pipe*.
+- Mientras la divisa elegida no es EUR se muestran, junto a los importes, el
+  tipo aplicado y su fecha («1 EUR = 1,1139 USD · tipo del 12/11/2026») y el
+  total en EUR. La fecha es la del objeto de esa divisa: cada tipo trae la
+  suya.
+- **Estados**:
+
+| Estado | Qué se ve |
+|---|---|
+| Cargando | El selector solo permite EUR e indica que los tipos se están cargando |
+| Datos | El selector permite las cuatro divisas |
+| Error | Aviso visible, importes en EUR, selector limitado a EUR y botón «Reintentar». El resto de la aplicación funciona igual |
+
+- **Qué cuenta como error**: fallo de red, más de 5 s sin respuesta, estado
+  distinto de `200` o una respuesta que no supera la validación.
+- **Validación de la respuesta**: debe ser una lista en la que, para cada
+  una de las tres divisas pedidas, haya **exactamente un** objeto con ese
+  `quote`, con `base` igual a `EUR`, un `date` con forma de fecha
+  (`AAAA-MM-DD`) y un `rate` numérico mayor que 0. Una divisa ausente o
+  repetida, o un objeto que incumpla algo de lo anterior, invalida la
+  respuesta entera: una respuesta parcial se trata como error completo. Los
+  objetos de divisas no pedidas se ignoran.
+- Si los tipos fallan cuando ya hay elegida otra divisa (reintento fallido),
+  la vista vuelve a EUR con el aviso.
+
+### 2.7 Estados de carga y de error (R-17)
+
+- **Toda llamada remota tiene tres estados explícitos**: cargando, error y
+  datos, y la interfaz muestra los tres.
+- Ninguna llamada espera sin límite: 10 s para el backend y 5 s para la API
+  de divisas. Pasado ese tiempo el estado es «error».
+- Todo error ofrece una salida: «Reintentar» o un enlace al panel.
+- Los indicadores de carga llevan `role="status"` y los avisos de error
+  `role="alert"`.
+- Los errores no se tragan: el servicio los convierte en un estado de error
+  con el `code` de la API cuando existe, y en `network_error` o `timeout`
+  cuando no hay respuesta.
+
+### 2.8 Presentación
+
+- Textos en español.
+- Los tipos impositivos llegan en puntos básicos y se muestran como
+  porcentaje (`2100` → «21 %»).
+- Las fechas llegan en UTC y se muestran en la zona horaria del navegador,
+  con formato `es-ES`.
+- Controles con etiqueta, manejables con teclado; HTML semántico.
+
+### 2.9 Configuración
+
+La URL del backend y la de la API de divisas están en los ficheros de
+entorno de Angular, no repartidas por el código. El backend admite por CORS
+solo el origen del frontend en local (A16).
+
+## 3. Requisitos (EARS)
+
+### Panel y buscador
+
+| Id | Requisito | Cubre |
+|---|---|---|
+| E-01 | Cuando se abre el panel, el sistema deberá mostrar el listado inicial de clientes. | R-10 |
+| E-02 | Cuando el texto del buscador lleva 300 ms sin cambiar, el sistema deberá pedir la búsqueda y cancelar la petición anterior si sigue en curso. | R-10 |
+| E-03 | El sistema deberá mostrar los resultados en el orden en que los devuelve la API, sin filtrarlos ni reordenarlos. | R-10 |
+| E-04 | Cuando la búsqueda no devuelve clientes, el sistema deberá mostrar un mensaje de «sin resultados» distinto del estado de carga y del de error. | R-10, R-17 |
+
+### Alta
+
+| Id | Requisito | Cubre |
+|---|---|---|
+| E-05 | El sistema deberá ofrecer como países y planes exactamente los que devuelve `GET /meta`. | A17 |
+| E-06 | El sistema no deberá calcular ni comprobar en el navegador el carácter de control del identificador fiscal. | ADR-002 |
+| E-07 | Mientras un alta está en curso, el sistema deberá impedir un segundo envío. | A17 |
+| E-08 | Cuando el alta responde `201`, el sistema deberá navegar al detalle del cliente creado. | A17 |
+| E-09 | Si el alta responde `422`, entonces el sistema deberá mostrar cada error junto a su campo y conservar los valores escritos. | A14, R-17 |
+| E-10 | Si el alta responde `409` con `customer_already_exists`, entonces el sistema deberá avisar de que el cliente ya existe y conservar los valores escritos. | A12 |
+| E-11 | El sistema deberá decidir el tratamiento de un error de la API por su `code`, nunca por su texto. | A14 |
+
+### Detalle
+
+| Id | Requisito | Cubre |
+|---|---|---|
+| E-12 | Cuando se abre el detalle de un cliente existente, el sistema deberá mostrar sus datos y una tarjeta por cada simulación recibida, en el orden de la API. | R-11 |
+| E-13 | Cuando el cliente no tiene simulaciones, el sistema deberá mostrar un mensaje y un enlace al simulador. | R-11 |
+| E-14 | Mientras el cliente tiene más simulaciones de las recibidas, el sistema deberá indicar cuántas se muestran y cuántas hay. | R-11 |
+| E-15 | Si el cliente no existe, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel. | R-11, R-17 |
+| E-16 | El sistema deberá mostrar el detalle sin desplazamiento horizontal a 375 px de ancho. | R-11 |
+
+### Simulador
+
+| Id | Requisito | Cubre |
+|---|---|---|
+| E-17 | El sistema deberá mantener sincronizados el control deslizante y el campo numérico de usuarios. | R-12 |
+| E-18 | Cuando el número de usuarios lleva 200 ms sin cambiar y es válido, el sistema deberá pedir la proyección a `POST /pricing/quote` y cancelar la petición anterior si sigue en curso. | R-12, A9 |
+| E-19 | El sistema deberá mostrar como proyección únicamente los importes devueltos por el backend, sin calcular ninguno en el navegador salvo la conversión de divisa. | A9, ADR-002 |
+| E-20 | Si la proyección falla, entonces el sistema deberá retirar los importes anteriores y mostrar un aviso con opción de reintentar. | R-17, ADR-002 |
+| E-21 | Mientras una proyección está en curso, el sistema deberá marcar los importes visibles como no vigentes. | R-17 |
+| E-22 | Si un campo del simulador no es un entero dentro de sus límites, entonces el sistema deberá mostrar el error junto al campo y no llamar a la API. | A3, A7 |
+| E-23 | Mientras la proyección del valor actual no esté disponible, haya un campo no válido o se esté guardando, el sistema deberá mantener desactivado el botón de guardar. | R-12 |
+| E-24 | Cuando el guardado responde `201`, el sistema deberá navegar al detalle del cliente. | R-05, R-11 |
+| E-25 | Si el guardado falla, entonces el sistema deberá mostrar el error y conservar los valores del formulario. | R-17 |
+
+### Divisas
+
+| Id | Requisito | Cubre |
+|---|---|---|
+| E-26 | Cuando arranca la aplicación, el sistema deberá pedir una sola vez a la API pública los tipos de EUR a USD, GBP y CHF, directamente desde el navegador. | R-09, A8 |
+| E-27 | Cuando se elige otra divisa, el sistema deberá mostrar al momento todos los importes visibles convertidos, sin hacer ninguna petición. | R-09 |
+| E-28 | Mientras la divisa elegida es EUR, el sistema deberá mostrar los importes exactos en céntimos, sin depender de la API de divisas. | A8 |
+| E-29 | Mientras la divisa elegida no es EUR, el sistema deberá mostrar el tipo aplicado, su fecha y el total en EUR. | A8 |
+| E-30 | Si la API de divisas falla, tarda más de 5 s o devuelve una respuesta no válida, entonces el sistema deberá mostrar un aviso, presentar los importes en EUR y ofrecer un botón para reintentar, manteniendo utilizable el resto de la aplicación. | R-17, A8 |
+| E-31 | El sistema no deberá enviar al backend ni guardar ningún importe convertido ni la divisa elegida. | A8 |
+
+### Estados
+
+| Id | Requisito | Cubre |
+|---|---|---|
+| E-32 | El sistema deberá mostrar de forma distinguible los estados de carga, error y datos de cada llamada remota. | R-17 |
+| E-33 | Si una llamada al backend no responde en 10 s, entonces el sistema deberá pasar al estado de error. | R-17 |
+| E-34 | Si la ruta no corresponde a ninguna vista, entonces el sistema deberá mostrar la página «no encontrada» con un enlace al panel. | — |
+
+## 4. Contratos consumidos
+
+### 4.1 Backend
+
+| Llamada | Desde | Spec |
+|---|---|---|
+| `GET /meta` | Alta, detalle (nombres de país y plan) | SPEC-01 |
+| `GET /customers?q=` | Panel | SPEC-01 |
+| `POST /customers` | Alta | SPEC-01 |
+| `GET /customers/{id}` | Detalle, simulador (nombre y país del cliente) | SPEC-01, SPEC-03 |
+| `POST /pricing/quote` | Simulador | SPEC-02 |
+| `POST /simulations` | Simulador | SPEC-03 |
+
+`/meta` se pide una vez y se guarda en memoria durante la sesión.
+
+### 4.2 API de divisas
+
+Petición: `GET https://api.frankfurter.dev/v2/rates?base=EUR&quotes=USD,GBP,CHF`
+
+Respuesta `200` real (`application/json; charset=utf-8`), obtenida con curl
+el 2026-11-12 a las 14:53:
+
+```json
+[{"date":"2026-11-12","base":"EUR","quote":"CHF","rate":0.92316},{"date":"2026-11-12","base":"EUR","quote":"GBP","rate":0.83583},{"date":"2026-11-12","base":"EUR","quote":"USD","rate":1.1139}]
+```
+
+Con una divisa inexistente (`quotes=XXX`) respondió `422` con
+`{"status":422,"message":"invalid currency: XXX"}`.
+
+| Dato | Estado |
+|---|---|
+| Sin clave ni registro; sin cuota diaria ni mensual | **Verificado** en la documentación (<https://frankfurter.dev/>, leída el 2026-11-12) |
+| Forma de la respuesta de la `v2` | **Verificado** con la petición de arriba |
+| La `v1` está declarada obsoleta en favor de la `v2` | **Verificado** en la documentación; por eso se usa la `v2` (D-01) |
+| El navegador puede llamarla (CORS) | **Verificado** el 2026-11-12 con curl y la cabecera `Origin: http://localhost:4200`: la `v2` y la `v1` responden `access-control-allow-origin: *` y `access-control-allow-methods: GET, OPTIONS`. Lo comprobó también el Tech Lead. No se ha probado desde un navegador real |
+| La respuesta se puede servir desde caché | **Verificado**: la cabecera fue `cache-control: public, max-age=36362`; por eso se muestra la fecha de cada tipo |
+| Límite de peticiones por segundo | **No declarado** por la documentación |
+| Que los tres tipos traigan siempre la misma fecha | **No verificado**: en la lectura coincidían; la documentación dice que agrega varias fuentes |
+| Comportamiento en fines de semana y festivos | **No verificado**: la documentación no lo dice |
+
+## 5. Casos de prueba
+
+### 5.1 Conversión y formato
+
+Tipos del ejemplo de 4.2. Los valores se calcularon con Node 24 y su
+`Intl.NumberFormat('es-ES', { style: 'currency', currencyDisplay: 'code' })`.
+El separador entre el número y el código es un espacio de no separación.
+
+| Céntimos | EUR | USD (1,1139) | GBP (0,83583) | CHF (0,92316) | Qué demuestra |
+|---|---|---|---|---|---|
+| 0 | 0,00 EUR | 0,00 USD | 0,00 GBP | 0,00 CHF | Cero |
+| 1 | 0,01 EUR | 0,01 USD | 0,01 GBP | 0,01 CHF | Un céntimo |
+| 1000 | 10,00 EUR | 11,14 USD | 8,36 GBP | 9,23 CHF | Redondeo hacia arriba y hacia abajo |
+| 14000 | 140,00 EUR | 155,95 USD | 117,02 GBP | 129,24 CHF | Base del ejemplo del encargo |
+| 2940 | 29,40 EUR | 32,75 USD | 24,57 GBP | 27,14 CHF | Su impuesto |
+| 16940 | 169,40 EUR | 188,69 USD | 141,59 GBP | 156,38 CHF | Su total |
+| 60520570 | 605.205,70 EUR | 674.138,63 USD | 505.849,08 GBP | 558.701,69 CHF | Separador de miles |
+
+**Diferencia de un céntimo**: en USD, 155,95 + 32,75 = 188,70, pero el total
+convertido es 188,69. Es el caso que la interfaz avisa como orientativo. En
+EUR, 140,00 + 29,40 = 169,40 siempre.
+
+### 5.2 API de divisas
+
+| Situación | Selector | Importes | Aviso |
+|---|---|---|---|
+| Respuesta de 4.2 | Cuatro divisas | En la divisa elegida | No |
+| Petición en curso | Solo EUR | En EUR | «Cargando tipos» |
+| Error de red | Solo EUR | En EUR | Sí, con «Reintentar» |
+| Sin respuesta en 5 s | Solo EUR | En EUR | Sí |
+| `404`, `422` o `500` | Solo EUR | En EUR | Sí |
+| Lista sin el objeto de `GBP` | Solo EUR | En EUR | Sí: una respuesta parcial es un error |
+| Lista con dos objetos de `USD` | Solo EUR | En EUR | Sí: debe haber exactamente uno |
+| Lista vacía | Solo EUR | En EUR | Sí |
+| `rate` `0`, negativo, `null` o `"1.1"` en una divisa | Solo EUR | En EUR | Sí |
+| `base` distinto de `EUR` en una divisa | Solo EUR | En EUR | Sí |
+| `date` ausente o sin forma de fecha en una divisa | Solo EUR | En EUR | Sí |
+| Un objeto (como el de la `v1`) en lugar de una lista | Solo EUR | En EUR | Sí |
+| Lista válida con un objeto añadido de `JPY` | Cuatro divisas | En la divisa elegida | No: lo no pedido se ignora |
+| Cuerpo que no es JSON | Solo EUR | En EUR | Sí |
+| Error y después «Reintentar» con éxito | Cuatro divisas | En la divisa elegida | Desaparece |
+| Cambio de divisa diez veces | — | Se actualizan | Ninguna petición nueva |
+
+En todas las filas de error, el buscador, el detalle y el simulador siguen
+funcionando.
+
+### 5.3 Buscador
+
+| Acción | Peticiones | Resultado |
+|---|---|---|
+| Abrir el panel | 1, sin `q` | Listado inicial |
+| Escribir `eje` deprisa (tres pulsaciones en menos de 300 ms) | 1, con `q=eje` | Lista |
+| Escribir `eje`, esperar, añadir `m` antes de que responda | 2; la primera se cancela | Solo se muestra la respuesta de `ejem` |
+| La respuesta trae `items: []` | — | «No hay clientes que coincidan» |
+| La petición falla | — | Aviso con «Reintentar»; al pulsarlo se repite la misma búsqueda |
+
+### 5.4 Alta: respuesta → interfaz
+
+| Respuesta | Interfaz |
+|---|---|
+| `201` con `id` 7 | Navega a `/clientes/7` |
+| `422`, `tax_id` · `invalid_tax_id_format` | Mensaje junto al identificador; resto de campos intactos |
+| `422`, `tax_id` · `invalid_tax_id_check_character` | Mensaje junto al identificador, distinto del anterior |
+| `422`, errores en `company_name` y `contact_email` a la vez | Los dos mensajes, cada uno en su campo |
+| `422`, `field` desconocido | Mensaje en el aviso general |
+| `409` `customer_already_exists` | Aviso de cliente existente; no navega |
+| `500` o sin conexión | Aviso general con «Reintentar» |
+| Doble clic en «Guardar» | Una sola petición |
+| `/meta` falla | Error con «Reintentar»; sin formulario enviable |
+
+### 5.5 Simulador
+
+Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
+
+| Acción | Peticiones a `/pricing/quote` | Interfaz |
+|---|---|---|
+| Abrir el simulador | 1, con 10 usuarios | Total 121,00 EUR |
+| Arrastrar el control de 10 a 15 pasando por 11–14 en menos de 200 ms | 1, con 15 | Total 169,40 EUR |
+| Mover a 51 mientras la de 15 sigue en curso | La de 15 se cancela | Solo se muestra la de 51: 514,25 EUR |
+| Escribir `20000` en el campo numérico | 1 | El control deslizante queda en su máximo (500); se proyecta 20.000 |
+| Escribir `-1`, `1,5`, `100001` o dejarlo vacío | 0 | Error junto al campo; sin importes; «Guardar» desactivado |
+| La proyección falla | — | Sin importes; aviso con «Reintentar»; «Guardar» desactivado |
+| Cambiar almacenamiento o llamadas | 0 | La proyección no cambia |
+| Cambiar la divisa a USD con 15 usuarios | 0 | Total 188,69 USD, con el tipo, su fecha y 169,40 EUR |
+| «Guardar» con respuesta `201` | — | Navega al detalle; la simulación nueva es la primera |
+| «Guardar» con `404` o `500` | — | Aviso; los valores se conservan |
+
+## 6. Criterios de aceptación
+
+| Id | Criterio | Requisitos |
+|---|---|---|
+| CA-01 | Un test parametrizado del *pipe* de importes reproduce cada celda de 5.1, incluido el caso del céntimo de diferencia. | E-27, E-28 |
+| CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-30 |
+| CA-03 | Un test comprueba que, con la API de divisas en error, el panel, el detalle y el simulador muestran sus datos en EUR. | E-28, E-30 |
+| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones y cuál se muestra. | E-01 a E-04 |
+| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos literales de SPEC-01. | E-05, E-07 a E-11 |
+| CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
+| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas y `404`. | E-12 a E-15 |
+| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5, usando como respuestas los ejemplos de SPEC-02 y SPEC-03. | E-17, E-18, E-20 a E-25 |
+| CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
+| CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
+| CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada». | E-34 |
+| CA-12 | El evaluador independiente comprueba que `frontend/src` no contiene la tarifa, los tipos impositivos, la tabla de letras del DNI ni el cálculo del CIF. | E-06, E-19 |
+| CA-13 | Una prueba de Playwright comprueba que, a 375 px de ancho, ninguna de las cuatro vistas (panel, alta, detalle y simulador) tiene desplazamiento horizontal. | E-16 |
+| CA-14 | Una prueba de Playwright de principio a fin, contra el backend y el frontend reales en local, da de alta un cliente, abre el simulador, guarda una simulación y comprueba que aparece la primera en el detalle. | E-08, E-12, E-24 |
+| CA-15 | Capturas manuales de las cuatro vistas a 375 px y a 1280 px, guardadas en `04-calidad/` como complemento de CA-13. | E-16 |
+
+**Sobre CA-12 a CA-15**: CA-12 es una revisión del evaluador y CA-15 una
+comprobación manual; ninguna de las dos la hace el oráculo. CA-13 y CA-14 se
+implementan **en la fase de QA**, con Playwright (D-09); hasta entonces
+están **pendientes de implementar** y no pueden darse por cumplidos. La
+prueba de principio a fin no llama a la API real de divisas: la intercepta
+con la respuesta de 4.2, para no depender de la red.
+
+## 7. Decisiones de diseño
+
+Aprobadas o decididas por el Tech Lead el 2026-11-12. La columna «Origen»
+dice si aprobó la propuesta de la IA o la cambió.
+
+| Id | Decisión | Origen |
+|---|---|---|
+| D-01 | **API de divisas**: Frankfurter, versión `v2` (`/v2/rates?base=EUR&quotes=USD,GBP,CHF`). La propia API declara obsoleta la `v1`, y un proyecto nuevo no nace dependiendo de algo obsoleto | Cambiada (la IA proponía la `v1`, la única cuya respuesta había verificado) |
+| D-02 | **CORS de la API de divisas**: cerrada. La `v1` y la `v2` devuelven `access-control-allow-origin: *` (4.2) | Cerrada por el Tech Lead, que lo comprobó; la IA lo había dejado sin verificar |
+| D-03 | **Divisas ofrecidas**: EUR, USD, GBP y CHF | Aprobada |
+| D-04 | **Los tipos se piden una vez al arrancar**, para que el cambio de divisa sea instantáneo | Aprobada |
+| D-05 | **Código de divisa en lugar de símbolo** (`188,69 USD`) | Aprobada |
+| D-06 | **Cada importe se convierte por separado** y se avisa de que los convertidos son orientativos; no se ajusta el céntimo de diferencia | Aprobada |
+| D-07 | **Rutas en español y simulador en ruta propia**: `/clientes/nuevo`, `/clientes/:id`, `/clientes/:id/simulacion` | Aprobada |
+| D-08 | **Control deslizante de 0 a 500**, con campo numérico hasta 100.000 y valor inicial 10 | Aprobada |
+| D-09 | **Playwright para lo esencial**, con la versión fijada y como dependencia de desarrollo: una prueba de principio a fin (alta → simulador → guardar → la simulación aparece la primera en el detalle) y la ausencia de desplazamiento horizontal a 375 px en las cuatro vistas. Las capturas manuales quedan como complemento en `04-calidad/`. Se implementa en la fase de QA | Cambiada (la IA proponía solo la comprobación manual, para no añadir una dependencia) |
+| D-10 | **Tiempos**: 300 ms en el buscador, 200 ms en el simulador, 10 s de espera al backend y 5 s a la API de divisas | Aprobada |
+| D-11 | **La divisa elegida no se recuerda al recargar**: vuelve a EUR | Aprobada |
+| D-12 | **Mensajes de error de campo**: se muestra el `message` del backend; la lógica solo mira el `code` | Aprobada |
+| D-13 | **Validación de ayuda en el navegador** limitada a obligatorios, longitudes y forma del email | Aprobada |
+
+**Sobre D-09**: la versión de Playwright se fija al añadir la dependencia,
+en la fase de QA. El 2026-11-12 la última publicada de `@playwright/test`
+era la 1.65.0, que declara `node >=20` (consultado con `npm view`). No se ha
+instalado ni ejecutado.
+
+## 8. Cambios que provoca en otros documentos
+
+**No se han aplicado.** Por decisión del Tech Lead se aplican cuando se
+aprueben las specs.
+
+| Documento | Cambio |
+|---|---|
+| ADR-002 | «unos 200 ms» pasa a 200 ms, fijado aquí (D-10) |
+| A8 en `supuestos.md` | La lista de divisas queda cerrada: EUR, USD, GBP y CHF (D-03) |
+| SPEC-01 | Sigue pendiente el cambio de 4.2 y CA-06 anotado en el apartado 8 de SPEC-03 |
+
+## 9. Pendiente antes de aprobar
+
+| Asunto | Qué cambiaría en esta spec |
+|---|---|
+| SPEC-01, SPEC-02 y SPEC-03 | Si cambian sus contratos, las tablas de 5.4 y 5.5 |
+
+## Historial
+
+| Fecha | Cambio |
+|---|---|
+| 2026-11-12 | Primer borrador |
+| 2026-11-12 | Revisión del Tech Lead: la API de divisas pasa a la `v2` de Frankfurter, con su respuesta real en 4.2, la validación de 2.6 adaptada a una lista y las tablas 5.1 y 5.2 recalculadas (D-01); CORS verificado (D-02); Playwright para la prueba de principio a fin y los 375 px, con CA-13 reescrito y nuevos CA-14 y CA-15 (D-09); aprobadas las demás decisiones |

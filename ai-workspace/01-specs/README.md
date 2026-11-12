@@ -10,7 +10,7 @@ código. No se programa una parte hasta que su spec está `aprobada`.
 | [SPEC-01](SPEC-01-clientes-y-validacion-fiscal.md) | Clientes y validación fiscal | R-03, R-04, R-10, R-11 | A2, A4, A10, A11, A12, A13, A14, A18 | `borrador` (2026-11-12) |
 | [SPEC-02](SPEC-02-tarificacion-e-impuestos.md) | Tarificación e impuestos | R-06, R-07, R-12 | A2, A3, A4, A5, A6, A7, A9 | `borrador` (2026-11-12) |
 | [SPEC-03](SPEC-03-simulaciones-y-persistencia.md) | Simulaciones y persistencia | R-05, R-11 | A3, A6, A7, A9, A13, A14, A18 | `borrador` (2026-11-12) |
-| SPEC-04 | Frontend y divisas | R-09 a R-12, R-17 | A8, A9, A17 | no iniciada |
+| [SPEC-04](SPEC-04-frontend-y-divisas.md) | Frontend y divisas | R-09 a R-12, R-17 | A8, A9, A13, A14, A16, A17 | `borrador` (2026-11-12) |
 
 Una spec no puede pasar a `aprobada` mientras dependa de un supuesto que no
 esté `decidido` (ver [`supuestos.md`](../00-analisis/supuestos.md)).
