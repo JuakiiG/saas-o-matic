@@ -6,7 +6,7 @@
 | **Requisitos** | R-09, R-10, R-11, R-12 y R-17 |
 | **Supuestos** | A6, A7, A8, A9, A12, A13, A14, A16 y A17 (`decidido`) · A3 (`pendiente de confirmar`) |
 | **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres en `borrador`; ADR-001, ADR-002 y ADR-003 |
-| **Bloqueos para aprobarla** | A3 sin respuesta (con fecha límite) · SPEC-01, SPEC-02 y SPEC-03 sin aprobar |
+| **Bloqueos para aprobarla** | A3 sin respuesta (con fecha límite) · SPEC-01, SPEC-02 y SPEC-03 (el bloque backend) sin aprobar. Esta spec se aprueba aparte, después de ese bloque y antes de empezar el frontend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -40,6 +40,15 @@ enlace al panel y el **selector de divisa**. La divisa elegida vale para
 todas las vistas y se conserva al navegar; al recargar la página vuelve a
 EUR.
 
+**Nombres de país y de plan (`GET /meta`).** `/meta` se pide **una vez, al
+arrancar la aplicación**, y se guarda en memoria durante la sesión. Las
+cuatro vistas que muestran un país o un plan (panel, alta, detalle y
+simulador) usan sus nombres («España», «Profesional»), nunca los códigos.
+Mientras `/meta` se está cargando, esas vistas muestran el estado de carga.
+Si `/meta` falla, cada una muestra el error con «Reintentar» en lugar de su
+contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
+`/meta`.
+
 ### 2.2 Panel y buscador
 
 - Al entrar se muestra el listado inicial (`GET /customers` sin `q`).
@@ -50,7 +59,8 @@ EUR.
 - Cada resultado muestra el nombre, el identificador fiscal, el país y el
   plan, y enlaza con el detalle. El país y el plan se muestran **con los
   nombres de `GET /meta`** («España», «Profesional»), no con sus códigos. Si
-  `/meta` falla, el panel muestra el error con «Reintentar», como el alta.
+  `/meta` falla, el panel muestra el error con «Reintentar» en lugar del
+  buscador y de la lista (2.1).
 - Cuatro estados visibles: cargando, error con botón «Reintentar», sin
   resultados («No hay clientes que coincidan») y lista.
 - El frontend no filtra ni ordena: muestra lo que devuelve la API, en su
@@ -59,12 +69,18 @@ EUR.
 ### 2.3 Alta de cliente
 
 - Los desplegables de país y plan se rellenan con `GET /meta`. Si `/meta`
-  falla, se muestra el error con «Reintentar» y el formulario no se puede
-  enviar.
+  falla, se muestra el error con «Reintentar» en lugar del formulario
+  (2.1), que por tanto no se puede enviar.
 - **Validación en el navegador, solo de ayuda**: campos obligatorios, nombre
   de 2 a 120 caracteres tras recortar, forma básica del email e
   identificador no vacío y de 30 caracteres como máximo. **El control del
   identificador fiscal no se calcula en el frontend**: lo decide el backend.
+- **La ayuda mide igual que el backend** (SPEC-01, 2.12): las longitudes se
+  cuentan en puntos de código (`[...s].length`, no `s.length`, que cuenta
+  unidades UTF-16) y recortar es quitar de los extremos solo el carácter
+  U+0020 (no `trim()`, que quita también tabuladores y saltos de línea).
+  *Por qué*: una ayuda que mide distinto bloquearía altas que el backend
+  acepta.
 - Al enviar, el botón se desactiva hasta que llega la respuesta, para que no
   haya dos altas.
 - Respuestas:
@@ -83,7 +99,8 @@ EUR.
 ### 2.4 Detalle del cliente
 
 - Una tarjeta con los datos del cliente: nombre, identificador fiscal, email,
-  país y plan (con los nombres de `/meta`) y fecha de alta.
+  país y plan (con los nombres de `/meta`) y fecha de alta. Si `/meta`
+  falla, el detalle muestra el error con «Reintentar» (2.1).
 - Una tarjeta por simulación, en el orden que devuelve la API: fecha,
   usuarios, almacenamiento, llamadas a la API, coste base, impuesto con su
   tipo y total. El desglose por tramos va en un bloque desplegable.
@@ -101,10 +118,15 @@ EUR.
 
 - **Usuarios activos**: un control deslizante de 0 a 500 y, sincronizado con
   él, un campo numérico que admite de 0 a 100.000 (A7). Valor inicial: 10.
-- Al abrir el simulador se pide el cliente. Si responde `404`, o `422` por
-  un `id` no válido, se muestra la vista «Cliente no encontrado» y no se
-  pide ninguna proyección. Lo mismo si una proyección responde `404`
-  `customer_not_found`.
+- Al abrir el simulador se pide el cliente. **Mientras el cliente no se ha
+  cargado no se pide ninguna proyección**, aunque el valor inicial de
+  usuarios sea válido y hayan pasado los 200 ms; la primera se pide cuando
+  llega el cliente. Si responde `404`, o `422` por un `id` no válido, se
+  muestra la vista «Cliente no encontrado» y no se pide ninguna proyección.
+  Lo mismo si una proyección responde `404` `customer_not_found`.
+- El simulador muestra el nombre de la empresa y el **nombre del país** del
+  cliente, tomado de `/meta` («España»), no su código. Si `/meta` falla,
+  muestra el error con «Reintentar» (2.1).
 - **Almacenamiento** y **llamadas a la API**: campos numéricos enteros, con
   los límites de SPEC-03. Valor inicial: 0. Cambiarlos no pide una proyección
   nueva, porque no tienen precio (A3). Un valor no válido en uno de ellos
@@ -216,7 +238,9 @@ SPEC-03, «Operación del backend».
 | E-02 | Cuando el texto del buscador lleva 300 ms sin cambiar, el sistema deberá pedir la búsqueda y cancelar la petición anterior si sigue en curso. | R-10 |
 | E-03 | El sistema deberá mostrar los resultados en el orden en que los devuelve la API, sin filtrarlos ni reordenarlos. | R-10 |
 | E-04 | Cuando la búsqueda no devuelve clientes, el sistema deberá mostrar un mensaje de «sin resultados» distinto del estado de carga y del de error. | R-10, R-17 |
-| E-35 | El sistema deberá mostrar el país y el plan de cada resultado con los nombres que devuelve `GET /meta`, no con sus códigos. | R-10 |
+| E-35 | El sistema deberá mostrar el país y el plan con los nombres que devuelve `GET /meta`, no con sus códigos, en el panel, el alta, el detalle y el simulador. | R-10, R-11, R-12 |
+| E-39 | Cuando arranca la aplicación, el sistema deberá pedir `GET /meta` una sola vez y conservar la respuesta en memoria durante la sesión. | A13 |
+| E-40 | Si `GET /meta` falla, entonces el sistema deberá mostrar en el panel, el alta, el detalle y el simulador el error con un botón «Reintentar» en lugar de su contenido, sin mostrar ningún código de país o de plan. | R-17 |
 
 ### Alta
 
@@ -229,6 +253,7 @@ SPEC-03, «Operación del backend».
 | E-09 | Si el alta responde `422`, entonces el sistema deberá mostrar cada error junto a su campo y conservar los valores escritos. | A14, R-17 |
 | E-10 | Si el alta responde `409` con `customer_already_exists`, entonces el sistema deberá avisar de que el cliente ya existe y conservar los valores escritos. | A12 |
 | E-11 | El sistema deberá decidir el tratamiento de un error de la API por su `code`, nunca por su texto. | A14 |
+| E-41 | El sistema deberá medir en la validación de ayuda del navegador las longitudes en puntos de código y recortar solo el carácter U+0020, igual que el backend. | A17 |
 
 ### Detalle
 
@@ -245,7 +270,8 @@ SPEC-03, «Operación del backend».
 | Id | Requisito | Cubre |
 |---|---|---|
 | E-17 | El sistema deberá mantener sincronizados el control deslizante y el campo numérico de usuarios. | R-12 |
-| E-18 | Cuando el número de usuarios lleva 200 ms sin cambiar y es válido, el sistema deberá pedir la proyección a `POST /pricing/quote` y cancelar la petición anterior si sigue en curso. | R-12, A9 |
+| E-18 | Cuando el número de usuarios lleva 200 ms sin cambiar y es válido, y el cliente ya se ha cargado, el sistema deberá pedir la proyección a `POST /pricing/quote` y cancelar la petición anterior si sigue en curso. | R-12, A9 |
+| E-38 | Mientras el cliente no se ha cargado, el sistema no deberá pedir ninguna proyección. | R-12 |
 | E-19 | El sistema deberá mostrar como proyección únicamente los importes devueltos por el backend, sin calcular ninguno en el navegador salvo la conversión de divisa. | A9, ADR-002 |
 | E-20 | Si la proyección falla, entonces el sistema deberá retirar los importes anteriores y mostrar un aviso con opción de reintentar. | R-17, ADR-002 |
 | E-21 | Mientras una proyección está en curso, el sistema deberá marcar los importes visibles como no vigentes. | R-17 |
@@ -281,14 +307,15 @@ SPEC-03, «Operación del backend».
 
 | Llamada | Desde | Spec |
 |---|---|---|
-| `GET /meta` | Panel y detalle (nombres de país y plan), alta (desplegables) | SPEC-01 |
+| `GET /meta` | Al arrancar la aplicación. La usan el panel, el detalle y el simulador (nombres de país y plan) y el alta (desplegables) | SPEC-01 |
 | `GET /customers?q=` | Panel | SPEC-01 |
 | `POST /customers` | Alta | SPEC-01 |
 | `GET /customers/{id}` | Detalle, simulador (nombre y país del cliente) | SPEC-01, SPEC-03 |
 | `POST /pricing/quote` | Simulador | SPEC-02 |
 | `POST /simulations` | Simulador | SPEC-03 |
 
-`/meta` se pide una vez y se guarda en memoria durante la sesión.
+`/meta` se pide una vez, al arrancar, y se guarda en memoria durante la
+sesión (2.1).
 
 ### 4.2 API de divisas
 
@@ -370,7 +397,9 @@ funcionando.
 | Escribir `eje`, esperar, añadir `m` antes de que responda | 2; la primera se cancela | Solo se muestra la respuesta de `ejem` |
 | La respuesta trae `items: []` | — | «No hay clientes que coincidan» |
 | Un resultado con `country` `ES` y `plan` `professional` | — | Se muestra «España» y «Profesional» |
-| `/meta` falla | — | Error con «Reintentar»; no se muestran códigos en lugar de nombres |
+| `/meta` falla | — | Error con «Reintentar» en lugar del buscador y de la lista; no se muestra ningún código |
+| `/meta` falla y después «Reintentar» con éxito | 1 más a `/meta` | El panel muestra el listado inicial, con nombres |
+| Navegar del panel al detalle y volver, con `/meta` ya cargado | Ninguna nueva a `/meta` | Se pide una sola vez por sesión |
 | La petición falla | — | Aviso con «Reintentar»; al pulsarlo se repite la misma búsqueda |
 
 ### 5.4 Alta: respuesta → interfaz
@@ -386,6 +415,10 @@ funcionando.
 | `500` o sin conexión | Aviso general con «Reintentar» |
 | Doble clic en «Guardar» | Una sola petición |
 | `/meta` falla | Error con «Reintentar»; sin formulario enviable |
+| Nombre de 61 caracteres `𝔸` (U+1D538; 61 puntos de código, 122 unidades UTF-16) | La ayuda no lo rechaza: se envía |
+| Nombre de 121 caracteres `ñ` | Error de ayuda junto al campo; no se envía |
+| Nombre `A` rodeado de espacios U+0020 | Error de ayuda: un carácter tras recortar; no se envía |
+| Nombre `AB` precedido de un tabulador | La ayuda no recorta el tabulador ni lo rechaza: se envía, y el `422` `invalid_characters` del backend se muestra junto al campo |
 
 ### 5.5 Simulador
 
@@ -393,10 +426,12 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 
 | Acción | Peticiones a `/pricing/quote` | Interfaz |
 |---|---|---|
-| Abrir el simulador | 1, con 10 usuarios | Total 121,00 EUR |
+| Abrir el simulador | 1, con 10 usuarios | Total 121,00 EUR; se muestra «España», no `ES` |
+| Abrir el simulador y el cliente tarda 500 ms en responder | 0 mientras no llega el cliente; 1, con 10 usuarios, cuando llega | Estado de carga hasta entonces |
+| `/meta` falla | — | Error con «Reintentar» en lugar del simulador; no se muestra el código del país |
 | Arrastrar el control de 10 a 15 pasando por 11–14 en menos de 200 ms | 1, con 15 | Total 169,40 EUR |
 | Mover a 51 mientras la de 15 sigue en curso | La de 15 se cancela | Solo se muestra la de 51: 514,25 EUR |
-| Escribir `20000` en el campo numérico | 1 | El control deslizante queda en su máximo (500); se proyecta 20.000 |
+| Escribir `20000` en el campo numérico | 1, con 20000 | El control deslizante queda en su máximo (500); se proyecta 20.000: total 121.205,70 EUR |
 | Escribir `-1`, `1,5`, `100001` o dejarlo vacío | 0 | Error junto al campo; sin importes; «Guardar» desactivado |
 | La proyección falla | — | Sin importes; aviso con «Reintentar»; «Guardar» desactivado |
 | Cambiar almacenamiento o llamadas | 0 | La proyección no cambia |
@@ -416,11 +451,11 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | CA-01 | Un test parametrizado del *pipe* de importes reproduce cada celda de 5.1, incluido el caso del céntimo de diferencia. | E-27, E-28 |
 | CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-30 |
 | CA-03 | Un test comprueba que, con la API de divisas en error, el panel, el detalle y el simulador muestran sus datos en EUR. | E-28, E-30 |
-| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones y cuál se muestra. | E-01 a E-04, E-35 |
-| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. | E-05, E-07 a E-11 |
+| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40 |
+| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. | E-05, E-07 a E-11, E-40, E-41 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
-| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas, `404` y `422` por `id` no válido. | E-12 a E-15 |
-| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15 y 51 usuarios de la tabla 5.1 de SPEC-02. | E-15, E-17, E-18, E-20 a E-25, E-29, E-36, E-37 |
+| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas, `404` y `422` por `id` no válido, país y plan con los nombres de `/meta`, y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
+| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. | E-15, E-17, E-18, E-20 a E-25, E-29, E-35 a E-38, E-40 |
 | CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
 | CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
 | CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada». | E-34 |
@@ -455,10 +490,12 @@ dice si aprobó la propuesta de la IA o la cambió.
 | D-10 | **Tiempos**: 300 ms en el buscador, 200 ms en el simulador, 10 s de espera al backend y 5 s a la API de divisas | Aprobada |
 | D-11 | **La divisa elegida no se recuerda al recargar**: vuelve a EUR | Aprobada |
 | D-12 | **Mensajes de error de campo**: se muestra el `message` del backend; la lógica solo mira el `code` | Aprobada |
-| D-13 | **Validación de ayuda en el navegador** limitada a obligatorios, longitudes y forma del email | Aprobada |
+| D-13 | **Validación de ayuda en el navegador** limitada a obligatorios, longitudes y forma del email. Mide como el backend: puntos de código y recorte solo de U+0020 | Aprobada; la medida, fijada por el Tech Lead tras la segunda evaluación (N-10) |
+| D-14 | **`/meta` se pide una vez al arrancar.** Si falla, el panel, el alta, el detalle y el simulador muestran el error con «Reintentar», sin códigos sueltos; el simulador muestra el nombre del país | Decidida por el Tech Lead tras la segunda evaluación (N-09) |
 
 D-01 y D-02 se registran además como ADR-003, con las alternativas y la
-verificación.
+verificación, y la dependencia de D-09 (Playwright) como ADR-005. El
+criterio de qué decisiones llevan ADR está en `02-arquitectura/README.md`.
 
 **Sobre D-09**: la versión de Playwright se fija al añadir la dependencia,
 en la fase de QA. El 2026-11-12 la última publicada de `@playwright/test`
@@ -496,3 +533,4 @@ La fecha límite de A3 es la del índice de specs: viernes 13 de noviembre de
 | 2026-11-12 | Primer borrador |
 | 2026-11-12 | Revisión del Tech Lead: la API de divisas pasa a la `v2` de Frankfurter, con su respuesta real en 4.2, la validación de 2.6 adaptada a una lista y las tablas 5.1 y 5.2 recalculadas (D-01); CORS verificado (D-02); Playwright para la prueba de principio a fin y los 375 px, con CA-13 reescrito y nuevos CA-14 y CA-15 (D-09); aprobadas las demás decisiones |
 | 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: aplicados los cambios cruzados del apartado 8, incluido A17 (H-01, H-19, H-26); A3, A6, A7 y A12 en la cabecera, con A3 como bloqueo (H-02); CA-08 cita E-29 (H-09); CA-05 y CA-08 dicen de dónde salen las respuestas simuladas (H-14); «Cliente no encontrado» también con `422` y en el simulador, E-37 (H-15); el panel muestra los nombres de `/meta`, E-35 (H-16); la fecha del tipo de cambio se muestra tal cual (H-17); eliminado el escenario inalcanzable del reintento, y un almacenamiento o un número de llamadas no válido ya no retira la proyección, E-36 (H-18); remisión a ADR-003 (H-20); E-06 remite a la regla de frontend y no a ADR-002 (H-25) |
+| 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: esta spec se aprueba aparte, después del bloque backend (N-01); el simulador no pide proyecciones mientras el cliente no se ha cargado, con E-18, E-38 y una fila en 5.5 (N-06); la fila de 20000 usuarios tiene respuesta de origen en SPEC-02 5.1 y CA-08 la cita (N-08); `/meta` se pide una vez al arrancar y, si falla, las cuatro vistas muestran el error con «Reintentar», con E-35, E-39, E-40, D-14 y filas en 5.3 y 5.5 (N-09); la ayuda del navegador mide como el backend, con E-41 y cuatro filas en 5.4 (N-10); remisión a ADR-005 (N-14) |

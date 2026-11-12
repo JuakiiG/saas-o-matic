@@ -6,7 +6,7 @@
 | **Requisitos** | R-05 y la parte de backend de R-11 |
 | **Supuestos** | A6, A7, A9, A13, A14, A16 y A18 (`decidido`) · A3 y A4 (`pendiente de confirmar`) |
 | **Depende de** | SPEC-01 (cliente) y SPEC-02 (cálculo), las dos en `borrador` |
-| **Bloqueos para aprobarla** | A3 y A4 sin respuesta (con fecha límite) · SPEC-01 y SPEC-02 sin aprobar |
+| **Bloqueos para aprobarla** | A3 y A4 sin respuesta (con fecha límite) · se aprueba a la vez que SPEC-01 y SPEC-02: las tres forman el bloque backend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -78,8 +78,10 @@ tiene simulaciones.
 
 ### 2.6 Persistencia
 
-**Tablas** (los tipos son los de SQLite; el DDL definitivo irá en
-`02-arquitectura/` cuando se apruebe esta spec):
+**Tablas** (los tipos son los de SQLite). El DDL vive en el backend, en un
+`schema.sql` versionado que se aplica al arrancar (ADR-004); se escribe con
+el esqueleto del backend. `02-arquitectura/` muestra el modelo y enlaza a
+ese fichero; no guarda una segunda copia del DDL.
 
 `customers` — campos de SPEC-01.
 
@@ -117,8 +119,8 @@ tiene simulaciones.
 |---|---|---|
 | `simulation_id` | INTEGER | No nulo. Clave foránea a `simulations(id)` |
 | `position` | INTEGER | No nulo. 1, 2 o 3 |
-| `from_users` | INTEGER | No nulo |
-| `to_users` | INTEGER | Nulo en el último tramo |
+| `from_users` | INTEGER | No nulo. `>= 1` |
+| `to_users` | INTEGER | Nulo en el último tramo. `to_users IS NULL OR to_users >= from_users` |
 | `unit_price_cents` | INTEGER | No nulo. `>= 0` |
 | `users` | INTEGER | No nulo. `>= 0` |
 | `subtotal_cents` | INTEGER | No nulo. `= unit_price_cents * users` |
@@ -140,7 +142,10 @@ tiene simulaciones.
 - Toda sentencia recibe sus valores como parámetros.
 - El fichero de la base de datos se crea al arrancar si no existe, con
   sentencias `CREATE TABLE IF NOT EXISTS`. Su ruta se configura con la
-  variable de entorno `DATABASE_PATH`. No hay herramienta de migraciones.
+  variable de entorno `DATABASE_PATH`, cuyo valor por defecto es
+  `backend/data/saas-o-matic.db`, relativo a la raíz del repositorio; git
+  lo ignora (`*.db` en `.gitignore`). Si el directorio no existe, se crea.
+  No hay herramienta de migraciones.
 
 Las alternativas y las consecuencias de estas decisiones (tres tablas, foto
 completa del cálculo, sin migraciones) están en ADR-004.
@@ -154,6 +159,30 @@ frontend en local. A una petición con un `Origin` de la lista se le responde
 con `access-control-allow-origin` igual a ese origen; a cualquier otra, sin
 esa cabecera. Nunca se responde con `*`. Los métodos admitidos son `GET` y
 `POST`, y la cabecera admitida, `content-type`.
+
+La cabecera acompaña a **cualquier respuesta** a un origen admitido,
+también a las de error y, en particular, al `500`. *Por qué*: sin ella el
+navegador oculta la respuesta al frontend, que vería un `network_error` en
+lugar de `internal_error`.
+
+**Comprobación previa (`OPTIONS`).** La atiende el middleware de CORS, no
+las rutas, y queda **fuera de la regla del `405`** (4.3). Es la petición
+`OPTIONS` que el navegador envía por su cuenta, con las cabeceras `Origin`
+y `Access-Control-Request-Method`, antes de un `POST` con cuerpo JSON:
+
+- Con un origen admitido: `200`, con las cabeceras CORS que admiten ese
+  origen, los métodos y `content-type`.
+- Con un origen no admitido: `400`, sin cabeceras CORS.
+
+Ese `400` es una **excepción documentada a `application/problem+json`**
+(A14): no lleva el cuerpo de error de la API. *Por qué*: esa respuesta la
+consume el navegador, no el frontend, que nunca llega a leerla.
+
+**Sin especificar**: un `OPTIONS` que no es una comprobación previa (sin
+`Origin` o sin `Access-Control-Request-Method`) y una comprobación previa de
+un origen admitido que pide un método o una cabecera no admitidos. Ninguna
+decisión los cubre; están planteados al Tech Lead en
+`04-calidad/respuesta-evaluacion-specs-02.md`.
 
 **`GET /health`** (A13). Comprueba que el backend está levantado y que la
 base de datos responde a una consulta trivial. No lee ni escribe datos de
@@ -189,7 +218,7 @@ casos de prueba, para que no queden sin demostrar.
 | E-13 | El sistema deberá devolver las simulaciones ordenadas por `id` descendente, sin tener en cuenta `created_at`. | R-11 |
 | E-14 | Mientras el cliente tiene más de 50 simulaciones, el sistema deberá devolver solo las 50 de `id` más alto. | A13 |
 | E-15 | Cuando el cliente no tiene simulaciones, el sistema deberá devolver una lista vacía y un total de 0. | R-11 |
-| E-16 | El sistema deberá devolver de cada simulación los importes guardados, sin recalcularlos. | A4 |
+| E-16 | El sistema deberá devolver de cada simulación los importes y el país (`country`) guardados con ella, sin recalcular los importes ni consultar el país actual del cliente. | A4 |
 | E-17 | El sistema no deberá incluir en el historial de un cliente simulaciones de otro. | R-11 |
 
 ### Inmutabilidad y persistencia
@@ -199,20 +228,23 @@ casos de prueba, para que no queden sin demostrar.
 | E-18 | El sistema no deberá ofrecer ninguna operación que modifique o elimine una simulación o un cliente. | A18 |
 | E-19 | El sistema deberá guardar todos los importes como enteros en céntimos y los tipos como enteros en puntos básicos. | A6 |
 | E-20 | Si se intenta guardar una simulación de un cliente inexistente, o borrar un cliente con simulaciones, entonces la base de datos deberá rechazarlo. | ADR-001 |
-| E-21 | Si se intenta guardar una fila con un valor negativo, una simulación cuyo total no es la suma de base e impuesto, un tramo cuyo subtotal no es el precio por los usuarios, un tramo con una posición distinta de 1, 2 o 3 o un tramo repetido, entonces la base de datos deberá rechazarlo. | A6 |
+| E-21 | Si se intenta guardar una fila con un valor negativo, una simulación cuyo total no es la suma de base e impuesto, un tramo cuyo subtotal no es el precio por los usuarios, un tramo con una posición distinta de 1, 2 o 3, un tramo repetido, un tramo cuyo límite inferior es menor que 1 o un tramo cuyo límite superior es menor que el inferior, entonces la base de datos deberá rechazarlo. | A6 |
 | E-22 | Cuando el backend arranca y la base de datos no existe, el sistema deberá crearla con todas sus tablas; cuando ya existe, deberá conservar sus datos. | R-05 |
+| E-32 | Mientras `DATABASE_PATH` no está definida, el sistema deberá usar la ruta `backend/data/saas-o-matic.db`. | R-18 |
 | E-23 | El sistema deberá pasar a la base de datos todos los valores como parámetros de la sentencia. | — |
 
 ### Operación del backend
 
 | Id | Requisito | Cubre |
 |---|---|---|
-| E-24 | Cuando recibe una petición con una cabecera `Origin` incluida en `CORS_ORIGINS`, el sistema deberá responder con `access-control-allow-origin` igual a ese origen. | A16 |
+| E-24 | Cuando recibe una petición con una cabecera `Origin` incluida en `CORS_ORIGINS`, el sistema deberá responder con `access-control-allow-origin` igual a ese origen, también cuando la respuesta es un error, incluido el `500`. | A16 |
 | E-25 | Si la cabecera `Origin` de una petición no está en `CORS_ORIGINS`, entonces el sistema deberá responder sin la cabecera `access-control-allow-origin`. | A16 |
 | E-26 | Mientras `CORS_ORIGINS` no está definida, el sistema deberá admitir únicamente el origen `http://localhost:4200`. | A16 |
 | E-27 | Cuando recibe `GET /health` y la base de datos responde, el sistema deberá responder `200` con `{"status":"ok"}`. | A13 |
 | E-28 | Si recibe `GET /health` y la base de datos no responde, entonces el sistema deberá responder `503` con el código `service_unavailable`, sin trazas ni detalles internos. | A13 |
-| E-29 | Si una petición a cualquier endpoint incurre en uno de los errores genéricos de las convenciones comunes, entonces el sistema deberá responder en `application/problem+json` con el estado y el `code` de esa tabla, sin trazas ni detalles internos. | A14 |
+| E-29 | Si una petición a cualquier endpoint incurre en uno de los errores genéricos de las convenciones comunes, entonces el sistema deberá responder en `application/problem+json` con el estado y el `code` de esa tabla, sin trazas ni detalles internos; si incurre en varios a la vez, deberá responder con el de mayor precedencia: `415`, después `400` y después `422`. | A14 |
+| E-30 | Cuando recibe una comprobación previa `OPTIONS` con un `Origin` incluido en `CORS_ORIGINS`, el sistema deberá responder `200` con las cabeceras CORS que admiten ese origen, en lugar de `405`. | A16 |
+| E-31 | Si recibe una comprobación previa `OPTIONS` con un `Origin` que no está en `CORS_ORIGINS`, entonces el sistema deberá responder `400` sin cabeceras CORS. | A16 |
 
 ## 4. Contratos
 
@@ -298,6 +330,9 @@ Cualquier método que una ruta no admite responde `405` en
 convención común del índice; aquí interesa porque es lo que hace comprobable
 A18: `PUT`, `PATCH` y `DELETE` sobre `/customers`, `/customers/{id}` y
 `/simulations`, y también `GET /simulations`, que no existe.
+
+**Excepción**: `OPTIONS`. La comprobación previa de CORS la atiende el
+middleware antes de llegar a las rutas y no responde `405` (2.7).
 
 ### 4.4 `GET /health`
 
@@ -400,6 +435,9 @@ inserta con esa fecha de forma directa.
 | Simulación con `total_cents` ≠ `base_cents + tax_cents` | Rechazada |
 | Tramo con `subtotal_cents` ≠ `unit_price_cents * users` | Rechazado |
 | Cuarto tramo (`position` = 4) o tramo repetido | Rechazado |
+| Tramo con `from_users` = 0 o `from_users` = −1 | Rechazado |
+| Tramo con `to_users` menor que `from_users` (11 y 10) | Rechazado |
+| Tramo con `to_users` igual a `from_users`, o con `to_users` nulo | Aceptado |
 
 ### 5.6 Operación del backend
 
@@ -409,7 +447,9 @@ inserta con esa fecha de forma directa.
 | `GET /meta` con `Origin: http://otro.example` | `CORS_ORIGINS` sin definir | Respuesta sin `access-control-allow-origin` |
 | `GET /meta` con `Origin: http://localhost:4200` | `CORS_ORIGINS=http://a.example,http://b.example` | Respuesta sin `access-control-allow-origin` |
 | `GET /meta` con `Origin: http://b.example` | `CORS_ORIGINS=http://a.example,http://b.example` | `access-control-allow-origin: http://b.example` |
-| `OPTIONS /customers` de comprobación previa, con `Origin: http://localhost:4200`, `Access-Control-Request-Method: POST` y `Access-Control-Request-Headers: content-type` | `CORS_ORIGINS` sin definir | Respuesta sin error que admite ese origen, `POST` y `content-type` |
+| `OPTIONS /customers` de comprobación previa, con `Origin: http://localhost:4200`, `Access-Control-Request-Method: POST` y `Access-Control-Request-Headers: content-type` | `CORS_ORIGINS` sin definir | `200`, no `405`, con `access-control-allow-origin: http://localhost:4200`, `POST` en `access-control-allow-methods` y `content-type` en `access-control-allow-headers` |
+| La misma comprobación previa, con `Origin: http://otro.example` | `CORS_ORIGINS` sin definir | `400`, sin ninguna cabecera `access-control-*`; no se exige `application/problem+json` |
+| Una petición con `Origin: http://localhost:4200` que provoca un fallo inesperado (como el de 5.7) | `CORS_ORIGINS` sin definir | `500` `internal_error` con `access-control-allow-origin: http://localhost:4200` |
 | `GET /health` | Base de datos accesible | `200` `{"status":"ok"}` |
 | `GET /health` | Base de datos inaccesible | `503` `service_unavailable`, sin trazas |
 
@@ -420,6 +460,9 @@ inserta con esa fecha de forma directa.
 | `POST /customers` con el cuerpo `{"company_name":` (JSON cortado) | `400` `malformed_request` |
 | `POST /simulations` con el cuerpo `[1, 2]`, `null` o `15` | `400` `malformed_request` |
 | `POST /pricing/quote` con `Content-Type: text/plain` | `415` `unsupported_media_type` |
+| `POST /pricing/quote` con `Content-Type: application/json; charset=utf-8` y un cuerpo válido | `200`: `application/json` con parámetros es válido |
+| `POST /simulations?debug=1` con `Content-Type: text/plain` y el cuerpo `{"customer_id":` | `415`: gana al `400` y al `422` |
+| `POST /simulations?debug=1` con `Content-Type: application/json` y el cuerpo `{"customer_id":` | `400` `malformed_request`: gana al `422` |
 | `GET /clientes` o `GET /customers/1/extra` | `404` `not_found` |
 | `GET /simulations`, `POST /customers/1`, `DELETE /meta` | `405` `method_not_allowed` |
 | `POST /simulations?debug=1` con un cuerpo válido | `422` `validation_error`, con `unknown_field` en el campo `debug`; no se guarda nada |
@@ -440,10 +483,10 @@ inserta con esa fecha de forma directa.
 | CA-09 | Un test comprueba que `PUT`, `PATCH` y `DELETE` sobre las tres rutas de 4.3, y `GET /simulations`, devuelven `405` con `method_not_allowed`, y que los datos no cambian. | E-18 |
 | CA-10 | Un test lee el esquema de la base de datos creada y comprueba que ninguna columna es `REAL` y que todas las acabadas en `_cents` o `_bp` son `INTEGER`. | E-19 |
 | CA-11 | Tests reproducen cada fila de 5.5 sobre una conexión abierta como la de la aplicación. | E-20, E-21 |
-| CA-12 | Un test arranca la aplicación con una ruta de base de datos inexistente y comprueba que se crea con las tres tablas; la arranca de nuevo y comprueba que los datos guardados siguen ahí. | E-22 |
+| CA-12 | Un test arranca la aplicación con una ruta de base de datos inexistente y comprueba que se crea con las tres tablas; la arranca de nuevo y comprueba que los datos guardados siguen ahí. Otro test comprueba que, sin `DATABASE_PATH`, la configuración da la ruta `backend/data/saas-o-matic.db`, sin llegar a crear el fichero. | E-22, E-32 |
 | CA-13 | Un test sustituye la conexión por una que registra las sentencias y comprueba que ningún valor de la petición aparece en el SQL ejecutado, solo en sus parámetros. | E-23 |
 | CA-14 | El OpenAPI generado declara para `POST /simulations`, `GET /customers/{id}` y `GET /health` los campos, tipos y códigos de estado del apartado 4. | E-01, E-12, E-27 |
-| CA-15 | Tests de integración reproducen las cinco filas de CORS de 5.6, arrancando la aplicación con cada valor de `CORS_ORIGINS`. | E-24, E-25, E-26 |
+| CA-15 | Tests de integración reproducen las siete filas de CORS de 5.6 (las cuatro de `GET /meta`, las dos comprobaciones previas y el `500`), arrancando la aplicación con cada valor de `CORS_ORIGINS`. | E-24, E-25, E-26, E-30, E-31 |
 | CA-16 | Tests de integración reproducen las dos filas de `GET /health` de 5.6; la base de datos inaccesible se simula con una conexión que falla. El cuerpo del `503` no contiene trazas ni rutas de ficheros. | E-27, E-28 |
 | CA-17 | Tests de integración reproducen cada fila de 5.7, comprobando el estado, el `Content-Type` `application/problem+json` y el `code`. | E-29 |
 
@@ -451,7 +494,8 @@ inserta con esa fecha de forma directa.
 
 Aprobadas las diez por el Tech Lead el 2026-11-12, con un cambio: el
 historial se ordena solo por `id` descendente (2.4), no por fecha como
-proponía la IA. D-02, D-06 y D-07 se registran además como ADR-004.
+proponía la IA. D-02, D-06 y D-07 se registran además como ADR-004. El
+criterio de qué decisiones llevan ADR está en `02-arquitectura/README.md`.
 
 | Id | Decisión | Aprobado | Alternativa descartada y coste |
 |---|---|---|---|
@@ -464,7 +508,7 @@ proponía la IA. D-02, D-06 y D-07 se registran además como ADR-004.
 | D-07 | **Creación del esquema** | `CREATE TABLE IF NOT EXISTS` al arrancar, sin herramienta de migraciones | Una herramienta de migraciones es una dependencia nueva para un esquema que nace completo |
 | D-08 | **`405` con `method_not_allowed`** | Especificarlo y probarlo, para que A18 sea comprobable | No especificarlo y dejar el comportamiento por defecto del framework |
 | D-09 | **Sin `Location` en el `201`** | No hay endpoint para una simulación suelta | Añadir `GET /simulations/{id}`: no lo pide ninguna vista |
-| D-10 | **Variable `DATABASE_PATH`** | Nombre de la variable de entorno con la ruta del fichero | Otro nombre |
+| D-10 | **Variable `DATABASE_PATH`** | Nombre de la variable de entorno con la ruta del fichero. Valor por defecto, fijado por el Tech Lead tras la segunda evaluación (N-13): `backend/data/saas-o-matic.db` | Otro nombre |
 
 ## 8. Cambios que provoca en otras specs
 
@@ -485,7 +529,7 @@ no tiene sentido.
 |---|---|
 | A3 · almacenamiento y API | Si tuvieran precio, entrarían en el cálculo (SPEC-02) y habría que guardar su importe |
 | A4 · países y tipos | Los tipos de los ejemplos y de las tablas 5.1 y 5.4 |
-| SPEC-01 y SPEC-02 | Si cambian los campos del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos |
+| SPEC-01 y SPEC-02 | Se aprueban a la vez que esta (bloque backend). Si cambian los campos del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos |
 
 La fecha límite de A3 y A4 es la del índice de specs: viernes 13 de noviembre de
 2026 a las 10:00.
@@ -497,3 +541,4 @@ La fecha límite de A3 y A4 es la del índice de specs: viernes 13 de noviembre 
 | 2026-11-12 | Primer borrador |
 | 2026-11-12 | Revisión del Tech Lead: aprobadas D-01 a D-10; el historial se ordena solo por `id` descendente (2.4, E-13 y tabla 5.3, con una fila nueva de fecha atrasada) |
 | 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: aplicados los cambios cruzados del apartado 8 (H-01); A4 y A16 en la cabecera (H-02); `405` para cualquier método no admitido, y el requisito E-29, la tabla 5.7 y CA-17 para los errores genéricos del índice (H-03); `customer_id` de 1 a 9223372036854775807 (H-04); nuevo apartado 2.7 «Operación del backend» con CORS y `GET /health`, E-24 a E-28, 4.4, 5.6, CA-15 y CA-16 (H-05); E-21 cubre el subtotal y la posición de los tramos (H-11); remisión a ADR-004 (H-20); columna `country` en `simulations` y precisión de `created_at` (H-23) |
+| 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: aprobación en bloque con SPEC-01 y SPEC-02 (N-01); `CHECK` de los límites de los tramos, con E-21 y tres filas en 5.5 (N-04); `OPTIONS` fuera de la regla del `405`, con E-30 y E-31, y cabeceras CORS también en el `500`, con E-24 y tres filas en 5.6 (N-05); el DDL vive en el `schema.sql` del backend (N-07); `application/json` con parámetros, precedencia `415` > `400` > `422` y valor por defecto de `DATABASE_PATH`, con E-29, E-32, tres filas en 5.7 y CA-12 (N-13); E-16 cubre el país guardado (N-17) |

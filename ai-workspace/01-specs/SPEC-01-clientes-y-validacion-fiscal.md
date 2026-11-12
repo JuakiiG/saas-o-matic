@@ -5,7 +5,8 @@
 | **Estado** | `borrador` (2026-11-12) |
 | **Requisitos** | R-03, R-04 y la parte de backend de R-10 y R-11 |
 | **Supuestos** | A10, A11, A12, A13, A14 y A18 (`decidido`) · A2 y A4 (`pendiente de confirmar`) |
-| **Bloqueos para aprobarla** | A2 y A4 sin respuesta (con fecha límite, ver apartado 8) |
+| **Depende de** | SPEC-03 (forma del historial dentro de la ficha, errores genéricos, CORS y esquema) y SPEC-02 (constante de países), las dos en `borrador` |
+| **Bloqueos para aprobarla** | A2 y A4 sin respuesta (con fecha límite, ver apartado 8) · se aprueba a la vez que SPEC-02 y SPEC-03: las tres forman el bloque backend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -45,13 +46,19 @@ están en 2.12.
 Se aplica **antes de validar**, igual para todos los países, y en este orden:
 
 1. Se eliminan todos los espacios, todos los guiones (`-`) y todos los
-   puntos (`.`), estén donde estén.
-2. Las letras de la `a` a la `z` pasan a mayúsculas.
+   puntos (`.`), estén donde estén. «Espacio» es únicamente el carácter
+   U+0020; el guion es U+002D y el punto, U+002E.
+2. Las 26 letras ASCII de la `a` a la `z` pasan a su mayúscula, con una
+   **correspondencia explícita** letra a letra. No se usa la conversión a
+   mayúsculas de Unicode (`upper()`), que transforma caracteres ajenos a
+   ese rango en letras ASCII: `ﬁ` (U+FB01) daría `FI` y `ſ` (U+017F), `S`.
 
 Nada más: **no se rellenan ceros a la izquierda**, no se quitan otros signos
 y no se quita un prefijo de país (`ES…`). Lo que quede debe estar formado
 solo por los caracteres ASCII `0`–`9` y `A`–`Z`; cualquier otro carácter (una
-barra, una `Ñ`, un dígito de otro alfabeto) es un error de formato.
+barra, una `Ñ`, un dígito de otro alfabeto, la ligadura `ﬁ`, el espacio de
+no separación U+00A0 o cualquier otro espacio que no sea U+0020) es un
+error de formato.
 
 *Por qué los puntos*: `12.345.678-Z` es una escritura frecuente del DNI y
 rechazarla no aporta seguridad.
@@ -145,11 +152,19 @@ los siete dígitos aleatorios.
 prueba del apartado 5 se generaron con este mismo algoritmo, por sí solos
 solo demuestran coherencia interna. Para romper esa circularidad, un test
 compara el validador con el de la biblioteca `python-stdnum`, fijada como
-dependencia **solo de test** (CA-19). Toda discrepancia se documenta y la
-decide el Tech Lead; no se resuelve cambiando el test ni el validador por
-cuenta propia. El 2026-11-12 la última versión publicada era la 2.2
-(consultado en PyPI); no se ha instalado ni ejecutado, y **no se sabe
-todavía si su validación del CIF coincide con los grupos de 2.6**.
+dependencia **solo de test** (CA-19, D-15 y ADR-005).
+
+**Resultado esperado**: todo identificador que acepta el validador del
+dominio lo acepta también `python-stdnum`, y las únicas diferencias son las
+de la forma del control: un CIF con el valor de control correcto, escrito
+como dígito o como letra, en una forma que el grupo de su letra de entidad
+no admite (D-01). Cualquier otra discrepancia la decide el Tech Lead; no se
+resuelve cambiando el test ni el validador por cuenta propia.
+
+El 2026-11-12 la última versión publicada era la 2.2 (consultado en PyPI).
+**No se ha instalado ni ejecutado: ese resultado es una expectativa, no un
+hecho comprobado.** El comportamiento real de la biblioteca se comprueba
+cuando se instale.
 
 ### 2.8 Fuera de España
 
@@ -184,9 +199,9 @@ mayúsculas ni los acentos distinguen, y la `Ñ` busca y ordena como `N`.
   la forma de búsqueda de su nombre, o si `q` normalizado como en 2.2 (sin
   espacios, guiones ni puntos, en mayúsculas) no queda vacío y aparece
   dentro del identificador fiscal guardado.
-- Las dos comparaciones se hacen con `LIKE` y una cláusula `ESCAPE`: `%`,
-  `_` y el propio carácter de escape del texto buscado se escapan y se
-  buscan como texto literal.
+- Las dos comparaciones se hacen con `LIKE` y una cláusula `ESCAPE` cuyo
+  carácter de escape es la barra invertida `\` (U+005C). `%`, `_` y `\` del
+  texto buscado se escapan con ella y se buscan como texto literal.
 - El texto llega a la base de datos siempre como parámetro, nunca
   concatenado en la sentencia.
 - Resultado: como máximo 20 clientes, ordenados por la forma de búsqueda del
@@ -223,6 +238,11 @@ del alta y para `GET /meta`. No existe una segunda lista de países.
 | `country` | `missing` → `not_a_string` → `unsupported_country` |
 | `plan` | `missing` → `not_a_string` → `unsupported_plan` |
 
+- **Identificador con un país no válido o ausente**: si `country` tiene
+  cualquier error (`missing`, `not_a_string` o `unsupported_country`), del
+  identificador solo se comprueba lo que no depende del país: `missing`,
+  `not_a_string` y `too_long`. No se comprueban su formato ni su carácter
+  de control. Los dos campos pueden traer error a la vez.
 - **Orden de `errors`**: el de los campos en el contrato (`company_name`,
   `tax_id`, `contact_email`, `country`, `plan`) y, después, un
   `unknown_field` por cada campo no documentado, por orden alfabético de su
@@ -252,7 +272,7 @@ del alta y para `GET /meta`. No existe una segunda lista de países.
 
 | Id | Requisito | Cubre |
 |---|---|---|
-| E-08 | El sistema deberá normalizar el identificador (sin espacios, guiones ni puntos, en mayúsculas) antes de validarlo, y guardar y devolver siempre la forma normalizada. | A10, A11 |
+| E-08 | El sistema deberá normalizar el identificador como define 2.2 (sin espacios U+0020, guiones ni puntos, y con las letras `a`–`z` en mayúsculas mediante una correspondencia explícita) antes de validarlo, y guardar y devolver siempre la forma normalizada. | A10, A11 |
 | E-09 | El sistema no deberá completar con ceros ni corregir de ningún otro modo un identificador para que resulte válido. | A11 |
 | E-10 | Mientras el país es España, el sistema deberá aceptar solo identificadores que encajen en el patrón de DNI, NIE o CIF de 2.3. | R-04, A11 |
 | E-11 | Mientras el país es España, el sistema deberá comprobar la letra del DNI con el resto de dividir su número entre 23 y la tabla `TRWAGMYFPDXBNJZSQVHLCKE`. | R-04 |
@@ -262,7 +282,7 @@ del alta y para `GET /meta`. No existe una segunda lista de países.
 | E-15 | Si el identificador no encaja en ningún patrón admitido para su país, entonces el sistema deberá rechazar el alta con el código de campo `invalid_tax_id_format`. | A11 |
 | E-16 | Si el identificador encaja en un patrón español pero su carácter de control no es el correcto o no tiene la forma exigida, entonces el sistema deberá rechazar el alta con el código de campo `invalid_tax_id_check_character`. | A11 |
 | E-17 | El sistema no deberá incluir en ninguna respuesta de error el carácter de control correcto ni ningún dato del que pueda deducirse. | A11 |
-| E-18 | Si el país no es válido, entonces el sistema deberá informar del error del país y no validar el identificador, que depende de él. | — |
+| E-18 | Si el país no es válido o falta, entonces el sistema deberá informar del error del país y comprobar del identificador solo lo que no depende del país (`missing`, `not_a_string` y `too_long`), sin validar su formato ni su carácter de control. | — |
 
 ### Unicidad
 
@@ -286,7 +306,7 @@ del alta y para `GET /meta`. No existe una segunda lista de países.
 |---|---|---|
 | E-25 | Cuando recibe `GET /customers?q=`, el sistema deberá devolver los clientes cuyo nombre contiene el texto, comparando las formas de búsqueda de ambos (sin distinguir mayúsculas ni acentos), o cuyo identificador fiscal contiene el texto normalizado. | R-10 |
 | E-26 | El sistema deberá devolver como máximo 20 clientes, ordenados por la forma de búsqueda del nombre y, a igualdad, por `id`. | A13 |
-| E-27 | El sistema deberá tratar `%`, `_` y el carácter de escape del texto buscado como caracteres literales. | R-10 |
+| E-27 | El sistema deberá tratar `%`, `_` y `\` (el carácter de escape) del texto buscado como caracteres literales. | R-10 |
 | E-28 | El sistema deberá pasar el texto buscado a la base de datos únicamente como parámetro de la consulta. | R-10 |
 | E-29 | Cuando `q` falta o queda vacío tras recortarlo, el sistema deberá devolver los 20 primeros clientes por orden de nombre. | A13 |
 | E-30 | Si `q` supera los 100 caracteres antes de recortarlo o la petición trae un parámetro no documentado, entonces el sistema deberá responder `422`. | A14 |
@@ -306,7 +326,7 @@ del alta y para `GET /meta`. No existe una segunda lista de países.
 | Campo | Tipo | Obligatorio | Regla |
 |---|---|---|---|
 | `company_name` | cadena | sí | 2 a 120 caracteres tras recortar |
-| `tax_id` | cadena | sí | Según el país (2.2 a 2.8) |
+| `tax_id` | cadena | sí | Según el país (2.2 a 2.6 y 2.8) |
 | `contact_email` | cadena | sí | Regla de 2.1 |
 | `country` | cadena | sí | Código de la constante de países, en mayúsculas |
 | `plan` | cadena | sí | `starter`, `professional` o `enterprise` |
@@ -544,6 +564,8 @@ ninguno de una persona o empresa real.
 | `K1234567D` | NIF de persona física `K`, fuera de A11 (D-03) |
 | `1234567８Z` | El octavo dígito es `８` de ancho completo (U+FF18), no ASCII |
 | `1234567ÑZ` | Letra fuera de `A`–`Z` |
+| `12345678`, U+00A0 y `Z` | El espacio de no separación no es U+0020: no se elimina |
+| `12345679ſ` | `ſ` (U+017F) no es `a`–`z` y no se convierte en `S`; con `upper()` saldría `12345679S`, un DNI con la letra correcta (resto 15) |
 
 ### 5.5 CIF: letras sin fuente oficial (D-01)
 
@@ -569,6 +591,8 @@ Numeración `1234567`, con C = 4 y letra `D`.
 | `IT` | `1234.5678` | Válido, se guarda `12345678`: los puntos se eliminan |
 | `IT` | `1234/5678` | `invalid_tax_id_format`: carácter no admitido |
 | `FR` | `12345678A` | Válido: fuera de España no se calcula el control del DNI |
+| `FR` | `ﬁ1234` | `invalid_tax_id_format`: la ligadura `ﬁ` (U+FB01) no es `a`–`z` y no se convierte en `FI`; con `upper()` saldría `FI1234`, que sería válido |
+| `FR` | `AB`, U+00A0 y `1234` | `invalid_tax_id_format`: el espacio de no separación no se elimina |
 
 ### 5.7 Otros campos
 
@@ -600,6 +624,11 @@ Numeración `1234567`, con C = 4 y letra `D`.
 | cualquiera | `null` | `422` | `not_a_string` |
 | adicional | `id` o `created_at` en la petición | `422` | `unknown_field` |
 | `country` y `tax_id` | `XX` y `12345678A` | `422` | solo `unsupported_country` (E-18) |
+| `country` y `tax_id` | `XX` y un identificador de 31 caracteres | `422` | `too_long` en `tax_id` y `unsupported_country`, en ese orden: la longitud no depende del país |
+| `country` y `tax_id` | `XX` y `tax_id` ausente | `422` | `missing` en `tax_id` y `unsupported_country`, en ese orden |
+| `country` y `tax_id` | `XX` y `tax_id` = `123` (número) | `422` | `not_a_string` en `tax_id` y `unsupported_country`, en ese orden |
+| `country` y `tax_id` | `country` ausente y `12345678A` | `422` | solo `missing` en `country`: sin país no se valida el formato ni el control |
+| `country` y `tax_id` | `country` = `34` (número) y un identificador de 31 caracteres | `422` | `too_long` en `tax_id` y `not_a_string` en `country`, en ese orden |
 | `company_name` y `contact_email` | `"A"` y `sin-arroba.example` | `422` | `too_short` y después `invalid_email`, en ese orden |
 | `plan`, `company_name` y un campo adicional `zeta` | `premium`, `"A"` y cualquier valor | `422` | `too_short`, `unsupported_plan` y `unknown_field`, en ese orden |
 
@@ -686,16 +715,17 @@ Además, con 25 clientes cuyo nombre contiene `Ejemplo`, la búsqueda
 | CA-16 | El OpenAPI generado declara para los cuatro endpoints los campos, tipos y códigos de estado del apartado 4. | E-01, E-22, E-25, E-32 |
 | CA-17 | El oráculo comprueba que los módulos de validación fiscal de `domain/` no importan nada ajeno a la biblioteca estándar y tienen el 100 % de ramas cubiertas. | E-10 a E-14 |
 | CA-18 | Un test unitario del dominio comprueba la forma de búsqueda de cada nombre de 5.9 (`José Pruebas SL` → `jose pruebas sl`, `Ñandú Pruebas SL` → `nandu pruebas sl`), y un test de integración comprueba que la columna guardada tras el alta coincide con ella. | E-33 |
-
-| CA-19 | Un test diferencial compara el validador del dominio con `python-stdnum` (dependencia solo de test, con la versión fijada) para DNI, NIE y CIF: en el CIF, las 17 letras de entidad con las dos formas de control (dígito y letra) y varios miles de numeraciones generadas con semilla fija; en el DNI y el NIE, varios miles de números con cada una de las 23 letras. Las discrepancias conocidas figuran en una lista explícita del test, cada una documentada y decidida por el Tech Lead; cualquier otra hace fallar el test. | E-11, E-12, E-13 |
+| CA-19 | Un test diferencial compara el validador del dominio con `python-stdnum` (dependencia solo de test, con la versión fijada; ADR-005) sobre dos conjuntos. **Exhaustivo del CIF**: las 17 letras de entidad × los 10 valores de control × las dos formas (dígito y letra), 340 identificadores. **Aleatorio**: 10.000 números generados con una semilla fija, escrita como constante en el test; con cada uno se forman un DNI, un NIE y un CIF, cada uno con su carácter de control correcto y con uno incorrecto. **Resultado esperado**: todo lo que acepta el dominio lo acepta `python-stdnum`, y lo único que `python-stdnum` acepta y el dominio rechaza son CIF con el valor de control correcto en una forma que el grupo de su letra no admite (D-01). Cualquier otra discrepancia hace fallar el test y la decide el Tech Lead. | E-11, E-12, E-13 |
 
 **Sobre CA-17**: depende de `scripts/check.py`, que aún no existe; hasta
 entonces está **pendiente de implementar**, igual que CA-09 de SPEC-02.
 
-**Sobre CA-19**: es lo que permite decir que R-04 se apoya, para el CIF, en
-una convención contrastada con una implementación independiente y no solo
-en casos generados con el propio algoritmo. La lista de discrepancias nace
-vacía; no se sabe todavía si habrá alguna.
+**Sobre CA-19**: es lo que permitirá decir que R-04 se apoya, para el CIF,
+en una convención contrastada con una implementación independiente y no
+solo en casos generados con el propio algoritmo. **Hoy no se puede decir**:
+el test no existe y la biblioteca no se ha instalado. El resultado esperado
+es una hipótesis sobre `python-stdnum`; si su comportamiento real resulta
+ser otro, lo decide el Tech Lead.
 
 ## 7. Decisiones de diseño
 
@@ -714,10 +744,15 @@ dice si aprobó la propuesta de la IA o la cambió.
 | D-08 | **Los acentos no distinguen en el buscador.** El dominio calcula en el alta una forma de búsqueda del nombre (NFD, sin marcas diacríticas, `casefold`), guardada en su propia columna; se busca y se ordena sobre ella | Cambiada (la IA proponía que los acentos distinguieran) |
 | D-09 | **País en minúsculas** (`es`): se rechaza | Aprobada |
 | D-10 | **La normalización elimina también los puntos**: `12.345.678-Z` es una escritura frecuente y rechazarla no aporta seguridad | Cambiada (la IA los rechazaba, siguiendo el encargo de la sesión, que el Tech Lead rectificó) |
-| D-11 | **País no válido**: solo se informa del país; el identificador no se valida (E-18) | Aprobada |
+| D-11 | **País no válido o ausente**: se informa del país y, del identificador, solo de lo que no depende del país (`missing`, `not_a_string`, `too_long`); su formato y su control no se validan (E-18) | Aprobada; precisada por el Tech Lead tras la segunda evaluación (N-03) |
 | D-12 | **`id` de ruta mal formado**: `422` | Aprobada |
 | D-13 | **Historial**: SPEC-03 decide dónde va el historial. Resuelta por SPEC-03/D-01: va dentro de `GET /customers/{id}` (4.2) | Aprobada; resuelta el 2026-11-12 |
 | D-14 | **Orden del buscador**: por la forma de búsqueda del nombre, de modo que la `Ñ` ordena como `N` y las vocales acentuadas como las no acentuadas | Aprobada con el cambio de D-08 (la IA proponía el orden por código de carácter, con la `Ñ` tras la `Z`) |
+| D-15 | **Prueba diferencial con `python-stdnum`**, dependencia solo de test, para no apoyar el CIF únicamente en casos generados con el propio algoritmo (2.7, CA-19). La dependencia se registra en ADR-005 | Decidida por el Tech Lead tras la primera evaluación (H-06); CA-19 fijado tras la segunda (N-15) |
+
+El criterio de qué decisiones llevan además un ADR está en
+`02-arquitectura/README.md`. De esta tabla, lo lleva la dependencia de D-15
+(ADR-005).
 
 ## 8. Pendiente antes de aprobar
 
@@ -725,6 +760,7 @@ dice si aprobó la propuesta de la IA o la cambió.
 |---|---|
 | A2 · plan | Si el plan tuviera significado propio, la lista de 2.1 y `/meta` |
 | A4 · países y tipos | La lista de países de 2.1 y el ejemplo de 4.4 |
+| SPEC-02 y SPEC-03 | Se aprueban a la vez que esta (bloque backend). Si cambian la constante de países o la forma del historial, cambian 2.1, 4.2 y 4.4 |
 
 **Fecha límite**: si el viernes 13 de noviembre de 2026 a las 10:00 no hay
 respuesta, el Tech Lead decide estos dos supuestos con la hipótesis ya
@@ -742,3 +778,4 @@ aprobación lo decide el Tech Lead.
 | 2026-11-12 | Primer borrador |
 | 2026-11-12 | Revisión del Tech Lead: decididos los grupos de letras del CIF (D-01, filas de 5.5 y CA-04); los acentos dejan de distinguir en el buscador, con una forma de búsqueda guardada en columna propia (D-08, D-14, E-25, E-26, nuevo E-33 y CA-18, tabla 5.9); la normalización elimina también los puntos (D-10, 2.2, 5.1, 5.4, 5.6); nombres de los planes en español (D-04); sustituidos dos DNI de numeración baja en 5.2; aprobadas las demás decisiones |
 | 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: la ficha incluye el historial y CA-06 lo excluye de la comparación (H-01); `id` de 1 a 9223372036854775807 y tabla 5.10 (H-04); prueba diferencial con `python-stdnum`, CA-19 (H-06); caso de parámetro desconocido en 5.9 (H-10); constante única de países, definida en SPEC-02 (H-12); referencias internas (H-13); ejemplos de `409` y de `422` (H-14); nuevo apartado 2.12 con el recorte, la unidad, el orden y la forma de los errores, E-34, E-35 y `too_long` para un identificador de más de 30 caracteres en cualquier país (H-22); precisión de `created_at` (H-23) |
+| 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: fila «Depende de» y aprobación en bloque con SPEC-02 y SPEC-03 (N-01); con un país no válido o ausente solo se comprueba del identificador lo que no depende del país, con E-18, 2.12, D-11 y cinco filas en 5.7 (N-03); normalización con «espacio» solo U+0020 y correspondencia explícita `a`–`z`, con casos de `ﬁ`, `ſ` y U+00A0 en 5.4 y 5.6 (N-11); el carácter de escape es `\` (N-12); D-15 y remisión a ADR-005 (N-14); CA-19 exacto y en futuro, con su resultado esperado (N-15, H-06); CA-19 dentro de la tabla (N-16); referencia de 4.1 (H-13) |

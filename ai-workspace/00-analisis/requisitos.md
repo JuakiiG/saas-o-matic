@@ -35,8 +35,10 @@ el cálculo que publica el Ministerio del Interior. Para el carácter de
 control del CIF no se ha localizado una fuente oficial que lo describa: la
 Orden EHA/451/2008 y la Agencia Tributaria fijan la estructura y las letras
 de entidad, pero no el cálculo. SPEC-01 se apoya en la convención de uso
-común, **contrastada con una implementación independiente** mediante una
-prueba diferencial (SPEC-01, CA-19), no en un texto oficial.
+común, no en un texto oficial. Esa convención **se contrastará** con una
+implementación independiente mediante una prueba diferencial (SPEC-01,
+CA-19). **Hoy no está contrastada**: la prueba no existe todavía y la
+biblioteca con la que se compara no se ha instalado.
 
 ## Requisitos de calidad
 

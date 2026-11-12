@@ -22,6 +22,33 @@ los decide con la hipótesis ya documentada y pasan a
 después. *Por qué: una consulta sin contestar no puede bloquear el
 desarrollo de forma indefinida.*
 
+## Bloques de aprobación y orden de implementación
+
+Las specs se aprueban en dos bloques, decididos por el Tech Lead el
+2026-11-12:
+
+| Bloque | Specs | Cuándo se aprueba |
+|---|---|---|
+| **Backend** | SPEC-01, SPEC-02 y SPEC-03 | Las tres **a la vez**, antes de escribir código del backend |
+| **Frontend** | SPEC-04 | Aparte, después del bloque backend y antes de empezar el frontend |
+
+*Por qué un bloque*: las tres specs del backend se necesitan entre sí.
+SPEC-01 usa la constante de países de SPEC-02 y devuelve en la ficha el
+historial que define SPEC-03; SPEC-03 guarda el cálculo de SPEC-02 para un
+cliente de SPEC-01, y contiene los requisitos de los errores genéricos, de
+CORS y del esquema que usan todos los endpoints. Aprobarlas una a una
+obligaría a implementar una spec a medias o a escribir código de otra sin
+aprobar.
+
+**Orden de implementación del bloque backend**:
+
+1. **Lo común**: errores genéricos (convenciones de este índice y
+   SPEC-03/E-29), CORS (SPEC-03/E-24 a E-26, E-30 y E-31), `GET /health`
+   (SPEC-03/E-27 y E-28) y el esquema de la base de datos (SPEC-03, 2.6).
+2. **SPEC-02**: tarifa, impuesto y `POST /pricing/quote`.
+3. **SPEC-01**: clientes y validación fiscal.
+4. **SPEC-03**: simulaciones e historial.
+
 ## Ciclo de vida
 
 | Estado | Significado |
@@ -97,9 +124,9 @@ Valen para todas las specs, que solo detallan lo que les es propio.
   | Situación | Estado | `code` |
   |---|---|---|
   | El cuerpo no es JSON válido o no es un objeto JSON (una lista, `null`, un número) | `400` | `malformed_request` |
-  | La petición lleva cuerpo y su `Content-Type` no es `application/json` | `415` | `unsupported_media_type` |
+  | La petición lleva cuerpo y su `Content-Type` no es `application/json`. Con parámetros, como `application/json; charset=utf-8`, es válido | `415` | `unsupported_media_type` |
   | La ruta no existe | `404` | `not_found` |
-  | La ruta existe pero no admite ese método | `405` | `method_not_allowed` |
+  | La ruta existe pero no admite ese método (salvo `OPTIONS`, ver más abajo) | `405` | `method_not_allowed` |
   | La petición trae un parámetro de consulta no documentado | `422` | `validation_error`, con el código de campo `unknown_field` |
   | Error inesperado | `500` | `internal_error`, sin trazas ni detalles internos |
 
@@ -107,3 +134,17 @@ Valen para todas las specs, que solo detallan lo que les es propio.
   ruta válida tiene su propio código (`customer_not_found`). El requisito y
   los casos de prueba de estos errores están en SPEC-03, «Operación del
   backend».
+
+  **Precedencia**: si una misma petición incurre en varios, se responde
+  solo con uno, en este orden: `415`, después `400` y después `422`. Así,
+  un cuerpo con un `Content-Type` no admitido da `415` aunque además esté
+  mal formado, y un cuerpo mal formado da `400` aunque la petición traiga
+  también un parámetro de consulta desconocido.
+
+- **Excepción a `application/problem+json`: la comprobación previa de
+  CORS.** El `OPTIONS` que el navegador envía antes de un `POST` lo atiende
+  el middleware de CORS y queda fuera de la regla del `405`: con un origen
+  admitido responde `200` con sus cabeceras CORS, y con uno no admitido,
+  `400` sin cabeceras CORS y sin el cuerpo de error de la API. *Por qué*:
+  esa respuesta la consume el navegador, no el frontend. El detalle está en
+  SPEC-03 (2.7).
