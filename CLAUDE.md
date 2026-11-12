@@ -70,9 +70,10 @@ scripts/    herramientas del repo (oráculo)
 
 Los comprueba el oráculo con ruff, ESLint y un recuento de líneas *(lo
 implementa el oráculo, pendiente)*. Una regla que el oráculo no comprueba no
-se anuncia aquí como garantizada. Si algo no cabe, se divide por responsabilidad; no se sube el límite ni se silencia la
-regla. *Por qué: los ficheros grandes son el fallo típico del código generado
-y lo que más dificulta revisarlo.*
+se anuncia aquí como garantizada. Si algo no cabe, se divide por
+responsabilidad; no se sube el límite ni se silencia la regla. *Por qué: los
+ficheros grandes son el fallo típico del código generado y lo que más
+dificulta revisarlo.*
 
 ## Estilo común
 

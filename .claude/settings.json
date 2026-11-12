@@ -3,7 +3,8 @@
     "deny": [
       "Bash(git push:*)",
       "Read(./.env)",
-      "Read(./.env.*)"
+      "Read(./.env.local)",
+      "Read(./.env.*.local)"
     ]
   }
 }
