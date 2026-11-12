@@ -103,8 +103,8 @@ esa combinación; se comprobará al crearlo.
 
 | Opción | A favor | En contra |
 |---|---|---|
-| **Módulo `sqlite3` de la biblioteca estándar**, con SQL parametrizado dentro de `repositories/` | Ninguna dependencia; el SQL es visible y revisable; dos tablas no justifican más | Sin migraciones automáticas; el mapeo de filas a objetos se escribe a mano |
-| SQLAlchemy 2 Core | Portabilidad a otra base de datos; constructor de consultas | Una dependencia grande y una capa más que entender para dos tablas |
+| **Módulo `sqlite3` de la biblioteca estándar**, con SQL parametrizado dentro de `repositories/` | Ninguna dependencia; el SQL es visible y revisable; tres tablas no justifican más | Sin migraciones automáticas; el mapeo de filas a objetos se escribe a mano |
+| SQLAlchemy 2 Core | Portabilidad a otra base de datos; constructor de consultas | Una dependencia grande y una capa más que entender para tres tablas |
 | ORM completo (SQLAlchemy ORM o SQLModel) | Menos código de mapeo | Oculta el SQL; fácil acabar con lógica en los modelos |
 
 **Decisión: `sqlite3` de la biblioteca estándar**, con un `schema.sql`
@@ -113,6 +113,11 @@ síncronas, que FastAPI ejecuta en su grupo de hilos. *Por qué*: es la opción
 más pequeña que cumple, y la capa `repositories/` ya aísla el resto del
 código, de modo que cambiar de base de datos más adelante afecta solo a esa
 capa.
+
+Al aceptar este ADR se contaba con dos tablas; SPEC-03 define tres
+(`customers`, `simulations` y `simulation_tiers`), y el texto de la tabla
+se corrigió el 2026-11-12. La decisión no cambia. El modelo de datos y sus
+alternativas están en ADR-004.
 
 **Cada conexión ejecuta `PRAGMA foreign_keys = ON` al abrirse.** SQLite no
 aplica las claves foráneas por defecto, y sin ese ajuste aceptaría una
