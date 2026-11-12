@@ -4,7 +4,7 @@
 |---|---|
 | **Estado** | `borrador` (2026-11-12) |
 | **Requisitos** | R-06, R-07 y la parte de cálculo de R-12 |
-| **Supuestos** | A6, A7 y A9 (`decidido`) · A2, A3, A4 y A5 (`pendiente de confirmar`) |
+| **Supuestos** | A6, A7, A9, A13 y A14 (`decidido`) · A2, A3, A4 y A5 (`pendiente de confirmar`) |
 | **Bloqueos para aprobarla** | A2, A3, A4 y A5 sin respuesta (con fecha límite, ver apartado 8) |
 
 ## 1. Objetivo
@@ -45,7 +45,26 @@ impuesto = redondeo(base · tipo_bp / 10000)
 total    = base + impuesto
 ```
 
-- El tipo es el del país del cliente (tabla de A4), en puntos básicos.
+- El tipo es el del país del cliente, en puntos básicos, tomado de la
+  **constante de países** del dominio:
+
+| Código | Nombre | Tipo (bp) |
+|---|---|---|
+| `ES` | España | 2100 |
+| `PT` | Portugal | 2300 |
+| `FR` | Francia | 2000 |
+| `DE` | Alemania | 1900 |
+| `IT` | Italia | 2200 |
+| `NL` | Países Bajos | 2100 |
+| `IE` | Irlanda | 2300 |
+| `BE` | Bélgica | 2100 |
+| `GB` | Reino Unido | 2000 |
+
+  Es la **única** lista de países del sistema: cada entrada lleva el
+  código, el nombre y el tipo. Los valores son los de A4, que sigue
+  `pendiente de confirmar`. Esta spec es la dueña de los tipos; SPEC-01 usa
+  la misma constante para validar el país del alta y para `GET /meta`, y no
+  mantiene una lista aparte.
 - El impuesto se calcula **una vez, sobre el coste base total**, no tramo a
   tramo.
 - `redondeo` es al céntimo más próximo, con el medio céntimo hacia arriba. En
@@ -83,6 +102,7 @@ función pura: mismos datos de entrada, mismo resultado, sin entrada/salida.
 |---|---|---|
 | E-09 | Si el número de usuarios no es un número entero, es negativo o supera 100.000, entonces el sistema deberá rechazar la petición sin calcular nada. | A7 |
 | E-10 | Si el país del cliente no tiene un tipo impositivo definido, entonces el sistema deberá responder `500` con el código `tax_rate_not_defined`, sin trazas ni detalles internos, en lugar de aplicar un 0 %. | A4 |
+| E-15 | Si `customer_id` no es un número entero de 1 a 9223372036854775807, entonces el sistema deberá rechazar la petición sin consultar la base de datos. | A14 |
 
 E-10 describe un fallo interno, no un error de quien llama: SPEC-01 solo
 admitirá en el alta países de la tabla de A4, así que un cliente guardado con
@@ -95,7 +115,7 @@ un país sin tipo indica datos incoherentes. Por eso es un `500` y no un `4xx`.
 | E-11 | Cuando recibe una petición válida, el sistema deberá responder `200` con el cálculo completo. | R-12, A9 |
 | E-12 | El sistema deberá atender `POST /pricing/quote` sin crear ni modificar ningún dato guardado. | A9 |
 | E-13 | Si el cliente indicado no existe, entonces el sistema deberá responder `404` con el código `customer_not_found`. | — |
-| E-14 | Si la petición no supera la validación (E-09, campo ausente, tipo incorrecto o campo desconocido), entonces el sistema deberá responder `422` con el código `validation_error` y el detalle de cada campo. | A14 |
+| E-14 | Si la petición no supera la validación (E-09, E-15, campo ausente, tipo incorrecto o campo desconocido), entonces el sistema deberá responder `422` con el código `validation_error` y el detalle de cada campo. | A14 |
 
 ## 4. Contrato de `POST /pricing/quote`
 
@@ -103,10 +123,10 @@ un país sin tipo indica datos incoherentes. Por eso es un `500` y no un `4xx`.
 
 | Campo | Tipo | Obligatorio | Regla |
 |---|---|---|---|
-| `customer_id` | entero | sí | Cliente existente (formato en SPEC-01) |
+| `customer_id` | entero | sí | De 1 a 9223372036854775807, y de un cliente existente |
 | `active_users` | entero | sí | De 0 a 100.000 |
 
-Se acepta solo un número JSON entero. Se rechazan cadenas (`"15"`),
+En los dos campos se acepta solo un número JSON entero. Se rechazan cadenas (`"15"`),
 booleanos, `null` y números con parte decimal, incluido `15.0`.
 
 ```json
@@ -208,6 +228,22 @@ que el redondeo se prueba directamente con bases y tipos inventados.
 | campo ausente | `422` | `missing` |
 | campo adicional `tax_rate_bp` | `422` | `unknown_field` |
 
+### 5.5 Valores de `customer_id`
+
+Con `active_users` válido salvo que se indique.
+
+| Valor | Resultado | Código por campo |
+|---|---|---|
+| `1` (existe) | `200` | — |
+| `999` (no existe) | `404` `customer_not_found` | — |
+| `9223372036854775807` (no existe) | `404` `customer_not_found` | — |
+| `0` | `422` | `out_of_range` |
+| `-1` | `422` | `out_of_range` |
+| `9223372036854775808` (2^63) | `422` | `out_of_range` |
+| `1.0`, `"1"`, `true`, `null` | `422` | `not_an_integer` |
+| campo ausente | `422` | `missing` |
+| `999` y `active_users` = `-1` | `422` | `out_of_range` en `active_users`: gana la validación |
+
 ## 6. Criterios de aceptación
 
 | Id | Criterio | Requisitos |
@@ -218,8 +254,8 @@ que el redondeo se prueba directamente con bases y tipos inventados.
 | CA-04 | Las funciones del dominio rechazan con un error propio un número de usuarios fuera de rango y un país sin tipo definido. | E-09, E-10 |
 | CA-05 | Un test de integración llama a `POST /pricing/quote` con un cliente de España y 15 usuarios, y obtiene exactamente la respuesta del apartado 4. | E-07, E-11 |
 | CA-06 | Un test de integración comprueba que, tras varias llamadas a `POST /pricing/quote`, el número de simulaciones guardadas no ha cambiado. | E-12 |
-| CA-07 | Tests de integración cubren el `404` y cada fila de 5.4, comprobando el estado, el `code` y el código por campo, no el texto. | E-13, E-14 |
-| CA-08 | Para una misma entrada, los importes de `POST /pricing/quote` y los de la simulación guardada por `POST /simulations` son idénticos. Se comprueba al implementar SPEC-03. | E-08 |
+| CA-07 | Tests de integración cubren cada fila de 5.4 y de 5.5, comprobando el estado, el `code` y el código por campo, no el texto. | E-13, E-14, E-15 |
+| CA-08 | Para una misma entrada, los importes de `POST /pricing/quote` y los de la simulación guardada por `POST /simulations` son idénticos. Lo comprueba SPEC-03/CA-03. | E-08 |
 | CA-09 | El oráculo comprueba de forma automática que `domain/` no importa nada ajeno a la biblioteca estándar, no usa `float` (ni el tipo, ni literales con decimales, ni la división `/`) y tiene el 100 % de ramas cubiertas. | E-05 |
 | CA-10 | El OpenAPI generado declara para `POST /pricing/quote` los campos, tipos y códigos de estado del apartado 4. | E-11, E-13, E-14 |
 | CA-11 | Un test de integración guarda directamente en la base de datos un cliente con un país sin tipo impositivo, llama a `POST /pricing/quote` y obtiene un `500` en `application/problem+json` con el código `tax_rate_not_defined`, cuyo cuerpo no contiene trazas ni nombres internos. | E-10 |
@@ -256,7 +292,7 @@ Aprobadas por el Tech Lead el 2026-11-12.
 |---|---|
 | A2 · plan | Si el plan afectara al precio, habría una segunda dimensión en la tarifa |
 | A3 · almacenamiento y API | Si tuvieran precio, entrarían en la petición y en el coste base |
-| A4 · países y tipos | La tabla de 5.2 |
+| A4 · países y tipos | La constante de países de 2.2 y la tabla de 5.2 |
 | A5 · IVA entre empresas | Si hubiera que modelarlo, el tipo dejaría de depender solo del país |
 
 **Fecha límite**: si el viernes 13 de noviembre de 2026 a las 10:00 no hay
@@ -270,3 +306,4 @@ aprobarse. Si la respuesta llega después, se revisan.
 |---|---|
 | 2026-11-12 | Primer borrador |
 | 2026-11-12 | Revisión del Tech Lead: aprobadas las decisiones de diseño y A7; E-10 responde `500` con `tax_rate_not_defined` (nueva fila de errores y CA-11); CA-09 pasa a comprobarse de forma automática; añadidos A2 a los supuestos y la fecha límite de los pendientes |
+| 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: A13 y A14 en la cabecera (H-02); `customer_id` de 1 a 9223372036854775807, con E-15 y la tabla 5.5 (H-04); la constante única de países, con su tabla en 2.2 (H-12); CA-08 remite a SPEC-03/CA-03 (H-01) |

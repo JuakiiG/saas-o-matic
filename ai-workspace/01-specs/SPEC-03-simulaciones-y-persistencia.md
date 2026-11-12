@@ -4,9 +4,9 @@
 |---|---|
 | **Estado** | `borrador` (2026-11-12) |
 | **Requisitos** | R-05 y la parte de backend de R-11 |
-| **Supuestos** | A6, A7, A9, A13, A14 y A18 (`decidido`) · A3 (`pendiente de confirmar`) |
+| **Supuestos** | A6, A7, A9, A13, A14, A16 y A18 (`decidido`) · A3 y A4 (`pendiente de confirmar`) |
 | **Depende de** | SPEC-01 (cliente) y SPEC-02 (cálculo), las dos en `borrador` |
-| **Bloqueos para aprobarla** | A3 sin respuesta (con fecha límite) · SPEC-01 y SPEC-02 sin aprobar |
+| **Bloqueos para aprobarla** | A3 y A4 sin respuesta (con fecha límite) · SPEC-01 y SPEC-02 sin aprobar |
 
 ## 1. Objetivo
 
@@ -28,29 +28,31 @@ edición y borrado (A18).
 
 | Campo | Quién lo pone | Regla |
 |---|---|---|
-| `customer_id` | Petición | Cliente existente |
+| `customer_id` | Petición | Entero de 1 a 9223372036854775807, de un cliente existente |
 | `active_users` | Petición | Entero de 0 a 100.000 (A7) |
 | `storage_gb` | Petición | Almacenamiento contratado, en GB. Entero de 0 a 1.000.000 |
 | `estimated_api_calls` | Petición | Llamadas a la API estimadas al mes. Entero de 0 a 1.000.000.000 |
 | Cálculo | Sistema | El resultado completo de la función de SPEC-02 para `active_users` y el país del cliente |
-| `id`, `created_at` | Sistema | Entero positivo; fecha y hora UTC en ISO 8601 con precisión de segundos |
+| `id`, `created_at` | Sistema | Entero de 1 a 9223372036854775807; fecha y hora UTC en ISO 8601 con precisión de segundos (`2026-11-12T15:00:00Z`) |
 
 `storage_gb` y `estimated_api_calls` se validan y se guardan, pero **no
 intervienen en el importe** (A3).
 
 ### 2.2 Qué se guarda del cálculo
 
-Se guarda **todo lo que devuelve el cálculo**, no solo el total: coste base,
-tipo impositivo aplicado, impuesto, total y el desglose de los tres tramos
-(límites, precio por usuario, usuarios y subtotal de cada uno).
+Se guarda **todo lo que devuelve el cálculo**, no solo el total: país con
+el que se calculó, coste base, tipo impositivo aplicado, impuesto, total y el
+desglose de los tres tramos (límites, precio por usuario, usuarios y subtotal
+de cada uno).
 
 *Por qué*: A4 ya exige guardar el tipo aplicado para que una simulación
 antigua siga mostrando lo que se calculó entonces. El mismo argumento vale
 para la tarifa: si un precio o un límite de tramo cambia, un desglose
 recalculado dejaría de sumar el coste base guardado.
 
-Una simulación guardada **nunca se recalcula**: el historial lee los importes
-guardados.
+Una simulación guardada **nunca se recalcula**: el historial lee solo lo
+guardado en la simulación, incluido su `country`, sin consultar el país del
+cliente ni las constantes del dominio.
 
 ### 2.3 Un solo cálculo
 
@@ -90,7 +92,7 @@ tiene simulaciones.
 | `contact_email` | TEXT | No nulo |
 | `country` | TEXT | No nulo |
 | `plan` | TEXT | No nulo |
-| `created_at` | TEXT | No nulo |
+| `created_at` | TEXT | No nulo. UTC, ISO 8601, precisión de segundos |
 | — | — | `UNIQUE (country, tax_id)` (SPEC-01/E-19) |
 
 `simulations`
@@ -102,11 +104,12 @@ tiene simulaciones.
 | `active_users` | INTEGER | No nulo. `>= 0` |
 | `storage_gb` | INTEGER | No nulo. `>= 0` |
 | `estimated_api_calls` | INTEGER | No nulo. `>= 0` |
+| `country` | TEXT | No nulo. País del cliente en el momento del cálculo |
 | `base_cents` | INTEGER | No nulo. `>= 0` |
 | `tax_rate_bp` | INTEGER | No nulo. `>= 0` |
 | `tax_cents` | INTEGER | No nulo. `>= 0` |
 | `total_cents` | INTEGER | No nulo. `= base_cents + tax_cents` |
-| `created_at` | TEXT | No nulo |
+| `created_at` | TEXT | No nulo. UTC, ISO 8601, precisión de segundos |
 
 `simulation_tiers` — tres filas por simulación.
 
@@ -139,6 +142,27 @@ tiene simulaciones.
   sentencias `CREATE TABLE IF NOT EXISTS`. Su ruta se configura con la
   variable de entorno `DATABASE_PATH`. No hay herramienta de migraciones.
 
+Las alternativas y las consecuencias de estas decisiones (tres tablas, foto
+completa del cálculo, sin migraciones) están en ADR-004.
+
+### 2.7 Operación del backend
+
+**CORS** (A16). El backend solo admite peticiones de navegador desde los
+orígenes de la variable de entorno `CORS_ORIGINS`, una lista separada por
+comas cuyo valor por defecto es `http://localhost:4200`, el origen del
+frontend en local. A una petición con un `Origin` de la lista se le responde
+con `access-control-allow-origin` igual a ese origen; a cualquier otra, sin
+esa cabecera. Nunca se responde con `*`. Los métodos admitidos son `GET` y
+`POST`, y la cabecera admitida, `content-type`.
+
+**`GET /health`** (A13). Comprueba que el backend está levantado y que la
+base de datos responde a una consulta trivial. No lee ni escribe datos de
+negocio.
+
+**Errores genéricos.** La tabla de códigos está en las convenciones comunes
+del índice y vale para todos los endpoints. Aquí están su requisito y sus
+casos de prueba, para que no queden sin demostrar.
+
 ## 3. Requisitos (EARS)
 
 ### `POST /simulations`
@@ -147,7 +171,7 @@ tiene simulaciones.
 |---|---|---|
 | E-01 | Cuando recibe una simulación válida de un cliente existente, el sistema deberá calcular el importe, guardar la simulación con su cálculo y responder `201` con la simulación creada. | R-05 |
 | E-02 | El sistema deberá calcular el importe de la simulación con la misma función del dominio que usa `POST /pricing/quote`. | A9 |
-| E-03 | El sistema deberá guardar, junto con los datos de entrada, el coste base, el tipo impositivo aplicado, el impuesto, el total y el desglose de los tres tramos. | R-05, A4 |
+| E-03 | El sistema deberá guardar, junto con los datos de entrada, el país con el que se calculó, el coste base, el tipo impositivo aplicado, el impuesto, el total y el desglose de los tres tramos. | R-05, A4 |
 | E-04 | El sistema deberá guardar `storage_gb` y `estimated_api_calls` sin que intervengan en ningún importe. | A3 |
 | E-05 | Si `active_users`, `storage_gb` o `estimated_api_calls` no es un número entero, es negativo o supera su máximo, entonces el sistema deberá rechazar la petición sin guardar nada. | A3, A7 |
 | E-06 | Si falta un campo o la petición trae un campo no documentado, incluidos importes, tipo impositivo o país, entonces el sistema deberá rechazar la petición sin guardar nada. | A14 |
@@ -175,9 +199,20 @@ tiene simulaciones.
 | E-18 | El sistema no deberá ofrecer ninguna operación que modifique o elimine una simulación o un cliente. | A18 |
 | E-19 | El sistema deberá guardar todos los importes como enteros en céntimos y los tipos como enteros en puntos básicos. | A6 |
 | E-20 | Si se intenta guardar una simulación de un cliente inexistente, o borrar un cliente con simulaciones, entonces la base de datos deberá rechazarlo. | ADR-001 |
-| E-21 | Si se intenta guardar una fila con un valor negativo o cuyo total no es la suma de base e impuesto, entonces la base de datos deberá rechazarla. | A6 |
+| E-21 | Si se intenta guardar una fila con un valor negativo, una simulación cuyo total no es la suma de base e impuesto, un tramo cuyo subtotal no es el precio por los usuarios, un tramo con una posición distinta de 1, 2 o 3 o un tramo repetido, entonces la base de datos deberá rechazarlo. | A6 |
 | E-22 | Cuando el backend arranca y la base de datos no existe, el sistema deberá crearla con todas sus tablas; cuando ya existe, deberá conservar sus datos. | R-05 |
 | E-23 | El sistema deberá pasar a la base de datos todos los valores como parámetros de la sentencia. | — |
+
+### Operación del backend
+
+| Id | Requisito | Cubre |
+|---|---|---|
+| E-24 | Cuando recibe una petición con una cabecera `Origin` incluida en `CORS_ORIGINS`, el sistema deberá responder con `access-control-allow-origin` igual a ese origen. | A16 |
+| E-25 | Si la cabecera `Origin` de una petición no está en `CORS_ORIGINS`, entonces el sistema deberá responder sin la cabecera `access-control-allow-origin`. | A16 |
+| E-26 | Mientras `CORS_ORIGINS` no está definida, el sistema deberá admitir únicamente el origen `http://localhost:4200`. | A16 |
+| E-27 | Cuando recibe `GET /health` y la base de datos responde, el sistema deberá responder `200` con `{"status":"ok"}`. | A13 |
+| E-28 | Si recibe `GET /health` y la base de datos no responde, entonces el sistema deberá responder `503` con el código `service_unavailable`, sin trazas ni detalles internos. | A13 |
+| E-29 | Si una petición a cualquier endpoint incurre en uno de los errores genéricos de las convenciones comunes, entonces el sistema deberá responder en `application/problem+json` con el estado y el `code` de esa tabla, sin trazas ni detalles internos. | A14 |
 
 ## 4. Contratos
 
@@ -185,7 +220,7 @@ tiene simulaciones.
 
 | Campo | Tipo | Obligatorio | Regla |
 |---|---|---|---|
-| `customer_id` | entero | sí | Cliente existente |
+| `customer_id` | entero | sí | De 1 a 9223372036854775807, y de un cliente existente |
 | `active_users` | entero | sí | De 0 a 100.000 |
 | `storage_gb` | entero | sí | De 0 a 1.000.000 |
 | `estimated_api_calls` | entero | sí | De 0 a 1.000.000.000 |
@@ -258,9 +293,25 @@ aunque `simulations` traiga solo 50. Los errores son los de SPEC-01.
 
 ### 4.3 Métodos no admitidos
 
-`PUT`, `PATCH` y `DELETE` sobre `/customers`, `/customers/{id}` y
-`/simulations` responden `405` en `application/problem+json` con el código
-`method_not_allowed`.
+Cualquier método que una ruta no admite responde `405` en
+`application/problem+json` con el código `method_not_allowed`. Es la
+convención común del índice; aquí interesa porque es lo que hace comprobable
+A18: `PUT`, `PATCH` y `DELETE` sobre `/customers`, `/customers/{id}` y
+`/simulations`, y también `GET /simulations`, que no existe.
+
+### 4.4 `GET /health`
+
+Respuesta `200`:
+
+```json
+{ "status": "ok" }
+```
+
+| Estado | `code` | Cuándo |
+|---|---|---|
+| `503` | `service_unavailable` | La base de datos no responde |
+
+El `503` va en `application/problem+json`, como el resto de errores.
 
 ## 5. Casos de prueba
 
@@ -294,7 +345,8 @@ añaden:
 | `estimated_api_calls` | `1.5`, `"1000"`, `true`, `null` | `422` | `not_an_integer` |
 | `estimated_api_calls` | ausente | `422` | `missing` |
 | `customer_id` | `"1"`, `1.0`, `null` | `422` | `not_an_integer` |
-| `customer_id` | `0`, `-1` | `422` | `out_of_range` |
+| `customer_id` | `0`, `-1`, `9223372036854775808` (2^63) | `422` | `out_of_range` |
+| `customer_id` | `9223372036854775807` (no existe), resto válido | `404` | — |
 | `customer_id` | ausente | `422` | `missing` |
 | adicional | `total_cents`, `tax_rate_bp`, `country` o `created_at` | `422` | `unknown_field` |
 | varios | `storage_gb` = `-1` y `estimated_api_calls` ausente | `422` | los dos errores, cada uno en su campo |
@@ -335,6 +387,8 @@ inserta con esa fecha de forma directa.
 | Sustituir en el test el tipo de `ES` por 1000 y el precio del tramo 1 por 2000 | — |
 | `GET /customers/{id}` | La simulación sigue mostrando base 14000, tipo 2100, impuesto 2940, total 16940 y el mismo desglose |
 | Guardar otra simulación de 15 usuarios | Usa los valores sustituidos: base 24000, tipo 1000, impuesto 2400, total 26400 |
+| Cambiar directamente en la base de datos el país del cliente a `DE` | — |
+| `GET /customers/{id}` | Las dos simulaciones siguen mostrando `country` `ES`: se lee de la simulación, no del cliente |
 
 ### 5.5 Restricciones de la base de datos (inserciones directas)
 
@@ -346,6 +400,30 @@ inserta con esa fecha de forma directa.
 | Simulación con `total_cents` ≠ `base_cents + tax_cents` | Rechazada |
 | Tramo con `subtotal_cents` ≠ `unit_price_cents * users` | Rechazado |
 | Cuarto tramo (`position` = 4) o tramo repetido | Rechazado |
+
+### 5.6 Operación del backend
+
+| Petición | Configuración | Resultado |
+|---|---|---|
+| `GET /meta` con `Origin: http://localhost:4200` | `CORS_ORIGINS` sin definir | `200` con `access-control-allow-origin: http://localhost:4200` |
+| `GET /meta` con `Origin: http://otro.example` | `CORS_ORIGINS` sin definir | Respuesta sin `access-control-allow-origin` |
+| `GET /meta` con `Origin: http://localhost:4200` | `CORS_ORIGINS=http://a.example,http://b.example` | Respuesta sin `access-control-allow-origin` |
+| `GET /meta` con `Origin: http://b.example` | `CORS_ORIGINS=http://a.example,http://b.example` | `access-control-allow-origin: http://b.example` |
+| `OPTIONS /customers` de comprobación previa, con `Origin: http://localhost:4200`, `Access-Control-Request-Method: POST` y `Access-Control-Request-Headers: content-type` | `CORS_ORIGINS` sin definir | Respuesta sin error que admite ese origen, `POST` y `content-type` |
+| `GET /health` | Base de datos accesible | `200` `{"status":"ok"}` |
+| `GET /health` | Base de datos inaccesible | `503` `service_unavailable`, sin trazas |
+
+### 5.7 Errores genéricos
+
+| Petición | Resultado |
+|---|---|
+| `POST /customers` con el cuerpo `{"company_name":` (JSON cortado) | `400` `malformed_request` |
+| `POST /simulations` con el cuerpo `[1, 2]`, `null` o `15` | `400` `malformed_request` |
+| `POST /pricing/quote` con `Content-Type: text/plain` | `415` `unsupported_media_type` |
+| `GET /clientes` o `GET /customers/1/extra` | `404` `not_found` |
+| `GET /simulations`, `POST /customers/1`, `DELETE /meta` | `405` `method_not_allowed` |
+| `POST /simulations?debug=1` con un cuerpo válido | `422` `validation_error`, con `unknown_field` en el campo `debug`; no se guarda nada |
+| Un fallo inesperado, provocado en el test con un repositorio que lanza una excepción | `500` `internal_error`; el cuerpo no contiene trazas, nombres de ficheros ni el texto de la excepción |
 
 ## 6. Criterios de aceptación
 
@@ -359,18 +437,21 @@ inserta con esa fecha de forma directa.
 | CA-06 | Un test provoca un fallo al guardar el segundo tramo y comprueba que no queda ninguna fila de esa simulación en ninguna de las dos tablas. | E-11 |
 | CA-07 | Tests de integración reproducen cada fila de 5.3, comprobando `simulation_count`, los `id` y su orden. | E-12 a E-15, E-17 |
 | CA-08 | Un test de integración reproduce los pasos de 5.4. | E-16 |
-| CA-09 | Un test comprueba que `PUT`, `PATCH` y `DELETE` sobre las tres rutas de 4.3 devuelven `405` con `method_not_allowed`, y que los datos no cambian. | E-18 |
+| CA-09 | Un test comprueba que `PUT`, `PATCH` y `DELETE` sobre las tres rutas de 4.3, y `GET /simulations`, devuelven `405` con `method_not_allowed`, y que los datos no cambian. | E-18 |
 | CA-10 | Un test lee el esquema de la base de datos creada y comprueba que ninguna columna es `REAL` y que todas las acabadas en `_cents` o `_bp` son `INTEGER`. | E-19 |
 | CA-11 | Tests reproducen cada fila de 5.5 sobre una conexión abierta como la de la aplicación. | E-20, E-21 |
 | CA-12 | Un test arranca la aplicación con una ruta de base de datos inexistente y comprueba que se crea con las tres tablas; la arranca de nuevo y comprueba que los datos guardados siguen ahí. | E-22 |
 | CA-13 | Un test sustituye la conexión por una que registra las sentencias y comprueba que ningún valor de la petición aparece en el SQL ejecutado, solo en sus parámetros. | E-23 |
-| CA-14 | El OpenAPI generado declara para `POST /simulations` y `GET /customers/{id}` los campos, tipos y códigos de estado del apartado 4. | E-01, E-12 |
+| CA-14 | El OpenAPI generado declara para `POST /simulations`, `GET /customers/{id}` y `GET /health` los campos, tipos y códigos de estado del apartado 4. | E-01, E-12, E-27 |
+| CA-15 | Tests de integración reproducen las cinco filas de CORS de 5.6, arrancando la aplicación con cada valor de `CORS_ORIGINS`. | E-24, E-25, E-26 |
+| CA-16 | Tests de integración reproducen las dos filas de `GET /health` de 5.6; la base de datos inaccesible se simula con una conexión que falla. El cuerpo del `503` no contiene trazas ni rutas de ficheros. | E-27, E-28 |
+| CA-17 | Tests de integración reproducen cada fila de 5.7, comprobando el estado, el `Content-Type` `application/problem+json` y el `code`. | E-29 |
 
 ## 7. Decisiones de diseño
 
 Aprobadas las diez por el Tech Lead el 2026-11-12, con un cambio: el
 historial se ordena solo por `id` descendente (2.4), no por fecha como
-proponía la IA.
+proponía la IA. D-02, D-06 y D-07 se registran además como ADR-004.
 
 | Id | Decisión | Aprobado | Alternativa descartada y coste |
 |---|---|---|---|
@@ -387,23 +468,26 @@ proponía la IA.
 
 ## 8. Cambios que provoca en otras specs
 
-No se han aplicado: se aplican cuando se apruebe esta spec.
+**Aplicados el 2026-11-12** por decisión del Tech Lead, tras la evaluación
+independiente (H-01): con todo en borrador, mantener destinos incoherentes
+no tiene sentido.
 
-| Spec | Cambio |
-|---|---|
-| SPEC-01, 4.2 | La ficha deja de ser «el mismo objeto que devuelve el alta»: añade `simulation_count` y `simulations` |
-| SPEC-01, CA-06 | La comparación entre el alta y la ficha debe excluir esos dos campos |
-| SPEC-01, D-13 | Queda resuelta por D-01 de esta spec |
-| SPEC-02, CA-08 | Queda cubierto por CA-03 de esta spec |
+| Spec | Cambio | Estado |
+|---|---|---|
+| SPEC-01, 4.2 | La ficha añade `simulation_count` y `simulations` a los campos del alta | Aplicado |
+| SPEC-01, CA-06 | La comparación entre el alta y la ficha excluye esos dos campos | Aplicado |
+| SPEC-01, D-13 | Queda resuelta por D-01 de esta spec | Aplicado |
+| SPEC-02, CA-08 | Remite a CA-03 de esta spec | Aplicado |
 
 ## 9. Pendiente antes de aprobar
 
 | Asunto | Qué cambiaría en esta spec |
 |---|---|
 | A3 · almacenamiento y API | Si tuvieran precio, entrarían en el cálculo (SPEC-02) y habría que guardar su importe |
+| A4 · países y tipos | Los tipos de los ejemplos y de las tablas 5.1 y 5.4 |
 | SPEC-01 y SPEC-02 | Si cambian los campos del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos |
 
-La fecha límite de A3 es la del índice de specs: viernes 13 de noviembre de
+La fecha límite de A3 y A4 es la del índice de specs: viernes 13 de noviembre de
 2026 a las 10:00.
 
 ## Historial
@@ -412,3 +496,4 @@ La fecha límite de A3 es la del índice de specs: viernes 13 de noviembre de
 |---|---|
 | 2026-11-12 | Primer borrador |
 | 2026-11-12 | Revisión del Tech Lead: aprobadas D-01 a D-10; el historial se ordena solo por `id` descendente (2.4, E-13 y tabla 5.3, con una fila nueva de fecha atrasada) |
+| 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: aplicados los cambios cruzados del apartado 8 (H-01); A4 y A16 en la cabecera (H-02); `405` para cualquier método no admitido, y el requisito E-29, la tabla 5.7 y CA-17 para los errores genéricos del índice (H-03); `customer_id` de 1 a 9223372036854775807 (H-04); nuevo apartado 2.7 «Operación del backend» con CORS y `GET /health`, E-24 a E-28, 4.4, 5.6, CA-15 y CA-16 (H-05); E-21 cubre el subtotal y la posición de los tramos (H-11); remisión a ADR-004 (H-20); columna `country` en `simulations` y precisión de `created_at` (H-23) |

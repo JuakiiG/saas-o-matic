@@ -46,13 +46,14 @@ frontend/src/app/
   datos**, y la interfaz muestra los tres. Un error de red nunca deja la
   pantalla en blanco ni un indicador de carga infinito.
 - **Los errores de la API se distinguen por su código estable**
-  (`invalid_tax_id`), nunca comparando el texto del mensaje. El mensaje del
+  (`invalid_tax_id_format`), nunca comparando el texto del mensaje. El mensaje del
   backend se puede mostrar tal cual; la lógica solo mira el código.
 - Formularios reactivos tipados. Las respuestas de la API tienen su interfaz
   en `core/`; no se usa `any`.
-- Los importes llegan del backend como enteros o cadenas decimales y se
+- Los importes llegan del backend **siempre como enteros en céntimos** y se
   formatean con un único pipe; no se hacen operaciones con `number` en coma
-  flotante sobre dinero más allá de la conversión de presentación.
+  flotante sobre dinero más allá de la conversión de divisa para mostrar,
+  que nunca se guarda ni se envía al backend.
 
 ## Interfaz
 

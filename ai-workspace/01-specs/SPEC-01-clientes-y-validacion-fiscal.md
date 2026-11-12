@@ -18,7 +18,8 @@ formularios.
 
 **Fuera**: historial de simulaciones dentro de la ficha (SPEC-03), cálculo
 del impuesto (SPEC-02), formulario y vistas (SPEC-04), edición y borrado
-(A18), `GET /health` (se especifica con el esqueleto del backend).
+(A18), `GET /health` y CORS (SPEC-03, «Operación del backend»), errores
+genéricos de la API (convenciones comunes del índice).
 
 ## 2. Reglas de negocio
 
@@ -26,14 +27,18 @@ del impuesto (SPEC-02), formulario y vistas (SPEC-04), edición y borrado
 
 | Campo | Regla |
 |---|---|
-| `company_name` | Texto. Se recortan los espacios de los extremos; el resultado tiene de 2 a 120 caracteres y ningún carácter de control (saltos de línea, tabuladores). Se guarda recortado |
-| `tax_id` | Texto de 30 caracteres como máximo antes de normalizar. Se normaliza (2.2), se valida según el país (2.3 a 2.7) y **se guarda normalizado** |
-| `contact_email` | Texto. Se recortan los extremos; 254 caracteres como máximo; sin espacios; exactamente una `@`, con texto delante y un dominio detrás que contiene al menos un punto y no empieza ni acaba en punto. No se comprueba que el buzón exista |
-| `country` | Uno de los códigos de la tabla de A4, en mayúsculas: `ES`, `PT`, `FR`, `DE`, `IT`, `NL`, `IE`, `BE`, `GB` |
+| `company_name` | Texto. Se recortan los espacios de los extremos; el resultado tiene de 2 a 120 caracteres y ningún carácter de las categorías Unicode Cc o Cf (saltos de línea, tabuladores, caracteres de formato invisibles). Se guarda recortado |
+| `tax_id` | Texto de 30 caracteres como máximo antes de normalizar, en cualquier país. Se normaliza (2.2), se valida según el país (2.3 a 2.6 para España, 2.8 para el resto) y **se guarda normalizado** |
+| `contact_email` | Texto. Se recortan los espacios de los extremos; ningún carácter Cc o Cf; 254 caracteres como máximo; sin espacios; exactamente una `@`, con texto delante y un dominio detrás que contiene al menos un punto y no empieza ni acaba en punto. No se comprueba que el buzón exista |
+| `country` | Uno de los códigos de la constante de países del dominio (SPEC-02, 2.2), en mayúsculas: `ES`, `PT`, `FR`, `DE`, `IT`, `NL`, `IE`, `BE`, `GB` |
 | `plan` | Uno de los códigos de la lista cerrada: `starter` («Básico»), `professional` («Profesional»), `enterprise` («Empresa») (A2). Dato informativo, sin efecto en el precio |
 
 Los cinco son obligatorios y deben ser cadenas JSON. El sistema añade `id`
-(entero positivo) y `created_at` (fecha y hora UTC en ISO 8601).
+(entero de 1 a 9223372036854775807) y `created_at` (fecha y hora UTC en
+ISO 8601, con precisión de segundos: `2026-11-12T14:30:00Z`).
+
+«Recortar», el orden de las comprobaciones y la unidad de las longitudes
+están en 2.12.
 
 ### 2.2 Normalización del identificador
 
@@ -85,8 +90,9 @@ número de 8 dígitos resultante se le aplica el cálculo del DNI.
 ### 2.6 CIF
 
 **Letras de entidad válidas** (17): `A B C D E F G H J N P Q R S U V W`.
-Las 15 primeras de la lista oficial son de entidades españolas; `N` es
-entidad extranjera y `W` establecimiento permanente de entidad no residente.
+Quince son claves de entidades españolas (`A B C D E F G H J P Q R S U V`);
+`N` es entidad extranjera y `W` establecimiento permanente de entidad no
+residente.
 
 **Cálculo del valor de control** sobre los 7 dígitos `d1…d7`:
 
@@ -135,6 +141,16 @@ regla, que algunas referencias citan, de exigir letra cuando los dos
 primeros dígitos son `00`: tampoco tiene fuente y la Orden de 2008 declara
 los siete dígitos aleatorios.
 
+**Contraste con una implementación independiente.** Como los casos de
+prueba del apartado 5 se generaron con este mismo algoritmo, por sí solos
+solo demuestran coherencia interna. Para romper esa circularidad, un test
+compara el validador con el de la biblioteca `python-stdnum`, fijada como
+dependencia **solo de test** (CA-19). Toda discrepancia se documenta y la
+decide el Tech Lead; no se resuelve cambiando el test ni el validador por
+cuenta propia. El 2026-11-12 la última versión publicada era la 2.2
+(consultado en PyPI); no se ha instalado ni ejecutado, y **no se sabe
+todavía si su validación del CIF coincide con los grupos de 2.6**.
+
 ### 2.8 Fuera de España
 
 Tras la normalización, el identificador debe tener **de 4 a 20 caracteres**
@@ -179,8 +195,42 @@ mayúsculas ni los acentos distinguen, y la `Ñ` busca y ordena como `N`.
 ### 2.11 Dónde vive
 
 Normalización, clasificación, cálculo de controles y forma de búsqueda son
-funciones puras de `backend/app/domain/`, igual que las listas de países y
-planes. La API y la base de datos no repiten ninguna de esas reglas.
+funciones puras de `backend/app/domain/`, igual que la lista de planes. La
+API y la base de datos no repiten ninguna de esas reglas.
+
+**Países**: hay una única constante en el dominio, con el código, el nombre
+y el tipo impositivo en puntos básicos de cada país. La define SPEC-02
+(2.2), que es la dueña de los tipos; esta spec la usa para validar el país
+del alta y para `GET /meta`. No existe una segunda lista de países.
+
+### 2.12 Validación: recorte, unidad, orden y forma de los errores
+
+- **Recortar** es quitar de los extremos únicamente el carácter espacio
+  U+0020. Un tabulador o un salto de línea en un extremo no se recorta: es
+  un carácter Cc y da `invalid_characters`.
+- **Caracteres no admitidos**: cualquier carácter de las categorías Unicode
+  Cc o Cf en `company_name` o en `contact_email` da `invalid_characters`.
+  En `tax_id` sigue valiendo 2.2: todo lo que no sea `0`–`9` o `A`–`Z` tras
+  normalizar es `invalid_tax_id_format`.
+- **Las longitudes se miden en puntos de código Unicode.**
+- **Un solo error por campo: el primero que falle**, en este orden:
+
+| Campo | Orden de las comprobaciones |
+|---|---|
+| `company_name` | `missing` → `not_a_string` → `invalid_characters` → `too_short` → `too_long` |
+| `tax_id` | `missing` → `not_a_string` → `too_long` (más de 30 antes de normalizar) → `invalid_tax_id_format` → `invalid_tax_id_check_character` |
+| `contact_email` | `missing` → `not_a_string` → `invalid_characters` → `too_long` → `invalid_email` |
+| `country` | `missing` → `not_a_string` → `unsupported_country` |
+| `plan` | `missing` → `not_a_string` → `unsupported_plan` |
+
+- **Orden de `errors`**: el de los campos en el contrato (`company_name`,
+  `tax_id`, `contact_email`, `country`, `plan`) y, después, un
+  `unknown_field` por cada campo no documentado, por orden alfabético de su
+  nombre.
+- **Valor de `field`**: el nombre del campo del cuerpo; `id` para el
+  identificador de la ruta; `q` para el parámetro de búsqueda; el nombre
+  recibido para un campo o un parámetro desconocido.
+- **El límite de 100 caracteres de `q` se mide antes de recortar.**
 
 ## 3. Requisitos (EARS)
 
@@ -189,12 +239,14 @@ planes. La API y la base de datos no repiten ninguna de esas reglas.
 | Id | Requisito | Cubre |
 |---|---|---|
 | E-01 | Cuando recibe un alta válida, el sistema deberá guardar el cliente y responder `201` con el cliente creado y la cabecera `Location` de su ficha. | R-03 |
-| E-02 | El sistema deberá recortar los espacios de los extremos del nombre y del email antes de validarlos y guardarlos. | R-03 |
-| E-03 | Si el nombre recortado tiene menos de 2 o más de 120 caracteres, o contiene caracteres de control, entonces el sistema deberá rechazar el alta. | R-03 |
+| E-02 | El sistema deberá recortar los espacios (U+0020) de los extremos del nombre y del email antes de validarlos y guardarlos. | R-03 |
+| E-03 | Si el nombre recortado tiene menos de 2 o más de 120 caracteres, o contiene algún carácter de las categorías Cc o Cf, entonces el sistema deberá rechazar el alta. | R-03 |
 | E-04 | Si el email no cumple la regla de 2.1, entonces el sistema deberá rechazar el alta. | R-03 |
-| E-05 | Si el país no es uno de los códigos de A4 escrito en mayúsculas, entonces el sistema deberá rechazar el alta en lugar de aceptarlo con un impuesto del 0 %. | A4 |
+| E-05 | Si el país no es uno de los códigos de la constante de países del dominio, escrito en mayúsculas, entonces el sistema deberá rechazar el alta en lugar de aceptarlo con un impuesto del 0 %. | A4 |
 | E-06 | Si el plan no es uno de los códigos de la lista cerrada, entonces el sistema deberá rechazar el alta. | A2 |
 | E-07 | Si falta un campo, un campo no es una cadena o la petición trae un campo no documentado, entonces el sistema deberá rechazar el alta. | A14 |
+| E-34 | Si el identificador fiscal recibido supera los 30 caracteres antes de normalizar, entonces el sistema deberá rechazar el alta con el código de campo `too_long`, sea cual sea el país. | A10, A11 |
+| E-35 | El sistema deberá informar de un solo error por campo, el primero que falle según el orden de 2.12, y devolver `errors` en el orden de los campos del contrato. | A14 |
 
 ### Identificador fiscal
 
@@ -224,9 +276,9 @@ planes. La API y la base de datos no repiten ninguna de esas reglas.
 
 | Id | Requisito | Cubre |
 |---|---|---|
-| E-22 | Cuando recibe `GET /customers/{id}` de un cliente existente, el sistema deberá responder `200` con sus datos. | R-11, A13 |
+| E-22 | Cuando recibe `GET /customers/{id}` de un cliente existente, el sistema deberá responder `200` con sus datos y con su historial de simulaciones, en la forma que define SPEC-03. | R-11, A13 |
 | E-23 | Si no existe un cliente con ese `id`, entonces el sistema deberá responder `404` con el código `customer_not_found`. | A13 |
-| E-24 | Si el `id` de la ruta no es un entero positivo, entonces el sistema deberá responder `422` con el código `validation_error`. | A14 |
+| E-24 | Si el `id` de la ruta no es un entero de 1 a 9223372036854775807, entonces el sistema deberá responder `422` con el código `validation_error` y, en el campo `id`, `not_an_integer` o `out_of_range`. | A14 |
 
 ### Buscador
 
@@ -237,7 +289,7 @@ planes. La API y la base de datos no repiten ninguna de esas reglas.
 | E-27 | El sistema deberá tratar `%`, `_` y el carácter de escape del texto buscado como caracteres literales. | R-10 |
 | E-28 | El sistema deberá pasar el texto buscado a la base de datos únicamente como parámetro de la consulta. | R-10 |
 | E-29 | Cuando `q` falta o queda vacío tras recortarlo, el sistema deberá devolver los 20 primeros clientes por orden de nombre. | A13 |
-| E-30 | Si `q` supera los 100 caracteres o la petición trae un parámetro no documentado, entonces el sistema deberá responder `422`. | A14 |
+| E-30 | Si `q` supera los 100 caracteres antes de recortarlo o la petición trae un parámetro no documentado, entonces el sistema deberá responder `422`. | A14 |
 | E-31 | Cuando ningún cliente coincide, el sistema deberá responder `200` con una lista vacía. | R-10 |
 | E-33 | Cuando guarda un cliente, el sistema deberá calcular en el dominio la forma de búsqueda de su nombre (NFD, sin marcas diacríticas, `casefold`) y guardarla en una columna propia. | R-10 |
 
@@ -245,7 +297,7 @@ planes. La API y la base de datos no repiten ninguna de esas reglas.
 
 | Id | Requisito | Cubre |
 |---|---|---|
-| E-32 | El sistema deberá devolver en `GET /meta` los países admitidos, con su código, nombre y tipo impositivo, y los planes, con su código y nombre, tomados de las mismas constantes del dominio que usan la validación y el cálculo. | A13, A2, A4 |
+| E-32 | El sistema deberá devolver en `GET /meta` los países admitidos, con su código, nombre y tipo impositivo, y los planes, con su código y nombre, tomados de la constante única de países (SPEC-02, 2.2) y de la lista de planes del dominio, las mismas que usan la validación y el cálculo. | A13, A2, A4 |
 
 ## 4. Contratos
 
@@ -256,7 +308,7 @@ planes. La API y la base de datos no repiten ninguna de esas reglas.
 | `company_name` | cadena | sí | 2 a 120 caracteres tras recortar |
 | `tax_id` | cadena | sí | Según el país (2.2 a 2.8) |
 | `contact_email` | cadena | sí | Regla de 2.1 |
-| `country` | cadena | sí | Código de A4 en mayúsculas |
+| `country` | cadena | sí | Código de la constante de países, en mayúsculas |
 | `plan` | cadena | sí | `starter`, `professional` o `enterprise` |
 
 ```json
@@ -307,26 +359,69 @@ Ejemplo de `422` por carácter de control:
 }
 ```
 
+Ejemplo de `422` por formato del identificador (solo cambia `errors`):
+
+```json
+"errors": [
+  {
+    "field": "tax_id",
+    "code": "invalid_tax_id_format",
+    "message": "El identificador fiscal no tiene un formato válido."
+  }
+]
+```
+
+Ejemplo de `422` con errores en dos campos, en el orden del contrato:
+
+```json
+"errors": [
+  {
+    "field": "company_name",
+    "code": "too_short",
+    "message": "Debe tener entre 2 y 120 caracteres."
+  },
+  {
+    "field": "contact_email",
+    "code": "invalid_email",
+    "message": "El email no tiene un formato válido."
+  }
+]
+```
+
+Ejemplo de `409`:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Conflict",
+  "status": 409,
+  "code": "customer_already_exists",
+  "detail": "Ya existe un cliente con ese identificador fiscal en ese país."
+}
+```
+
 El `message` de los dos errores del identificador es un texto fijo: no cambia
 con el valor recibido. El `409` no incluye datos del cliente existente (ver
 D-06).
 
 ### 4.2 `GET /customers/{id}`
 
-Respuesta `200`: el mismo objeto que devuelve el alta. SPEC-03 define cómo se
-obtiene el historial de simulaciones de la ficha (dentro de esta respuesta o
-en un endpoint propio); esta spec no lo fija.
+Respuesta `200`: los siete campos que devuelve el alta y, además, el
+historial del cliente en dos campos: `simulation_count` (entero) y
+`simulations` (lista). La forma de esos dos campos y un ejemplo completo
+están en SPEC-03, apartado 4.2; un cliente recién creado devuelve
+`"simulation_count": 0` y `"simulations": []`.
 
-| Estado | `code` | Cuándo | Códigos por campo |
+| Estado | `code` | Cuándo | Códigos por campo (`field`: `id`) |
 |---|---|---|---|
 | `404` | `customer_not_found` | No existe un cliente con ese `id` | — |
-| `422` | `validation_error` | El `id` no es un entero positivo | `not_an_integer`, `out_of_range` |
+| `422` | `validation_error` | El `id` no es un entero de 1 a 9223372036854775807 | `not_an_integer`, `out_of_range` |
 
 ### 4.3 `GET /customers?q=`
 
 | Parámetro | Tipo | Obligatorio | Regla |
 |---|---|---|---|
-| `q` | cadena | no | 100 caracteres como máximo |
+| `q` | cadena | no | 100 caracteres como máximo, medidos antes de recortar |
 
 Respuesta `200` para `GET /customers?q=ejemplo`:
 
@@ -342,7 +437,7 @@ No se devuelve el total de coincidencias ni hay paginación (A13).
 
 | Estado | `code` | Cuándo | Códigos por campo |
 |---|---|---|---|
-| `422` | `validation_error` | `q` demasiado largo o parámetro desconocido | `too_long`, `unknown_field` |
+| `422` | `validation_error` | `q` demasiado largo o parámetro desconocido | `too_long` (`field`: `q`), `unknown_field` (`field`: el nombre del parámetro) |
 
 ### 4.4 `GET /meta`
 
@@ -449,7 +544,6 @@ ninguno de una persona o empresa real.
 | `K1234567D` | NIF de persona física `K`, fuera de A11 (D-03) |
 | `1234567８Z` | El octavo dígito es `８` de ancho completo (U+FF18), no ASCII |
 | `1234567ÑZ` | Letra fuera de `A`–`Z` |
-| cadena de 31 caracteres | Supera el máximo antes de normalizar |
 
 ### 5.5 CIF: letras sin fuente oficial (D-01)
 
@@ -487,6 +581,15 @@ Numeración `1234567`, con C = 4 y letra `D`.
 | `company_name` | solo espacios | `422` | `too_short` |
 | `company_name` | 121 caracteres | `422` | `too_long` |
 | `company_name` | `"Ejemplo\nUno"` | `422` | `invalid_characters` |
+| `company_name` | `"\nEjemplo Uno"` | `422` | `invalid_characters`: el salto de línea no se recorta |
+| `company_name` | `"\tEjemplo Uno "` | `422` | `invalid_characters`: el tabulador tampoco |
+| `company_name` | `"Ejemplo​Uno"` (espacio de anchura cero, Cf) | `422` | `invalid_characters` |
+| `company_name` | `"A\n"` | `422` | `invalid_characters`, no `too_short`: un error por campo, el primero |
+| `company_name` | 120 caracteres con `ñ` y `é` | Válido: se cuentan puntos de código | — |
+| `tax_id` | 31 caracteres, país `ES` | `422` | `too_long`, no `invalid_tax_id_format` |
+| `tax_id` | 31 caracteres, país `FR` | `422` | `too_long` |
+| `tax_id` | `12345678Z` seguido de 21 espacios (30 en total), país `ES` | Válido: el límite es de 30 | — |
+| `contact_email` | `"a\t@b.example"` | `422` | `invalid_characters` |
 | `company_name` | `123` (número) | `422` | `not_a_string` |
 | `contact_email` | `a@b.example` | Válido | — |
 | `contact_email` | `sin-arroba.example`, `a@@b.example`, `@b.example`, `a@b`, `a b@c.example`, `a@.example` | `422` | `invalid_email` |
@@ -497,6 +600,8 @@ Numeración `1234567`, con C = 4 y letra `D`.
 | cualquiera | `null` | `422` | `not_a_string` |
 | adicional | `id` o `created_at` en la petición | `422` | `unknown_field` |
 | `country` y `tax_id` | `XX` y `12345678A` | `422` | solo `unsupported_country` (E-18) |
+| `company_name` y `contact_email` | `"A"` y `sin-arroba.example` | `422` | `too_short` y después `invalid_email`, en ese orden |
+| `plan`, `company_name` y un campo adicional `zeta` | `premium`, `"A"` y cualquier valor | `422` | `too_short`, `unsupported_plan` y `unknown_field`, en ese orden |
 
 ### 5.8 Duplicados
 
@@ -539,10 +644,25 @@ Datos de partida (todos de `ES` salvo que se indique):
 | `' OR 1=1 --` | — | Texto tratado como dato |
 | `noexiste` | — | `200` con lista vacía |
 | ausente, vacío o solo espacios | 5, 2, 3, 6, 7, 4, 1 | Listado inicial; `Ñandú` ordena como `nandu`, entre la `j` y la `z` |
-| 101 caracteres | `422` | `too_long` |
+| 101 caracteres | `422` | `too_long`, en el campo `q` |
+| 100 caracteres seguidos de un espacio | `422` | `too_long`: el límite se mide antes de recortar |
+| `q=alfa` y un parámetro `limit=5` | `422` | `unknown_field`, en el campo `limit` |
 
 Además, con 25 clientes cuyo nombre contiene `Ejemplo`, la búsqueda
 `ejemplo` devuelve exactamente los 20 primeros por nombre.
+
+### 5.10 `id` de la ruta
+
+| `GET /customers/…` | Resultado | Código en el campo `id` |
+|---|---|---|
+| `1` (existe) | `200` | — |
+| `999` (no existe) | `404` `customer_not_found` | — |
+| `9223372036854775807` (no existe) | `404` `customer_not_found` | — |
+| `0` | `422` | `out_of_range` |
+| `-1` | `422` | `out_of_range` |
+| `9223372036854775808` (2^63) | `422` | `out_of_range` |
+| `abc` | `422` | `not_an_integer` |
+| `1.5` | `422` | `not_an_integer` |
 
 ## 6. Criterios de aceptación
 
@@ -553,22 +673,29 @@ Además, con 25 clientes cuyo nombre contiene `Ejemplo`, la búsqueda
 | CA-03 | Un test recorre las 23 letras de la tabla del DNI: para un número con cada resto de 0 a 22, la letra correcta se acepta y las otras 22 se rechazan como error de control. | E-11 |
 | CA-04 | Un test recorre las 17 letras de entidad y los 10 valores de `C`, y comprueba que se acepta exactamente la forma (dígito, letra o ambas) del grupo de cada letra según 2.6, y reproduce cada fila de 5.5. | E-13 |
 | CA-05 | Un test unitario reproduce cada fila de 5.6. | E-14 |
-| CA-06 | Un test de integración envía el ejemplo de 4.1 y obtiene `201`, la cabecera `Location` y el cuerpo del ejemplo (salvo `id` y `created_at`), y `GET /customers/{id}` devuelve el mismo objeto. | E-01, E-02, E-08, E-22 |
-| CA-07 | Tests de integración cubren cada fila de 5.7, comprobando el estado, el `code` y el código por campo, no el texto. | E-03 a E-07, E-18 |
+| CA-06 | Un test de integración envía el ejemplo de 4.1 y obtiene `201`, la cabecera `Location` y el cuerpo del ejemplo (salvo `id` y `created_at`), y `GET /customers/{id}` devuelve esos mismos siete campos; la comparación excluye `simulation_count` y `simulations`, que comprueba SPEC-03. | E-01, E-02, E-08, E-22 |
+| CA-07 | Tests de integración cubren cada fila de 5.7, comprobando el estado, el `code`, el código por campo y el orden de `errors`, no el texto. | E-03 a E-07, E-18, E-34, E-35 |
 | CA-08 | Tests de integración comprueban que un identificador con error de formato y otro con error de control devuelven códigos de campo distintos. | E-15, E-16 |
 | CA-09 | Un test envía dos identificadores con controles correctos distintos y ambos incorrectos, y comprueba que los dos cuerpos de error son idénticos byte a byte. | E-17 |
 | CA-10 | Tests de integración reproducen cada fila de 5.8, y comprueban que tras un `409` o un `422` el número de clientes guardados no cambia. | E-19, E-20, E-21 |
 | CA-11 | Un test inserta directamente en la base de datos dos filas con el mismo país e identificador y la segunda falla por la restricción de unicidad. | E-19 |
-| CA-12 | Tests de integración cubren el `404` y el `422` de `GET /customers/{id}` (`abc`, `0`, `-1`, `1.5`). | E-23, E-24 |
-| CA-13 | Tests de integración reproducen cada fila de 5.9 y el caso de los 25 clientes, comprobando los `id` y su orden. | E-25 a E-27, E-29 a E-31 |
+| CA-12 | Tests de integración reproducen cada fila de 5.10. | E-22 a E-24 |
+| CA-13 | Tests de integración reproducen cada fila de 5.9, incluidas las tres de error, y el caso de los 25 clientes, comprobando los `id` y su orden. | E-25 a E-27, E-29 a E-31 |
 | CA-14 | Un test sustituye la conexión por una que registra las sentencias y comprueba que el texto buscado no aparece en el SQL ejecutado, solo en sus parámetros. | E-28 |
-| CA-15 | Un test compara `GET /meta` con las constantes del dominio y con el ejemplo de 4.4, y comprueba que cada país de `/meta` se acepta en el alta y tiene tipo en la tabla de SPEC-02. | E-32, E-05 |
+| CA-15 | Un test compara `GET /meta` con la constante única de países y la lista de planes del dominio y con el ejemplo de 4.4, y comprueba que cada país de `/meta` se acepta en el alta y que su tipo es el de la tabla 2.2 de SPEC-02. | E-32, E-05 |
 | CA-16 | El OpenAPI generado declara para los cuatro endpoints los campos, tipos y códigos de estado del apartado 4. | E-01, E-22, E-25, E-32 |
 | CA-17 | El oráculo comprueba que los módulos de validación fiscal de `domain/` no importan nada ajeno a la biblioteca estándar y tienen el 100 % de ramas cubiertas. | E-10 a E-14 |
 | CA-18 | Un test unitario del dominio comprueba la forma de búsqueda de cada nombre de 5.9 (`José Pruebas SL` → `jose pruebas sl`, `Ñandú Pruebas SL` → `nandu pruebas sl`), y un test de integración comprueba que la columna guardada tras el alta coincide con ella. | E-33 |
 
+| CA-19 | Un test diferencial compara el validador del dominio con `python-stdnum` (dependencia solo de test, con la versión fijada) para DNI, NIE y CIF: en el CIF, las 17 letras de entidad con las dos formas de control (dígito y letra) y varios miles de numeraciones generadas con semilla fija; en el DNI y el NIE, varios miles de números con cada una de las 23 letras. Las discrepancias conocidas figuran en una lista explícita del test, cada una documentada y decidida por el Tech Lead; cualquier otra hace fallar el test. | E-11, E-12, E-13 |
+
 **Sobre CA-17**: depende de `scripts/check.py`, que aún no existe; hasta
 entonces está **pendiente de implementar**, igual que CA-09 de SPEC-02.
+
+**Sobre CA-19**: es lo que permite decir que R-04 se apoya, para el CIF, en
+una convención contrastada con una implementación independiente y no solo
+en casos generados con el propio algoritmo. La lista de discrepancias nace
+vacía; no se sabe todavía si habrá alguna.
 
 ## 7. Decisiones de diseño
 
@@ -589,7 +716,7 @@ dice si aprobó la propuesta de la IA o la cambió.
 | D-10 | **La normalización elimina también los puntos**: `12.345.678-Z` es una escritura frecuente y rechazarla no aporta seguridad | Cambiada (la IA los rechazaba, siguiendo el encargo de la sesión, que el Tech Lead rectificó) |
 | D-11 | **País no válido**: solo se informa del país; el identificador no se valida (E-18) | Aprobada |
 | D-12 | **`id` de ruta mal formado**: `422` | Aprobada |
-| D-13 | **Historial**: `GET /customers/{id}` devuelve aquí solo los datos del cliente; SPEC-03 decide dónde va el historial | Aprobada |
+| D-13 | **Historial**: SPEC-03 decide dónde va el historial. Resuelta por SPEC-03/D-01: va dentro de `GET /customers/{id}` (4.2) | Aprobada; resuelta el 2026-11-12 |
 | D-14 | **Orden del buscador**: por la forma de búsqueda del nombre, de modo que la `Ñ` ordena como `N` y las vocales acentuadas como las no acentuadas | Aprobada con el cambio de D-08 (la IA proponía el orden por código de carácter, con la `Ñ` tras la `Z`) |
 
 ## 8. Pendiente antes de aprobar
@@ -614,3 +741,4 @@ aprobación lo decide el Tech Lead.
 |---|---|
 | 2026-11-12 | Primer borrador |
 | 2026-11-12 | Revisión del Tech Lead: decididos los grupos de letras del CIF (D-01, filas de 5.5 y CA-04); los acentos dejan de distinguir en el buscador, con una forma de búsqueda guardada en columna propia (D-08, D-14, E-25, E-26, nuevo E-33 y CA-18, tabla 5.9); la normalización elimina también los puntos (D-10, 2.2, 5.1, 5.4, 5.6); nombres de los planes en español (D-04); sustituidos dos DNI de numeración baja en 5.2; aprobadas las demás decisiones |
+| 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: la ficha incluye el historial y CA-06 lo excluye de la comparación (H-01); `id` de 1 a 9223372036854775807 y tabla 5.10 (H-04); prueba diferencial con `python-stdnum`, CA-19 (H-06); caso de parámetro desconocido en 5.9 (H-10); constante única de países, definida en SPEC-02 (H-12); referencias internas (H-13); ejemplos de `409` y de `422` (H-14); nuevo apartado 2.12 con el recorte, la unidad, el orden y la forma de los errores, E-34, E-35 y `too_long` para un identificador de más de 30 caracteres en cualquier país (H-22); precisión de `created_at` (H-23) |

@@ -38,7 +38,7 @@ resultado en cada movimiento del control.
 - `POST /pricing/quote` calcula y devuelve el desglose sin persistir nada.
 - `POST /simulations` usa la misma función del dominio y guarda el resultado.
 - El frontend no contiene la tarifa ni los tipos impositivos.
-- Al mover el control, el frontend espera unos 200 ms sin cambios antes de
+- Al mover el control, el frontend espera 200 ms sin cambios antes de
   pedir (*debounce*) y, si llega un valor nuevo, cancela la petición en curso
   para que una respuesta antigua nunca pise a una más reciente.
 - **Todo se calcula y se guarda en EUR.** La conversión a otra divisa la hace

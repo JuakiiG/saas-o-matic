@@ -43,7 +43,7 @@ Las dependencias van en un solo sentido: `api → services → domain` y
   respuestas HTTP en un único sitio. Las respuestas de error no exponen trazas
   ni detalles internos.
 - Cada error lleva un **código estable en inglés y en `snake_case`** (p. ej.
-  `invalid_tax_id`) y un mensaje legible en español. Los códigos se definen
+  `invalid_tax_id_format`) y un mensaje legible en español. Los códigos se definen
   en un único módulo, figuran en la spec y no se renombran: son parte del
   contrato. Los tests comprueban el código, no el texto del mensaje.
 - La configuración (ruta de la base de datos, orígenes CORS) llega por

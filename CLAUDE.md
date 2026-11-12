@@ -57,7 +57,10 @@ scripts/    herramientas del repo (oráculo)
 - **Las reglas de negocio viven solo en `backend/app/domain/`**, como funciones
   puras. El frontend no calcula precios ni impuestos: los pide al backend.
   *Por qué: dos implementaciones de una tarifa acaban divergiendo (ADR-002).*
-- **El dinero nunca es `float`**, ni en Python ni en TypeScript.
+- **El dinero nunca es `float`**, ni en Python ni en TypeScript. Única
+  excepción: la conversión de divisa del frontend, que es solo para mostrar,
+  se redondea al formatear y nunca se guarda ni se envía al backend
+  (ADR-002).
 - Las decisiones con alternativas se registran como ADR en
   `ai-workspace/02-arquitectura/` antes de aplicarlas.
 
@@ -83,7 +86,7 @@ dificulta revisarlo.*
   textos de la interfaz en español. Los comentarios explican el porqué, no
   repiten el código.
 - Los errores de la API llevan un **código estable en inglés** (p. ej.
-  `invalid_tax_id`) y un mensaje legible en español. El frontend decide por
+  `invalid_tax_id_format`) y un mensaje legible en español. El frontend decide por
   el código, nunca por el texto. *Por qué: el texto puede cambiar o
   traducirse sin romper nada.*
 - Funciones pequeñas y con nombre de lo que hacen. Errores tratados de forma

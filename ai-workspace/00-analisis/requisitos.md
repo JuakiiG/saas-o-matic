@@ -1,7 +1,7 @@
 # Requisitos
 
 - **Fecha**: 2026-11-12
-- **Estado**: borrador, pendiente de revisión del Tech Lead
+- **Estado**: `aprobado` por el Tech Lead el 2026-11-12
 - **Qué es**: nuestra lectura del encargo, descompuesta en requisitos
   numerados para poder seguir cada uno hasta su spec, su test y su commit.
   No reproduce el texto original.
@@ -27,8 +27,16 @@ interfaz web y una API con base de datos, que se comunican entre sí.
 | R-08 | El frontend usa un framework de libre elección | ADR-001 | — |
 | R-09 | La interfaz obtiene tipos de cambio de una API pública y permite cambiar la divisa de visualización (EUR, USD, GBP…), mostrando los costes convertidos al momento | SPEC-04 | A8 |
 | R-10 | Vista de panel con un buscador de clientes por nombre de empresa o por identificador fiscal | SPEC-04 · SPEC-01 | A13 |
-| R-11 | Vista de detalle con tarjetas *responsive* que muestran los datos del cliente y el historial de sus simulaciones guardadas | SPEC-04 · SPEC-03 | A13 |
+| R-11 | Vista de detalle con tarjetas *responsive* que muestran los datos del cliente y el historial de sus simulaciones guardadas | SPEC-04 · SPEC-03 · SPEC-01 | A13 |
 | R-12 | Formulario de simulación con un *slider* o control equivalente para el número de usuarios, que muestra en tiempo real la factura mensual prevista según los tramos y en la divisa elegida | SPEC-04 · SPEC-02 | A9 |
+
+**Sobre R-04 y el «algoritmo oficial»**: la letra del DNI y del NIE sigue
+el cálculo que publica el Ministerio del Interior. Para el carácter de
+control del CIF no se ha localizado una fuente oficial que lo describa: la
+Orden EHA/451/2008 y la Agencia Tributaria fijan la estructura y las letras
+de entidad, pero no el cálculo. SPEC-01 se apoya en la convención de uso
+común, **contrastada con una implementación independiente** mediante una
+prueba diferencial (SPEC-01, CA-19), no en un texto oficial.
 
 ## Requisitos de calidad
 

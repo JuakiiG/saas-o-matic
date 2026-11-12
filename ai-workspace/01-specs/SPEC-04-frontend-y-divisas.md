@@ -4,9 +4,9 @@
 |---|---|
 | **Estado** | `borrador` (2026-11-12) |
 | **Requisitos** | R-09, R-10, R-11, R-12 y R-17 |
-| **Supuestos** | A8, A9, A13, A14, A16 y A17 (`decidido`) |
-| **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres en `borrador`; ADR-001 y ADR-002 |
-| **Bloqueos para aprobarla** | SPEC-01, SPEC-02 y SPEC-03 sin aprobar |
+| **Supuestos** | A6, A7, A8, A9, A12, A13, A14, A16 y A17 (`decidido`) · A3 (`pendiente de confirmar`) |
+| **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres en `borrador`; ADR-001, ADR-002 y ADR-003 |
+| **Bloqueos para aprobarla** | A3 sin respuesta (con fecha límite) · SPEC-01, SPEC-02 y SPEC-03 sin aprobar |
 
 ## 1. Objetivo
 
@@ -18,9 +18,10 @@ otra divisa para mostrarlos.
 historial, simulador con proyección en tiempo real, selector de divisa y
 llamada a la API pública de tipos de cambio.
 
-**Fuera**: toda regla de negocio. El frontend no contiene la tarifa, los
-tipos impositivos ni el control del identificador fiscal (ADR-002); los
-contratos de la API están en SPEC-01, SPEC-02 y SPEC-03.
+**Fuera**: toda regla de negocio. El frontend no contiene la tarifa ni los
+tipos impositivos (ADR-002), ni el control del identificador fiscal
+(`.claude/rules/frontend.md`); los contratos de la API están en SPEC-01,
+SPEC-02 y SPEC-03.
 
 ## 2. Reglas
 
@@ -47,7 +48,9 @@ EUR.
   reciente.
 - El campo admite 100 caracteres como máximo, el límite de la API.
 - Cada resultado muestra el nombre, el identificador fiscal, el país y el
-  plan, y enlaza con el detalle.
+  plan, y enlaza con el detalle. El país y el plan se muestran **con los
+  nombres de `GET /meta`** («España», «Profesional»), no con sus códigos. Si
+  `/meta` falla, el panel muestra el error con «Reintentar», como el alta.
 - Cuatro estados visibles: cargando, error con botón «Reintentar», sin
   resultados («No hay clientes que coincidan») y lista.
 - El frontend no filtra ni ordena: muestra lo que devuelve la API, en su
@@ -88,7 +91,9 @@ EUR.
 - Si `simulation_count` es mayor que el número de simulaciones recibidas, se
   indica: «Se muestran las 50 últimas de *N*».
 - Sin simulaciones: mensaje y enlace al simulador.
-- `404`: vista «Cliente no encontrado», con enlace al panel.
+- Si `GET /customers/{id}` responde `404`, o `422` porque el `id` de la ruta
+  no es válido (`/clientes/abc`, `/clientes/0`): vista «Cliente no
+  encontrado», con enlace al panel.
 - **Responsive**: a 375 px, una columna y sin desplazamiento horizontal; en
   escritorio, las tarjetas del historial en varias columnas.
 
@@ -96,9 +101,15 @@ EUR.
 
 - **Usuarios activos**: un control deslizante de 0 a 500 y, sincronizado con
   él, un campo numérico que admite de 0 a 100.000 (A7). Valor inicial: 10.
+- Al abrir el simulador se pide el cliente. Si responde `404`, o `422` por
+  un `id` no válido, se muestra la vista «Cliente no encontrado» y no se
+  pide ninguna proyección. Lo mismo si una proyección responde `404`
+  `customer_not_found`.
 - **Almacenamiento** y **llamadas a la API**: campos numéricos enteros, con
   los límites de SPEC-03. Valor inicial: 0. Cambiarlos no pide una proyección
-  nueva, porque no tienen precio (A3).
+  nueva, porque no tienen precio (A3). Un valor no válido en uno de ellos
+  muestra el error junto al campo y desactiva «Guardar», pero **no retira la
+  proyección**, que no depende de ellos.
 - **Proyección**: al cambiar los usuarios, tras **200 ms** sin cambios se
   llama a `POST /pricing/quote`, cancelando la petición anterior (ADR-002).
   Se muestran los tres tramos, el coste base, el impuesto con su tipo y el
@@ -110,7 +121,7 @@ EUR.
 | Cargando | Los importes anteriores se marcan como «actualizando»; no se presentan como vigentes |
 | Datos | El desglose y el total |
 | Error | Se retiran los importes; aviso con «Reintentar». **Nunca queda a la vista un importe anterior como si fuera el actual** |
-| Entrada no válida | No se llama a la API; mensaje junto al campo; se retiran los importes |
+| Usuarios no válidos | No se llama a la API; mensaje junto al campo; se retiran los importes |
 
 - **Guardar**: llama a `POST /simulations`. El botón está desactivado
   mientras la proyección no esté en estado «datos» para el valor actual,
@@ -145,7 +156,8 @@ EUR.
 - Mientras la divisa elegida no es EUR se muestran, junto a los importes, el
   tipo aplicado y su fecha («1 EUR = 1,1139 USD · tipo del 12/11/2026») y el
   total en EUR. La fecha es la del objeto de esa divisa: cada tipo trae la
-  suya.
+  suya. Es una fecha sin hora y se muestra **tal cual**, solo cambiando su
+  forma a día/mes/año, sin convertirla de zona horaria.
 - **Estados**:
 
 | Estado | Qué se ve |
@@ -163,8 +175,6 @@ EUR.
   repetida, o un objeto que incumpla algo de lo anterior, invalida la
   respuesta entera: una respuesta parcial se trata como error completo. Los
   objetos de divisas no pedidas se ignoran.
-- Si los tipos fallan cuando ya hay elegida otra divisa (reintento fallido),
-  la vista vuelve a EUR con el aviso.
 
 ### 2.7 Estados de carga y de error (R-17)
 
@@ -184,15 +194,17 @@ EUR.
 - Textos en español.
 - Los tipos impositivos llegan en puntos básicos y se muestran como
   porcentaje (`2100` → «21 %»).
-- Las fechas llegan en UTC y se muestran en la zona horaria del navegador,
-  con formato `es-ES`.
+- Las fechas con hora del backend (`created_at`) llegan en UTC y se muestran
+  en la zona horaria del navegador, con formato `es-ES`. La fecha del tipo de
+  cambio no tiene hora y queda fuera de esta regla (2.6).
 - Controles con etiqueta, manejables con teclado; HTML semántico.
 
 ### 2.9 Configuración
 
 La URL del backend y la de la API de divisas están en los ficheros de
 entorno de Angular, no repartidas por el código. El backend admite por CORS
-solo el origen del frontend en local (A16).
+solo el origen del frontend (A16); el requisito y su criterio están en
+SPEC-03, «Operación del backend».
 
 ## 3. Requisitos (EARS)
 
@@ -204,13 +216,14 @@ solo el origen del frontend en local (A16).
 | E-02 | Cuando el texto del buscador lleva 300 ms sin cambiar, el sistema deberá pedir la búsqueda y cancelar la petición anterior si sigue en curso. | R-10 |
 | E-03 | El sistema deberá mostrar los resultados en el orden en que los devuelve la API, sin filtrarlos ni reordenarlos. | R-10 |
 | E-04 | Cuando la búsqueda no devuelve clientes, el sistema deberá mostrar un mensaje de «sin resultados» distinto del estado de carga y del de error. | R-10, R-17 |
+| E-35 | El sistema deberá mostrar el país y el plan de cada resultado con los nombres que devuelve `GET /meta`, no con sus códigos. | R-10 |
 
 ### Alta
 
 | Id | Requisito | Cubre |
 |---|---|---|
 | E-05 | El sistema deberá ofrecer como países y planes exactamente los que devuelve `GET /meta`. | A17 |
-| E-06 | El sistema no deberá calcular ni comprobar en el navegador el carácter de control del identificador fiscal. | ADR-002 |
+| E-06 | El sistema no deberá calcular ni comprobar en el navegador el carácter de control del identificador fiscal. | `.claude/rules/frontend.md` |
 | E-07 | Mientras un alta está en curso, el sistema deberá impedir un segundo envío. | A17 |
 | E-08 | Cuando el alta responde `201`, el sistema deberá navegar al detalle del cliente creado. | A17 |
 | E-09 | Si el alta responde `422`, entonces el sistema deberá mostrar cada error junto a su campo y conservar los valores escritos. | A14, R-17 |
@@ -224,7 +237,7 @@ solo el origen del frontend en local (A16).
 | E-12 | Cuando se abre el detalle de un cliente existente, el sistema deberá mostrar sus datos y una tarjeta por cada simulación recibida, en el orden de la API. | R-11 |
 | E-13 | Cuando el cliente no tiene simulaciones, el sistema deberá mostrar un mensaje y un enlace al simulador. | R-11 |
 | E-14 | Mientras el cliente tiene más simulaciones de las recibidas, el sistema deberá indicar cuántas se muestran y cuántas hay. | R-11 |
-| E-15 | Si el cliente no existe, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel. | R-11, R-17 |
+| E-15 | Si la petición del cliente responde `404`, o `422` por un `id` de ruta no válido, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel, tanto en el detalle como en el simulador. | R-11, R-17 |
 | E-16 | El sistema deberá mostrar el detalle sin desplazamiento horizontal a 375 px de ancho. | R-11 |
 
 ### Simulador
@@ -236,7 +249,9 @@ solo el origen del frontend en local (A16).
 | E-19 | El sistema deberá mostrar como proyección únicamente los importes devueltos por el backend, sin calcular ninguno en el navegador salvo la conversión de divisa. | A9, ADR-002 |
 | E-20 | Si la proyección falla, entonces el sistema deberá retirar los importes anteriores y mostrar un aviso con opción de reintentar. | R-17, ADR-002 |
 | E-21 | Mientras una proyección está en curso, el sistema deberá marcar los importes visibles como no vigentes. | R-17 |
-| E-22 | Si un campo del simulador no es un entero dentro de sus límites, entonces el sistema deberá mostrar el error junto al campo y no llamar a la API. | A3, A7 |
+| E-22 | Si el número de usuarios no es un entero dentro de sus límites, entonces el sistema deberá mostrar el error junto al campo, no llamar a la API y retirar los importes. | A7 |
+| E-36 | Si el almacenamiento o el número de llamadas no es un entero dentro de sus límites, entonces el sistema deberá mostrar el error junto al campo y desactivar el guardado, sin retirar la proyección. | A3 |
+| E-37 | Si una proyección responde `404` con `customer_not_found`, entonces el sistema deberá mostrar la vista «Cliente no encontrado». | R-17 |
 | E-23 | Mientras la proyección del valor actual no esté disponible, haya un campo no válido o se esté guardando, el sistema deberá mantener desactivado el botón de guardar. | R-12 |
 | E-24 | Cuando el guardado responde `201`, el sistema deberá navegar al detalle del cliente. | R-05, R-11 |
 | E-25 | Si el guardado falla, entonces el sistema deberá mostrar el error y conservar los valores del formulario. | R-17 |
@@ -248,7 +263,7 @@ solo el origen del frontend en local (A16).
 | E-26 | Cuando arranca la aplicación, el sistema deberá pedir una sola vez a la API pública los tipos de EUR a USD, GBP y CHF, directamente desde el navegador. | R-09, A8 |
 | E-27 | Cuando se elige otra divisa, el sistema deberá mostrar al momento todos los importes visibles convertidos, sin hacer ninguna petición. | R-09 |
 | E-28 | Mientras la divisa elegida es EUR, el sistema deberá mostrar los importes exactos en céntimos, sin depender de la API de divisas. | A8 |
-| E-29 | Mientras la divisa elegida no es EUR, el sistema deberá mostrar el tipo aplicado, su fecha y el total en EUR. | A8 |
+| E-29 | Mientras la divisa elegida no es EUR, el sistema deberá mostrar el tipo aplicado, su fecha tal como la da la API, sin convertirla de zona horaria, y el total en EUR. | A8 |
 | E-30 | Si la API de divisas falla, tarda más de 5 s o devuelve una respuesta no válida, entonces el sistema deberá mostrar un aviso, presentar los importes en EUR y ofrecer un botón para reintentar, manteniendo utilizable el resto de la aplicación. | R-17, A8 |
 | E-31 | El sistema no deberá enviar al backend ni guardar ningún importe convertido ni la divisa elegida. | A8 |
 
@@ -266,7 +281,7 @@ solo el origen del frontend en local (A16).
 
 | Llamada | Desde | Spec |
 |---|---|---|
-| `GET /meta` | Alta, detalle (nombres de país y plan) | SPEC-01 |
+| `GET /meta` | Panel y detalle (nombres de país y plan), alta (desplegables) | SPEC-01 |
 | `GET /customers?q=` | Panel | SPEC-01 |
 | `POST /customers` | Alta | SPEC-01 |
 | `GET /customers/{id}` | Detalle, simulador (nombre y país del cliente) | SPEC-01, SPEC-03 |
@@ -354,6 +369,8 @@ funcionando.
 | Escribir `eje` deprisa (tres pulsaciones en menos de 300 ms) | 1, con `q=eje` | Lista |
 | Escribir `eje`, esperar, añadir `m` antes de que responda | 2; la primera se cancela | Solo se muestra la respuesta de `ejem` |
 | La respuesta trae `items: []` | — | «No hay clientes que coincidan» |
+| Un resultado con `country` `ES` y `plan` `professional` | — | Se muestra «España» y «Profesional» |
+| `/meta` falla | — | Error con «Reintentar»; no se muestran códigos en lugar de nombres |
 | La petición falla | — | Aviso con «Reintentar»; al pulsarlo se repite la misma búsqueda |
 
 ### 5.4 Alta: respuesta → interfaz
@@ -383,6 +400,11 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | Escribir `-1`, `1,5`, `100001` o dejarlo vacío | 0 | Error junto al campo; sin importes; «Guardar» desactivado |
 | La proyección falla | — | Sin importes; aviso con «Reintentar»; «Guardar» desactivado |
 | Cambiar almacenamiento o llamadas | 0 | La proyección no cambia |
+| Escribir `-1` o `1,5` en almacenamiento, con una proyección visible | 0 | Error junto al campo; la proyección sigue a la vista; «Guardar» desactivado |
+| Abrir `/clientes/999/simulacion` (el cliente responde `404`) | 0 | Vista «Cliente no encontrado» |
+| Abrir `/clientes/abc/simulacion` (el cliente responde `422`) | 0 | Vista «Cliente no encontrado» |
+| Una proyección responde `404` `customer_not_found` | — | Vista «Cliente no encontrado» |
+| Con USD elegido, la fecha del tipo es `2026-11-12` y el navegador está en una zona con desfase negativo | 0 | Se muestra «12/11/2026», no el día anterior |
 | Cambiar la divisa a USD con 15 usuarios | 0 | Total 188,69 USD, con el tipo, su fecha y 169,40 EUR |
 | «Guardar» con respuesta `201` | — | Navega al detalle; la simulación nueva es la primera |
 | «Guardar» con `404` o `500` | — | Aviso; los valores se conservan |
@@ -394,11 +416,11 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | CA-01 | Un test parametrizado del *pipe* de importes reproduce cada celda de 5.1, incluido el caso del céntimo de diferencia. | E-27, E-28 |
 | CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-30 |
 | CA-03 | Un test comprueba que, con la API de divisas en error, el panel, el detalle y el simulador muestran sus datos en EUR. | E-28, E-30 |
-| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones y cuál se muestra. | E-01 a E-04 |
-| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos literales de SPEC-01. | E-05, E-07 a E-11 |
+| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones y cuál se muestra. | E-01 a E-04, E-35 |
+| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. | E-05, E-07 a E-11 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
-| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas y `404`. | E-12 a E-15 |
-| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5, usando como respuestas los ejemplos de SPEC-02 y SPEC-03. | E-17, E-18, E-20 a E-25 |
+| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas, `404` y `422` por `id` no válido. | E-12 a E-15 |
+| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15 y 51 usuarios de la tabla 5.1 de SPEC-02. | E-15, E-17, E-18, E-20 a E-25, E-29, E-36, E-37 |
 | CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
 | CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
 | CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada». | E-34 |
@@ -435,6 +457,9 @@ dice si aprobó la propuesta de la IA o la cambió.
 | D-12 | **Mensajes de error de campo**: se muestra el `message` del backend; la lógica solo mira el `code` | Aprobada |
 | D-13 | **Validación de ayuda en el navegador** limitada a obligatorios, longitudes y forma del email | Aprobada |
 
+D-01 y D-02 se registran además como ADR-003, con las alternativas y la
+verificación.
+
 **Sobre D-09**: la versión de Playwright se fija al añadir la dependencia,
 en la fase de QA. El 2026-11-12 la última publicada de `@playwright/test`
 era la 1.65.0, que declara `node >=20` (consultado con `npm view`). No se ha
@@ -442,20 +467,27 @@ instalado ni ejecutado.
 
 ## 8. Cambios que provoca en otros documentos
 
-**No se han aplicado.** Por decisión del Tech Lead se aplican cuando se
-aprueben las specs.
+**Aplicados el 2026-11-12.** El Tech Lead había decidido aplicarlos al
+aprobar las specs; tras la evaluación independiente (H-01, H-19, H-26)
+decidió aplicarlos ya: con todo en borrador, mantener destinos incoherentes
+no tiene sentido.
 
-| Documento | Cambio |
-|---|---|
-| ADR-002 | «unos 200 ms» pasa a 200 ms, fijado aquí (D-10) |
-| A8 en `supuestos.md` | La lista de divisas queda cerrada: EUR, USD, GBP y CHF (D-03) |
-| SPEC-01 | Sigue pendiente el cambio de 4.2 y CA-06 anotado en el apartado 8 de SPEC-03 |
+| Documento | Cambio | Estado |
+|---|---|---|
+| ADR-002 | «unos 200 ms» pasa a 200 ms, fijado aquí (D-10) | Aplicado |
+| A8 en `supuestos.md` | La lista de divisas queda cerrada: EUR, USD, GBP y CHF (D-03) | Aplicado |
+| A17 en `supuestos.md` | El alta está en una ruta propia, `/clientes/nuevo`, con acceso desde el panel (D-07) | Aplicado |
+| SPEC-01, 4.2 y CA-06 | La ficha incluye el historial (apartado 8 de SPEC-03) | Aplicado |
 
 ## 9. Pendiente antes de aprobar
 
 | Asunto | Qué cambiaría en esta spec |
 |---|---|
+| A3 · almacenamiento y API | Si tuvieran precio, cambiarlos pediría una proyección nueva (2.5) |
 | SPEC-01, SPEC-02 y SPEC-03 | Si cambian sus contratos, las tablas de 5.4 y 5.5 |
+
+La fecha límite de A3 es la del índice de specs: viernes 13 de noviembre de
+2026 a las 10:00.
 
 ## Historial
 
@@ -463,3 +495,4 @@ aprueben las specs.
 |---|---|
 | 2026-11-12 | Primer borrador |
 | 2026-11-12 | Revisión del Tech Lead: la API de divisas pasa a la `v2` de Frankfurter, con su respuesta real en 4.2, la validación de 2.6 adaptada a una lista y las tablas 5.1 y 5.2 recalculadas (D-01); CORS verificado (D-02); Playwright para la prueba de principio a fin y los 375 px, con CA-13 reescrito y nuevos CA-14 y CA-15 (D-09); aprobadas las demás decisiones |
+| 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: aplicados los cambios cruzados del apartado 8, incluido A17 (H-01, H-19, H-26); A3, A6, A7 y A12 en la cabecera, con A3 como bloqueo (H-02); CA-08 cita E-29 (H-09); CA-05 y CA-08 dicen de dónde salen las respuestas simuladas (H-14); «Cliente no encontrado» también con `422` y en el simulador, E-37 (H-15); el panel muestra los nombres de `/meta`, E-35 (H-16); la fecha del tipo de cambio se muestra tal cual (H-17); eliminado el escenario inalcanzable del reintento, y un almacenamiento o un número de llamadas no válido ya no retira la proyección, E-36 (H-18); remisión a ADR-003 (H-20); E-06 remite a la regla de frontend y no a ADR-002 (H-25) |

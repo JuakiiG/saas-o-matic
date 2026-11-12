@@ -22,17 +22,17 @@
 |---|---|---|---|
 | A1 | Plazo de entrega | `logística` | R-19 |
 | A2 | Qué es el plan y si afecta al precio | `pendiente de confirmar` | SPEC-01, SPEC-02 |
-| A3 | Almacenamiento y llamadas a la API sin tarifa | `pendiente de confirmar` | SPEC-02, SPEC-03 |
-| A4 | Países admitidos y tipo de impuesto de cada uno | `pendiente de confirmar` | SPEC-02, SPEC-01 |
+| A3 | Almacenamiento y llamadas a la API sin tarifa | `pendiente de confirmar` | SPEC-02, SPEC-03, SPEC-04 |
+| A4 | Países admitidos y tipo de impuesto de cada uno | `pendiente de confirmar` | SPEC-01, SPEC-02, SPEC-03 |
 | A5 | Tratamiento del IVA entre empresas de distintos países | `pendiente de confirmar` | SPEC-02 |
-| A6 | Representación del dinero y redondeo | `decidido` (2026-11-12) | SPEC-02, SPEC-03 |
-| A7 | Límites del número de usuarios | `decidido` (2026-11-12) | SPEC-02, SPEC-03 |
+| A6 | Representación del dinero y redondeo | `decidido` (2026-11-12) | SPEC-02, SPEC-03, SPEC-04 |
+| A7 | Límites del número de usuarios | `decidido` (2026-11-12) | SPEC-02, SPEC-03, SPEC-04 |
 | A8 | Divisas: moneda de cálculo, origen de los tipos y fallo de la API | `decidido` (2026-11-12) | SPEC-04 |
-| A9 | Dónde se calcula la proyección en tiempo real | `decidido` (2026-11-12) | SPEC-02, SPEC-04, ADR-002 |
+| A9 | Dónde se calcula la proyección en tiempo real | `decidido` (2026-11-12) | SPEC-02, SPEC-03, SPEC-04, ADR-002 |
 | A10 | Identificador fiscal de países distintos de España | `decidido` (2026-11-12) | SPEC-01 |
 | A11 | Alcance exacto de la validación española | `decidido` (2026-11-12) | SPEC-01 |
-| A12 | Clientes duplicados | `decidido` (2026-11-12) | SPEC-01 |
-| A13 | Endpoints de lectura no enumerados | `decidido` (2026-11-12) | SPEC-01, SPEC-03, SPEC-04 |
+| A12 | Clientes duplicados | `decidido` (2026-11-12) | SPEC-01, SPEC-04 |
+| A13 | Endpoints de lectura no enumerados | `decidido` (2026-11-12) | SPEC-01, SPEC-02, SPEC-03, SPEC-04 |
 | A14 | Formato de los errores de la API | `decidido` (2026-11-12) | Todas |
 | A15 | Formato de entrega del repositorio | `logística` | R-19 |
 | A16 | Autenticación | `decidido` (2026-11-12) | Todas |
@@ -170,8 +170,8 @@ máximo del control de la interfaz puede ser menor y se fija en SPEC-04.
   qué*: es la letra del encargo, que dice que es la interfaz la que conecta.
   Pasarla por el backend aislaría mejor el fallo de un tercero, pero se
   aparta de lo pedido.
-- Divisas ofrecidas: una lista corta (EUR, USD, GBP y alguna más), que se
-  cierra en SPEC-04.
+- Divisas ofrecidas: EUR, USD, GBP y CHF. Lista cerrada en SPEC-04 (D-03)
+  el 2026-11-12.
 - Se muestra la fecha del tipo de cambio usado.
 - Si la API de divisas falla o tarda demasiado: aviso visible, importes en
   EUR y un botón para reintentar. La aplicación sigue siendo utilizable.
@@ -227,7 +227,7 @@ Se añaden los mínimos:
 | `GET /customers/{id}` | Ficha del cliente con su historial (R-11) |
 | `POST /pricing/quote` | Proyección sin guardar (R-12, A9) |
 | `GET /meta` | Países admitidos con su impuesto y planes, para los formularios |
-| `GET /health` | Comprobar que el backend está levantado |
+| `GET /health` | Comprobar que el backend está levantado (SPEC-03, «Operación del backend») |
 
 El buscador devuelve **como máximo 20 resultados, ordenados por nombre de
 empresa**. *Por qué*: una respuesta acotada y con orden estable es predecible
@@ -246,13 +246,14 @@ el frontend y los tests.
 
 Sin inicio de sesión. *Por qué*: es una herramienta interna, el encargo no lo
 menciona y añadirlo desviaría el esfuerzo de lo que se evalúa. Sí se limita
-CORS al origen del frontend.
+CORS al origen del frontend (SPEC-03, «Operación del backend»).
 
 ### A17 · Vista de alta de cliente
 
 No figura entre las vistas obligatorias, pero sin ella no hay forma de crear
-clientes desde la interfaz. Se añade un formulario sencillo de alta en el
-panel. *Por qué*: es donde la validación fiscal se hace visible para quien
+clientes desde la interfaz. Se añade un formulario sencillo de alta en una
+ruta propia (`/clientes/nuevo`), con acceso desde el panel (SPEC-04, D-07).
+*Por qué*: es donde la validación fiscal se hace visible para quien
 evalúa, y evita depender de datos precargados.
 
 ### A18 · Edición y borrado
