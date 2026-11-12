@@ -50,6 +50,43 @@ la sesión 01).
 | 14:42 | — | SPEC-04 en `borrador` e índice de specs actualizado. Sin commit, a la espera de revisión |
 | 14:53 | — | Revisión de SPEC-04 por el Tech Lead (apartado 3). Verificación de la `v2` de Frankfurter y de sus cabeceras CORS con curl |
 | 14:56 | *(este commit)* | SPEC-04 en `borrador` con la revisión aplicada, índice de specs y esta bitácora, que entra por primera vez en un commit |
+| 14:58 | — | El commit anterior es `1aeb653`. Lanzado el evaluador independiente sobre las cuatro specs |
+| 15:05 | — | Informe del evaluador guardado tal cual en `04-calidad/evaluacion-specs-01.md`: 26 hallazgos (1 de severidad alta, 7 media, 18 baja). `git status` confirma que el evaluador no modificó ningún fichero. La IA no ha corregido nada ni ha valorado los hallazgos en el informe. Sin commit, a la espera de la revisión del Tech Lead |
+| 15:13 | `292e96b` | Informe del evaluador, intacto, en un commit propio |
+| 15:13 | — | Revisión del informe por el Tech Lead: decisiones sobre los 26 hallazgos (apartado 3) |
+| 15:20 | `63a494c` | Correcciones de la evaluación en las cuatro specs, el índice, `supuestos.md`, `requisitos.md` (que pasa a `aprobado`), `CLAUDE.md`, las reglas por capa y ADR-002 |
+| 15:20 | `3326b38` | ADR-003 (API de divisas) y ADR-004 (persistencia); «dos tablas» corregido en ADR-001; índice de arquitectura |
+| 15:22 | *(este commit)* | Respuesta a la evaluación (`04-calidad/respuesta-evaluacion-specs-01.md`) y esta bitácora |
+
+**Evaluador: no se pudo lanzar como subagente con nombre.** La sesión no
+reconoció el tipo `evaluador` de `.claude/agents/evaluador.md` (la lista de
+agentes disponibles no lo incluía). La IA lanzó en su lugar un subagente de
+propósito general con contexto limpio y modelo `opus`, con la orden de leer
+primero ese fichero y adoptar su papel y sus límites. Diferencia con lo
+previsto: ese subagente sí dispone de herramientas de escritura; se le
+ordenó no usarlas y la IA comprueba con `git status` que no ha tocado nada.
+El encargo no incluía ninguna conclusión de la IA sobre las specs.
+
+**Causa, indicada por el Tech Lead (15:09)**: el tipo `evaluador` no estaba
+disponible porque los agentes se cargan al arrancar el proceso. Por eso se
+usó la alternativa: subagente de propósito general, contexto limpio, modelo
+`opus` y orden de solo lectura. La IA no ha comprobado esa causa por su
+cuenta; solo constató que el tipo no figuraba entre los disponibles.
+
+**Comprobación pedida por el Tech Lead (15:09)**, con `git status` y
+`git diff --stat` tras terminar el evaluador:
+
+- Único fichero modificado: `ai-workspace/03-proceso/sesion-02.md` (11
+  líneas añadidas, todas escritas por la IA: las filas de cronología de las
+  14:58 y las 15:05 y la nota sobre el evaluador).
+- Único fichero sin seguimiento: `ai-workspace/04-calidad/evaluacion-specs-01.md`,
+  el informe, que guardó la IA.
+- Nada preparado en el índice. `HEAD` sigue en `1aeb653`.
+- Ninguna spec, ADR, regla ni `CLAUDE.md` aparece modificado: el evaluador
+  no escribió en el repo.
+
+Límite de la comprobación: `git status` no muestra ficheros ignorados por
+`.gitignore` ni nada escrito fuera del repo.
 
 **Desviación que se anota**: la bitácora se creó después de leer los
 documentos y de lanzar las primeras consultas a fuentes oficiales, no como
@@ -150,6 +187,57 @@ con curl y la cabecera `Origin`.
 borró sin querer el encabezado «4. Comprobaciones hechas en la sesión». Lo
 detectó al anotar esta revisión y lo restauró; la tabla no perdió filas.
 
+### Informe del evaluador · Revisión (15:13)
+
+Procedimiento fijado por el Tech Lead: **el informe no se toca; se responde a
+cada hallazgo**. Primero un commit solo con el informe intacto; después las
+correcciones, y un documento de respuesta
+(`04-calidad/respuesta-evaluacion-specs-01.md`) con hallazgo, decisión,
+motivo y dónde se cambió. Todas las decisiones de esta tabla son suyas. Donde
+no dio motivo figura un guion.
+
+| # | Hallazgo | Decisión del Tech Lead | Motivo |
+|---|---|---|---|
+| v1 | H-01, H-26, H-19 | Los cambios cruzados se aplican ya, no al aprobar: SPEC-01 4.2 describe la ficha con `simulation_count` y `simulations` y CA-06 los excluye de la comparación; ADR-002 a 200 ms; A8 con la lista cerrada; A17 con el alta en ruta propia | Con todo en borrador, mantener destinos incoherentes no tiene sentido |
+| v2 | H-02, H-24 | Corregir cabeceras, índice y columnas «Afecta a» de supuestos y requisitos. **Aprueba `requisitos.md`**: pasa a `aprobado` con fecha de hoy | — |
+| v3 | H-03 | Errores genéricos con `code` estable en las convenciones del índice: `400 malformed_request`, `415 unsupported_media_type`, `404 not_found`, `405 method_not_allowed` para cualquier método no admitido, `422 unknown_field` para un parámetro de consulta desconocido y `500 internal_error` sin trazas; todos en `problem+json` | — |
+| v4 | H-04 | Todo `id`, de ruta o de cuerpo, es un entero de 1 a 9223372036854775807; fuera de rango, `422 out_of_range`. Añadir 0, −1 y 2^63 a las tablas de casos | Es el máximo de `INTEGER` en SQLite |
+| v5 | H-05 | CORS y `/health` como requisitos EARS con su criterio, en un apartado «Operación del backend» de SPEC-03. Variable `CORS_ORIGINS`, por defecto `http://localhost:4200`. `GET /health` → `200 {"status":"ok"}` si la base de datos responde y `503` si no | — |
+| v6 | H-06 | Prueba diferencial: `python-stdnum`, fijado como dependencia solo de test, valida DNI, NIE y CIF; un test compara los dos validadores en todas las letras de entidad y en miles de números generados. Toda discrepancia se documenta y la decide él. Nuevo CA en SPEC-01 y nota en R-04 | Romper la circularidad de unos casos generados con el propio algoritmo |
+| v7 | H-07, H-08, H-21 | `frontend.md`: importes siempre enteros en céntimos. `CLAUDE.md`: excepción explícita para la conversión de divisa solo para mostrar. Corregir el código de ejemplo inexistente | — |
+| v8 | H-12 | Una única constante de países (código, nombre y tipo en puntos básicos) en el dominio; los tipos los define SPEC-02 y SPEC-01 la usa. Corregir CA-15 | — |
+| v9 | H-15 a H-18 | Un `422` por `id` mal formado y un `404` en el simulador muestran «Cliente no encontrado»; el panel muestra los nombres de `/meta`; la fecha del tipo de cambio se muestra tal cual, sin convertir de zona horaria; se elimina el escenario inalcanzable; un almacenamiento o un número de llamadas no válido no retira la proyección, solo desactiva «Guardar» | — |
+| v10 | H-20 | ADR-003 (API de divisas) y ADR-004 (persistencia); corregir «dos tablas» en ADR-001 | — |
+| v11 | H-22 | Recortar quita solo U+0020; cualquier carácter Cc o Cf → `invalid_characters`; longitudes en puntos de código; un error por campo, el primero que falle; `errors` en el orden de los campos del contrato; `field` es `id` para la ruta y `q` para la consulta; el límite de `q` se mide antes de recortar; un `tax_id` de más de 30 caracteres → `too_long` en cualquier país | — |
+| v12 | H-23 | Columna `country` en `simulations`; `created_at` con precisión de segundos en las dos tablas | Que el historial lea solo lo guardado |
+| v13 | H-09, H-10, H-11, H-13, H-14, H-25 | Corregirlos como propone el informe | — |
+
+Pidió el diff resumido y tres commits separados (specs, arquitectura y
+respuesta), y parar después.
+
+**Autocrítica de la IA sobre H-01**: es el cambio cruzado que la IA anotó en
+el apartado 8 de SPEC-03 y dejó sin aplicar «hasta aprobar la spec», una
+regla que se puso ella sola y que dejaba dos contratos distintos para la
+misma ficha.
+
+**Cómo se aplicaron las correcciones (15:13–15:22)**. Fueron unas 120
+sustituciones de texto en 14 ficheros. La IA las aplicó con un script
+propio, fuera del repo, que exige que cada texto a sustituir aparezca
+exactamente una vez y se detiene si no. Un primer intento sobre el índice y
+los demás documentos falló por la forma de la ruta en Windows, sin llegar a
+cambiar nada; se relanzó corregido.
+
+**Precisiones añadidas por la IA sin que estuvieran en las decisiones**:
+catorce, numeradas P-01 a P-14 en el apartado 2 de
+`04-calidad/respuesta-evaluacion-specs-01.md`. Las más relevantes: el orden
+de las comprobaciones de cada campo (P-01), la interpretación del `422` por
+parámetro de consulta desconocido (P-04), el requisito y los casos de los
+errores genéricos en SPEC-03, que no se habían pedido (P-05), y el código
+`service_unavailable` del `503` (P-06). **Ninguna está aprobada.**
+
+**Sobre H-14**: la instrucción era corregirlo «como propone el informe»,
+pero el informe solo describe el defecto. La IA eligió el arreglo (P-10).
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -168,6 +256,10 @@ detectó al anotar esta revisión y lo restauró; la tabla no perdió filas.
 | CORS de la API de divisas | `curl` con la cabecera `Origin: http://localhost:4200`, a la `v2` y a la `v1` | Las dos responden `access-control-allow-origin: *` y `access-control-allow-methods: GET, OPTIONS`. No se ha probado desde un navegador |
 | Tabla 5.1 de SPEC-04 con los tipos de la `v2` | El mismo script de Node con los tipos nuevos | Recalculadas todas las celdas. El céntimo de diferencia pasa a estar en USD: 155,95 + 32,75 = 188,70 frente a 188,69 |
 | Versión de Playwright | `npm view @playwright/test version engines.node` | 1.65.0, `node >=20`. No instalado ni ejecutado |
+| Estado del repo tras el evaluador | `git status` y `git diff --stat`, a petición del Tech Lead | Solo esta bitácora modificada y el informe sin seguimiento; el evaluador no escribió en el repo |
+| Versión de `python-stdnum` | Consulta a PyPI | 2.2, `requires_python >=3.8`. No instalado ni ejecutado |
+| Trailers de coautoría | `git log --pretty=%B \| grep -i co-authored` tras cada commit | Sin resultados |
+| Finales de línea tras las correcciones | Búsqueda de CRLF en `ai-workspace/`, `CLAUDE.md` y `.claude/rules/` | Ninguno |
 
 ## 5. No verificado
 
@@ -192,6 +284,15 @@ detectó al anotar esta revisión y lo restauró; la tabla no perdió filas.
   Node 24 usado para la tabla 5.1 de SPEC-04.
 - Las tablas 5.2 a 5.5 de SPEC-04 y 5.2 a 5.5 de SPEC-03 son comportamiento
   esperado; no las ha ejecutado ningún código.
+- Si la validación del CIF de `python-stdnum` coincide con los grupos de
+  letras de SPEC-01: no se ha ejecutado. Es lo que debe mostrar la prueba
+  diferencial (SPEC-01, CA-19).
+- Las tablas de casos nuevas que salen de las correcciones: comportamiento
+  esperado, sin código que las ejecute.
+- Que FastAPI permita devolver los estados y códigos de los errores
+  genéricos (en especial `400` y `415`) sin código a medida.
+- Las specs corregidas no han pasado por una segunda evaluación
+  independiente.
 
 ## 6. Propuestas de la IA no pedidas en el encargo
 
@@ -228,9 +329,9 @@ de SPEC-04 del índice.
 
 | Tarea | Cuándo |
 |---|---|
-| Evaluación independiente de las cuatro specs y revisión de su informe por el Tech Lead | Ahora |
+| Revisión por el Tech Lead de las correcciones y de las precisiones P-01 a P-14 | Ahora |
+| Segunda evaluación independiente de las specs corregidas | A decidir por el Tech Lead |
 | Aprobación literal del cambio de A10 que entró en el commit de SPEC-01 | Cuando el Tech Lead lo vea |
-| Aplicar los cambios del apartado 8 de SPEC-04 (ADR-002 y A8) | Al aprobar las specs (decisión u5) |
 | Playwright: prueba de principio a fin y comprobación a 375 px | Fase de QA |
-| Aplicar a SPEC-01 los cambios del apartado 8 de SPEC-03 | Al aprobar SPEC-03 |
-| DDL definitivo en `02-arquitectura/` | Al aprobar SPEC-03 |
+| DDL definitivo (`schema.sql`) | Con el esqueleto del backend |
+| Decidir A2 a A5 | Viernes 13 de noviembre de 2026, 10:00 |
