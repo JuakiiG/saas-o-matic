@@ -1,0 +1,12 @@
+# Normalize line endings to LF in the repository and in every working tree,
+# so shell scripts and tooling behave the same on Windows, macOS and Linux.
+* text=auto eol=lf
+
+# Binary assets: never normalized or diffed as text
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
