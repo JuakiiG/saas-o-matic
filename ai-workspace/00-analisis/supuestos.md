@@ -1,8 +1,8 @@
 # Supuestos y ambigüedades
 
 - **Fecha**: 2026-11-12
-- **Estado**: revisado por el Tech Lead el 2026-11-12. Quedan abiertos A2 a A5
-  (a la espera de respuesta) y A7 (a la espera de decisión)
+- **Estado**: revisado por el Tech Lead el 2026-11-12. Quedan abiertos A2 a A5,
+  a la espera de respuesta y con fecha límite
 - **Qué es**: cada punto que el encargo deja abierto, la opción elegida y por
   qué. Ninguna spec se aprueba mientras dependa de un supuesto sin cerrar.
 
@@ -13,6 +13,7 @@
 | `pendiente de confirmar` | Consultado a quien propone el reto; sin respuesta todavía. La propuesta es provisional |
 | `propuesto` | Propuesta de la IA a la espera de la decisión del Tech Lead |
 | `decidido` | Decisión tomada por el Tech Lead, con su fecha |
+| `decidido (sin confirmación externa)` | Decidido por el Tech Lead al vencer la fecha límite sin respuesta. Se revisa si la respuesta llega después |
 | `logística` | Asunto de la entrega, ajeno al producto |
 
 ## Resumen
@@ -25,7 +26,7 @@
 | A4 | Países admitidos y tipo de impuesto de cada uno | `pendiente de confirmar` | SPEC-02, SPEC-01 |
 | A5 | Tratamiento del IVA entre empresas de distintos países | `pendiente de confirmar` | SPEC-02 |
 | A6 | Representación del dinero y redondeo | `decidido` (2026-11-12) | SPEC-02, SPEC-03 |
-| A7 | Límites del número de usuarios | `propuesto` | SPEC-02, SPEC-03 |
+| A7 | Límites del número de usuarios | `decidido` (2026-11-12) | SPEC-02, SPEC-03 |
 | A8 | Divisas: moneda de cálculo, origen de los tipos y fallo de la API | `decidido` (2026-11-12) | SPEC-04 |
 | A9 | Dónde se calcula la proyección en tiempo real | `decidido` (2026-11-12) | SPEC-02, SPEC-04, ADR-002 |
 | A10 | Identificador fiscal de países distintos de España | `decidido` (2026-11-12) | SPEC-01 |
@@ -52,6 +53,12 @@ redactar los requisitos.
 
 Mientras no haya respuesta se trabaja con la propuesta, y las specs afectadas
 no pasan de `borrador` en la parte que depende de ella.
+
+**Fecha límite**: si el viernes 13 de noviembre de 2026 a las 10:00 no hay
+respuesta, el Tech Lead decide A2 a A5 con la hipótesis documentada aquí.
+Pasan a `decidido (sin confirmación externa)` y se revisan si la respuesta
+llega después. *Por qué: una consulta sin contestar no puede bloquear el
+desarrollo de forma indefinida, y la hipótesis ya está razonada.*
 
 ### A2 · Plan
 
@@ -146,6 +153,13 @@ Con las tarifas actuales, que son euros enteros por usuario, y tipos
 impositivos enteros, **el impuesto sale siempre exacto al céntimo** y el
 redondeo nunca llega a actuar. La regla existe para tarifas o tipos futuros
 con decimales, y se prueba con un caso sintético.
+
+### A7 · Límites del número de usuarios
+
+Entero entre 0 y 100.000. Cero usuarios cuesta 0 €. Negativos, decimales y
+valores por encima del máximo se rechazan. *Por qué*: el primer tramo empieza
+en cero, y un máximo evita entradas absurdas sin limitar ningún uso real. El
+máximo del control de la interfaz puede ser menor y se fija en SPEC-04.
 
 ### A8 · Divisas
 
@@ -246,13 +260,3 @@ evalúa, y evita depender de datos precargados.
 Fuera de alcance. Los clientes y las simulaciones se crean y se consultan,
 pero no se modifican ni se eliminan. *Por qué*: no se pide, y un historial de
 simulaciones tiene más valor si es inmutable.
-
-## Propuestos
-
-### A7 · Límites del número de usuarios
-
-**Propuesta**: entero entre 0 y 100.000. Cero usuarios cuesta 0 €. Negativos,
-decimales y valores por encima del máximo se rechazan. *Por qué*: el primer
-tramo empieza en cero, y un máximo evita entradas absurdas sin limitar ningún
-uso real. El máximo del control de la interfaz puede ser menor y se fija en
-SPEC-04.
