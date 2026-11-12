@@ -51,8 +51,12 @@ Donde el Tech Lead no dio un motivo aparte, figura el del propio hallazgo.
 ## 2. Precisiones que añadió la IA al aplicar las decisiones
 
 Las decisiones dejaban algunos detalles sin fijar. Para no dejar otra
-ambigüedad, la IA los concretó. **Ninguno está aprobado**: se listan para
-que el Tech Lead los confirme o los cambie.
+ambigüedad, la IA los concretó y los listó para que el Tech Lead los
+confirmara o los cambiara.
+
+**Estado**: al escribir esta respuesta ninguno estaba aprobado. **El Tech
+Lead aprobó los catorce, P-01 a P-14, tal como están, el 2026-11-12 a las
+15:36.**
 
 | # | Hallazgo | Precisión de la IA | Dónde |
 |---|---|---|---|
@@ -92,7 +96,6 @@ que el Tech Lead los confirme o los cambie.
 
 | Asunto | Cuándo |
 |---|---|
-| Confirmar o cambiar las precisiones P-01 a P-14 | Revisión del Tech Lead |
 | Decidir A2 a A5 | Viernes 13 de noviembre de 2026, 10:00 |
 | Segunda evaluación independiente de las specs corregidas | A decidir por el Tech Lead |
 | DDL definitivo (`schema.sql`) | Con el esqueleto del backend (R-15) |

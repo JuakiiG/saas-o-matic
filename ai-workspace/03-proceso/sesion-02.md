@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-12 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | *(se rellena al cerrar la sesión)* |
+| **Resultado** | SPEC-01, SPEC-03 y SPEC-04 redactadas y revisadas, en `borrador` como SPEC-02; una evaluación independiente de las cuatro specs con 26 hallazgos, todos respondidos y corregidos; ADR-003 y ADR-004; `requisitos.md` aprobado. Ninguna spec está `aprobada` y no hay ninguna línea de código de aplicación |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -57,6 +57,8 @@ la sesión 01).
 | 15:20 | `63a494c` | Correcciones de la evaluación en las cuatro specs, el índice, `supuestos.md`, `requisitos.md` (que pasa a `aprobado`), `CLAUDE.md`, las reglas por capa y ADR-002 |
 | 15:20 | `3326b38` | ADR-003 (API de divisas) y ADR-004 (persistencia); «dos tablas» corregido en ADR-001; índice de arquitectura |
 | 15:22 | *(este commit)* | Respuesta a la evaluación (`04-calidad/respuesta-evaluacion-specs-01.md`) y esta bitácora |
+| 15:36 | — | El commit anterior es `f5a7de7`. El Tech Lead aprueba las precisiones P-01 a P-14 y ordena cerrar la sesión |
+| 15:36 | *(commit de cierre)* | Aprobación anotada en la respuesta a la evaluación; campo «Resultado» y cierre de esta bitácora |
 
 **Evaluador: no se pudo lanzar como subagente con nombre.** La sesión no
 reconoció el tipo `evaluador` de `.claude/agents/evaluador.md` (la lista de
@@ -238,6 +240,30 @@ errores genéricos en SPEC-03, que no se habían pedido (P-05), y el código
 **Sobre H-14**: la instrucción era corregirlo «como propone el informe»,
 pero el informe solo describe el defecto. La IA eligió el arreglo (P-10).
 
+### Precisiones de la IA · Aprobación (15:36)
+
+| # | La IA | El Tech Lead | Motivo |
+|---|---|---|---|
+| w1 | Añadió catorce precisiones, P-01 a P-14, al aplicar las correcciones de la evaluación, y las dejó en los commits `63a494c` y `3326b38` sin aprobación previa, avisándolo al entregar | **Aprobadas las catorce, tal como están** | — |
+
+La frase «Ninguna está aprobada» de más arriba describe el estado de las
+15:22 y se deja como estaba.
+
+### Cierre de la sesión (15:36)
+
+Lo que queda al cerrar:
+
+- Las cuatro specs siguen en `borrador`. SPEC-01 a SPEC-04 dependen de A2 a
+  A5, que se deciden el viernes 13 de noviembre de 2026 a las 10:00.
+- Las specs corregidas no han pasado por una segunda evaluación
+  independiente.
+- No existe código de aplicación, tests ni oráculo: nada de lo especificado
+  está demostrado.
+- El cambio de A10 que entró en el commit de SPEC-01 sigue sin una
+  aprobación literal del Tech Lead.
+- El tipo de subagente `evaluador` no estuvo disponible durante la sesión;
+  la evaluación se hizo con la alternativa descrita en la cronología.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -329,7 +355,6 @@ de SPEC-04 del índice.
 
 | Tarea | Cuándo |
 |---|---|
-| Revisión por el Tech Lead de las correcciones y de las precisiones P-01 a P-14 | Ahora |
 | Segunda evaluación independiente de las specs corregidas | A decidir por el Tech Lead |
 | Aprobación literal del cambio de A10 que entró en el commit de SPEC-01 | Cuando el Tech Lead lo vea |
 | Playwright: prueba de principio a fin y comprobación a 375 px | Fase de QA |
