@@ -63,6 +63,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         # `/health/` is not `/health`: a 404, not a redirection decided by the framework.
         redirect_slashes=False,
+        # `/docs` and `/openapi.json` stay for whoever reviews the API. A second page of
+        # documentation and a redirection for OAuth, which the API does not use, do not.
+        redoc_url=None,
+        swagger_ui_oauth2_redirect_url=None,
         dependencies=[Depends(reject_undocumented_query_parameters)],
     )
     _install_services(app, database)

@@ -157,7 +157,7 @@ alternativas y el motivo de cada una están en
   | La petición lleva cuerpo y su `Content-Type` no es `application/json`. Con parámetros, como `application/json; charset=utf-8`, es válido | `415` | `unsupported_media_type` |
   | La ruta no existe | `404` | `not_found` |
   | La ruta existe pero no admite ese método (salvo `OPTIONS`, ver más abajo) | `405` | `method_not_allowed` |
-  | La petición trae un parámetro de consulta no documentado | `422` | `validation_error`, con el código de campo `unknown_field` |
+  | La petición trae un parámetro de consulta no documentado (salvo en `/docs` y `/openapi.json`, ver «Documentación generada») | `422` | `validation_error`, con el código de campo `unknown_field` |
   | Error inesperado | `500` | `internal_error`, sin trazas ni detalles internos |
   | La base de datos no puede abrirse o consultarse | `503` | `service_unavailable`, sin trazas ni detalles internos |
 
@@ -204,6 +204,17 @@ alternativas y el motivo de cada una están en
   es una comprobación previa responde `405`, como cualquier otro método no
   admitido. El detalle está en SPEC-03 (2.7).
 
+- **Documentación generada.** El backend publica dos rutas que no define
+  ninguna spec de negocio: `GET /openapi.json`, el contrato en formato
+  OpenAPI, y `GET /docs`, una página para explorarlo. **Existen, no son
+  endpoints de negocio y no aplican la regla del parámetro desconocido**:
+  `GET /docs?x=1` y `GET /openapi.json?x=1` responden `200`. La página de
+  `/docs` carga sus scripts y estilos de un servidor externo. Las otras dos
+  rutas que el framework publica por defecto, `GET /redoc` y
+  `GET /docs/oauth2-redirect`, **están desactivadas** y responden `404`
+  `not_found`, como cualquier ruta que no existe. *Por qué: quien revise
+  la prueba abrirá `/docs`; `/redoc` lo duplica y no hay OAuth.*
+
 ## Historial de las convenciones
 
 Cambios de las convenciones comunes desde que el bloque backend tiene el
@@ -219,3 +230,4 @@ de cada spec.
 | 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-02, y el caso A-01 de su respuesta), decidida por el Tech Lead: un cuerpo con un *surrogate* suelto, en un valor o en un nombre de campo, responde `400` `malformed_request`. Fila del `400` de la tabla de errores genéricos y párrafo «El texto del cuerpo». Motivo: respondía `500` `internal_error` en el nombre y el email del alta (al guardar) y en un nombre de campo desconocido de cualquier `POST` (al escribir el `422`). Una sola regla en el guarda y no una por campo, porque el fallo saltaba en puntos distintos de los tres `POST`; RFC 8259 (8.2) dice que ese texto no representa caracteres Unicode |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-07), decidida por el Tech Lead: el cuerpo se lee como UTF-8 estricto; UTF-16 y UTF-32, con BOM o sin él, y UTF-8 con BOM responden `400` `malformed_request`. Fila del `400` («JSON válido en UTF-8») y primera frase de «El texto del cuerpo». Motivo: esos cuerpos se aceptaban, porque el lector de JSON adivinaba la codificación; RFC 8259 (8.1) fija UTF-8 y sin BOM |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-03), decidida por el Tech Lead: pasa a estar escrita en «Errores de validación» la regla de que los parámetros de consulta se comprueban antes que la ruta y el cuerpo y, si alguno no está documentado, se responde solo con ellos. Sin cambio de comportamiento. Motivo: la regla solo estaba en el código y en un test (precisión W-15 de la sesión 04), y una regla que no está escrita no es parte del contrato |
+| 2026-11-13 | Corrección de la evaluación independiente del backend (H-09), decidida por el Tech Lead: se conservan `/docs` y `/openapi.json`, que pasan a estar escritas en las convenciones («Documentación generada») como rutas que existen, no son de negocio y no aplican la regla del parámetro desconocido; `/redoc` y `/docs/oauth2-redirect` se desactivan y responden `404` `not_found`. Motivo: eran cuatro rutas que el framework publica por defecto y que ninguna spec definía; quien revise la prueba abrirá `/docs`, `/redoc` lo duplica y no hay OAuth |
