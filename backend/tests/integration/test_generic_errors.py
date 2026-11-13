@@ -41,6 +41,16 @@ def test_request_to_unknown_route_returns_404_not_found(client: TestClient, path
     assert "errors" not in body
 
 
+@pytest.mark.parametrize("path", ["/health/", "/probe/"])
+def test_route_with_trailing_slash_returns_404_without_redirecting(
+    client: TestClient, path: str
+) -> None:
+    """SPEC-03/E-29: a route with a trailing slash is a route that does not exist."""
+    response = client.get(path, follow_redirects=False)
+    assert_problem(response, 404, "not_found")
+    assert "location" not in response.headers
+
+
 @pytest.mark.parametrize("method", ["PUT", "PATCH", "DELETE"])
 def test_request_with_unsupported_method_returns_405_method_not_allowed(
     client: TestClient, method: str

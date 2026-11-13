@@ -607,6 +607,7 @@ edición (norma n2).
 | Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
 |---|---|---|---|---|
 | 12:11 | p1 | `assert 200 == 503`: con el fichero apartado, `/health` respondía `200` | `Database.connect()` abre el fichero en modo `rw` (URI de SQLite) y falla si no existe; solo `create_schema()` lo abre en modo `rwc`. **Cambio en un test que ya existía**: el del `200` arrancaba la aplicación sin su fase de arranque y dependía de que la conexión creara el fichero, que era el defecto; ahora la arranca como un servidor real. Su aserción no cambia | `65 passed`; oráculo en verde, 20 correctas y 4 inactivas |
+| 12:12 | p2 | `assert 307 == 404` en `/health/` y en `/probe/` | `redirect_slashes=False` al construir la aplicación. El commit de p1 es `604a058` (12:12:07 según `git log`) | `67 passed`; oráculo en verde |
 
 ## 4. Comprobaciones hechas en la sesión
 

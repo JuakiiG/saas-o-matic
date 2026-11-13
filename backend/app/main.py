@@ -40,6 +40,8 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=API_TITLE,
         lifespan=lifespan,
+        # `/health/` is not `/health`: a 404, not a redirection decided by the framework.
+        redirect_slashes=False,
         dependencies=[Depends(reject_undocumented_query_parameters)],
     )
     # Built here and handed to the endpoints through `Depends`: no global state.
