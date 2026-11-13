@@ -17,6 +17,8 @@ from app.domain.customers import (
 from app.services.customers import CustomerService
 
 router = APIRouter()
+# Every operation here reads or writes the database, and declares what it answers without it.
+UNAVAILABLE = "La base de datos no responde"
 
 
 class CustomerRequest(BaseModel):
@@ -79,6 +81,7 @@ def get_customer_service(request: Request) -> CustomerService:
         {
             409: "Ya hay un cliente con ese país e identificador normalizado",
             422: "La petición no es válida",
+            503: UNAVAILABLE,
         }
     ),
     openapi_extra={"requestBody": REQUEST_BODY},
@@ -100,6 +103,7 @@ def create_customer(
         {
             404: "No existe un cliente con ese `id`",
             422: "El `id` no es un entero de 1 a 9223372036854775807",
+            503: UNAVAILABLE,
         }
     ),
 )
@@ -112,7 +116,9 @@ def read_customer(
 @router.get(
     "/customers",
     response_model=CustomerListResponse,
-    responses=problem_responses({422: "`q` es demasiado largo o hay un parámetro desconocido"}),
+    responses=problem_responses(
+        {422: "`q` es demasiado largo o hay un parámetro desconocido", 503: UNAVAILABLE}
+    ),
 )
 def search_customers(
     service: Annotated[CustomerService, Depends(get_customer_service)],

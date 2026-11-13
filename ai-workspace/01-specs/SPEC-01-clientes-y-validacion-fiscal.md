@@ -358,6 +358,7 @@ Respuesta `201`, con `Location: /customers/1`:
 | Estado | `code` | Cuándo | Códigos por campo |
 |---|---|---|---|
 | `409` | `customer_already_exists` | Ya hay un cliente con ese país e identificador normalizado | — |
+| `503` | `service_unavailable` | La base de datos no puede abrirse o consultarse (error genérico de las convenciones comunes) | — |
 | `422` | `validation_error` | La petición no es válida | `missing`, `not_a_string`, `too_short`, `too_long`, `invalid_characters`, `invalid_email`, `unsupported_country`, `unsupported_plan`, `invalid_tax_id_format`, `invalid_tax_id_check_character`, `unknown_field` |
 
 Ejemplo de `422` por carácter de control:
@@ -436,6 +437,7 @@ están en SPEC-03, apartado 4.2; un cliente recién creado devuelve
 |---|---|---|---|
 | `404` | `customer_not_found` | No existe un cliente con ese `id` | — |
 | `422` | `validation_error` | El `id` no es un entero de 1 a 9223372036854775807 | `not_an_integer`, `out_of_range` |
+| `503` | `service_unavailable` | La base de datos no puede abrirse o consultarse (error genérico de las convenciones comunes) | — |
 
 ### 4.3 `GET /customers?q=`
 
@@ -458,6 +460,7 @@ No se devuelve el total de coincidencias ni hay paginación (A13).
 | Estado | `code` | Cuándo | Códigos por campo |
 |---|---|---|---|
 | `422` | `validation_error` | `q` demasiado largo o parámetro desconocido | `too_long` (`field`: `q`), `unknown_field` (`field`: el nombre del parámetro) |
+| `503` | `service_unavailable` | La base de datos no puede abrirse o consultarse (error genérico de las convenciones comunes) | — |
 
 ### 4.4 `GET /meta`
 
@@ -796,3 +799,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-13 | Confirmación del Tech Lead sobre el apartado 8: aprobó esta spec sabiendo que la lectura directa de la página del Ministerio del Interior sigue sin verificar. Motivo: el algoritmo queda cubierto por los vectores de prueba y por la prueba diferencial de CA-19. Sin cambios en requisitos, criterios ni casos |
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A2 (plan informativo, valores de libre elección) y, de A4, solo el uso del tipo general; la lista de países sigue siendo decisión propia. El Tech Lead mantiene los planes de D-04 y su visto bueno a esta spec. Cabecera y apartado 8 actualizados; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |
 | 2026-11-13 | Decisión del Tech Lead al revisar la implementación: el `id` de la ruta tiene una sola forma, escrita en las convenciones del índice («Identificadores»). Seis filas nuevas en 5.10 (`1.0`, `+1`, `01`, `1_0` y un espacio delante o detrás), todas `not_an_integer`; E-24 y CA-12 no cambian de texto y las cubren. Motivo: un cliente, una dirección; antes esas formas devolvían un cliente (`1_0`, el 10) |
+| 2026-11-13 | Decisión del Tech Lead al revisar la implementación: fila `503` `service_unavailable` en las tablas de errores de 4.1, 4.2 y 4.3. Motivo: todo endpoint que lee la base de datos declara el `503` que ya responde (regla de las convenciones comunes); `GET /meta` no la lee y no lo declara. El OpenAPI de las tres operaciones lo declara (CA-16) |

@@ -866,6 +866,7 @@ backend entero antes del frontend.
 | Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
 |---|---|---|---|---|
 | 14:35 | r1 | 14:33: **10 en rojo, todos por aserción** (`200 == 422`, `404 == 422` para `1_0` y `out_of_range` en vez de `not_an_integer` para `-0`, `00` y `-01`); 6 en verde: las cinco filas que ya había y el dígito árabe, que la biblioteca ya rechazaba | Regla en «Identificadores» del índice, con historial; seis filas nuevas en 5.10 de SPEC-01, con historial. `app/api/identifiers.py`: el `id` de la ruta pasa primero por una expresión regular (`0` o un menos opcional y dígitos ASCII sin ceros a la izquierda) y después por el rango | `518 passed`; oráculo en verde a las 14:35 (20 correctas, 0 con fallo, 4 inactivas; 84 de 84 ramas) |
+| 14:38 | r2 | 14:37: **2 en rojo por aserción** (`['201', '409', '422'] == ['201', '409', '422', '503']` y lo mismo en la ficha), al cambiar el valor esperado de los dos tests del OpenAPI; el del buscador va en el mismo test que la ficha | Fila `503` en las tablas de 4.1, 4.2 y 4.3 de SPEC-01 y en 4.1 de SPEC-03; fila nueva en 5.7 de SPEC-03; historial en las dos. `app/api/customers.py` declara el `503` en sus tres operaciones. El commit de r1 es `ce04f42` (14:35:55) | `518 passed`; oráculo en verde a las 14:38 (20 correctas, 0 con fallo, 4 inactivas) |
 
 Precisiones de la IA sobre los cambios de la revisión, **sin aprobar**:
 
@@ -876,6 +877,8 @@ Precisiones de la IA sobre los cambios de la revisión, **sin aprobar**:
 | Z-03 | El código importa `PydanticCustomError` de `pydantic_core`, que no figura en `pyproject.toml`: es el núcleo de Pydantic, llega con él y está fijado en `uv.lock`. Es la forma documentada de lanzar un error con un tipo propio | No es una dependencia nueva, pero sí una importación directa de un paquete que el proyecto no declara. Si el Tech Lead prefiere declararlo, es una línea |
 | Z-04 | **Defecto propio visto antes del commit**: con el control de la forma escrito delante de los límites, el OpenAPI de la ruta publicaba `ge` y `le` (que no son JSON Schema) en vez de `minimum` y `maximum`, y ningún test lo detectaba. Corregido cambiando el orden. El test que lo fija se escribió **después** del código; a las 14:34 se comprobó con una mutación (el orden anterior) que falla: `(None, None) == (1, 9223372036854775807)` | Lo vio la IA al mirar el documento generado, no un test |
 | Z-05 | El test del `id` no válido crea ahora el cliente 1 en cada fila | Sin él, `1.0` o `01` habrían dado `404` y no `200`: el rojo no habría demostrado que la forma abría la ficha de un cliente |
+| Z-06 | **La fila `503` se añadió también a la tabla de 4.1 de SPEC-03** (`POST /simulations`), que el encargo no nombra, y la fila nueva de 5.7 cita ese endpoint, que aún no existe | Es la misma regla («todo endpoint que lee la base de datos») y se implementa a continuación; así la spec no nace incoherente. Su caso de 5.7 se prueba en la pieza (a) de SPEC-03 |
+| Z-07 | Dos tests que ya existían cambian su valor esperado (los estados que declara el OpenAPI) | Cambia la regla, no se relaja el test. `GET /meta` sigue declarando solo el `200`: no lee la base de datos |
 
 ## 4. Comprobaciones hechas en la sesión
 

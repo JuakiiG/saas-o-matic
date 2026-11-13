@@ -311,6 +311,7 @@ cabecera `Location`: no existe un endpoint para leer una simulación suelta.
 | `404` | `customer_not_found` | No existe un cliente con ese `customer_id` | — |
 | `422` | `validation_error` | La petición no es válida | `missing`, `not_an_integer`, `out_of_range`, `unknown_field` |
 | `500` | `tax_rate_not_defined` | El país del cliente guardado no tiene tipo impositivo | — |
+| `503` | `service_unavailable` | La base de datos no puede abrirse o consultarse (error genérico de las convenciones comunes) | — |
 
 ### 4.2 `GET /customers/{id}` (amplía SPEC-01, apartado 4.2)
 
@@ -489,6 +490,7 @@ inserta con esa fecha de forma directa.
 | `OPTIONS /customers` sin `Origin`, y `OPTIONS /customers` con `Origin: http://localhost:4200` pero sin `Access-Control-Request-Method` | `405` `method_not_allowed`: no es una comprobación previa |
 | `POST /simulations?debug=1` con un cuerpo válido | `422` `validation_error`, con `unknown_field` en el campo `debug`; no se guarda nada |
 | Un fallo inesperado, provocado en el test con un repositorio que lanza una excepción | `500` `internal_error`; el cuerpo no contiene trazas, nombres de ficheros ni el texto de la excepción |
+| Una petición válida a un endpoint que lee o escribe la base de datos (`POST /customers`, `GET /customers/1`, `GET /customers?q=alfa`, `POST /pricing/quote`, `POST /simulations`), con el fichero de la base de datos apartado | `503` `service_unavailable`, sin trazas; el fichero no se vuelve a crear |
 
 ## 6. Criterios de aceptación
 
@@ -573,3 +575,4 @@ del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos.
 | 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-01 y SPEC-02 (bloque backend) |
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A3 y, de A4, solo el uso del tipo general. El Tech Lead mantiene su visto bueno a esta spec. Cabecera y apartado 9 actualizados; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |
 | 2026-11-13 | Cambio pedido por el Tech Lead en la revisión del paso 1: las tres tablas pasan a ser `STRICT` (2.6), E-21 incluye el valor que no es del tipo de su columna y 5.5 gana cuatro filas. Motivo: sin `STRICT` la base de datos guardaba `10.5` en `base_cents` y `'abc'` en `active_users`, y un importe con decimales nunca puede ser cierto (E-19, A6). Versión mínima de SQLite, 3.37.0, anotada en ADR-004 |
+| 2026-11-13 | Decisión del Tech Lead al revisar SPEC-01, ya implementada: fila nueva en 5.7 para el `503` `service_unavailable` de un endpoint que no es `GET /health`, y fila `503` en la tabla de errores de 4.1. Motivo: todo endpoint que lee la base de datos declara el `503` (regla de las convenciones comunes); la tabla 5.7 no tenía ese caso. E-29 y CA-17 no cambian de texto y lo cubren |

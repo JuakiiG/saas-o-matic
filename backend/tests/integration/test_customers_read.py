@@ -206,7 +206,7 @@ def test_openapi_declares_the_contract_of_reading_customers(client: TestClient) 
     document = client.get("/openapi.json").json()
     schemas = document["components"]["schemas"]
     one = document["paths"].get("/customers/{id}", {}).get("get", {})
-    assert sorted(one.get("responses", {})) == ["200", "404", "422"]
+    assert sorted(one.get("responses", {})) == ["200", "404", "422", "503"]
     assert [(p["name"], p["in"], p["schema"]["type"]) for p in one["parameters"]] == [
         ("id", "path", "integer")
     ]
@@ -215,8 +215,9 @@ def test_openapi_declares_the_contract_of_reading_customers(client: TestClient) 
     answered = one["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
     assert list(schemas[answered.rsplit("/", maxsplit=1)[-1]]["properties"]) == CUSTOMER_FIELDS
     search = document["paths"].get("/customers", {}).get("get", {})
-    assert sorted(search.get("responses", {})) == ["200", "422"]
+    assert sorted(search.get("responses", {})) == ["200", "422", "503"]
     (parameter,) = search["parameters"]
     assert (parameter["name"], parameter["in"], parameter["required"]) == ("q", "query", False)
-    for status, operation in (("404", one), ("422", one), ("422", search)):
+    problems = (("404", one), ("422", one), ("503", one), ("422", search), ("503", search))
+    for status, operation in problems:
         assert list(operation["responses"][status]["content"]) == [PROBLEM_JSON]

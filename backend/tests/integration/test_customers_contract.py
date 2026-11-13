@@ -147,8 +147,8 @@ def test_openapi_declares_the_statuses_and_the_response_of_the_creation(
     document = client.get("/openapi.json").json()
     schemas = document["components"]["schemas"]
     creation = document["paths"].get("/customers", {}).get("post", {}).get("responses", {})
-    assert sorted(creation) == ["201", "409", "422"]
-    for status in ("409", "422"):
+    assert sorted(creation) == ["201", "409", "422", "503"]
+    for status in ("409", "422", "503"):
         assert list(creation[status]["content"]) == [PROBLEM_JSON]
     created = creation["201"]["content"]["application/json"]["schema"]["$ref"]
     assert list(schemas[created.rsplit("/", maxsplit=1)[-1]]["properties"]) == RESPONSE_FIELDS
