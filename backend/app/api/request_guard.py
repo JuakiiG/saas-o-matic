@@ -31,9 +31,14 @@ def _is_json_media_type(content_type: str | None) -> bool:
     return media_type.strip().lower() == JSON_MEDIA_TYPE
 
 
+def _reject_constant(name: str) -> None:
+    """`NaN`, `Infinity` and `-Infinity` are not JSON (RFC 8259); Python accepts them by default."""
+    raise ValueError(f"{name} is not valid JSON")
+
+
 def _is_json_object(body: bytes) -> bool:
     try:
-        return isinstance(json.loads(body), dict)
+        return isinstance(json.loads(body, parse_constant=_reject_constant), dict)
     except (ValueError, RecursionError):
         # Not UTF-8, not JSON, or nested beyond what the parser accepts.
         return False

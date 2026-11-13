@@ -66,8 +66,19 @@ def test_options_that_is_not_a_preflight_returns_405_method_not_allowed(client: 
 
 @pytest.mark.parametrize(
     "content",
-    [CUT_BODY, b"[1, 2]", b"null", b"15", b'{"name": "\xff"}', DEEP_BODY],
-    ids=["cut", "list", "null", "number", "not-utf8", "too-deep"],
+    [
+        CUT_BODY,
+        b"[1, 2]",
+        b"null",
+        b"15",
+        b'{"name": "\xff"}',
+        DEEP_BODY,
+        # Not JSON (RFC 8259), although Python's parser accepts them by default.
+        b'{"name": "Acme", "a": NaN}',
+        b'{"name": "Acme", "a": Infinity}',
+        b'{"name": "Acme", "a": -Infinity}',
+    ],
+    ids=["cut", "list", "null", "number", "not-utf8", "too-deep", "NaN", "Infinity", "-Infinity"],
 )
 def test_body_that_is_not_a_json_object_returns_400_malformed_request(
     client: TestClient, content: bytes
