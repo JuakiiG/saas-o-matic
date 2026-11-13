@@ -4,9 +4,9 @@
 |---|---|
 | **Fecha** | 2026-11-13 |
 | **Responde a** | [`evaluacion-backend-01.md`](evaluacion-backend-01.md), que queda intacto (commit `1e682fd`) |
-| **Decide** | Tech Lead. **Ningún hallazgo está decidido todavía**: la columna «Qué propone la IA» es una propuesta |
+| **Decide** | Tech Lead. Al escribir los apartados 1 a 3 ningún hallazgo estaba decidido: la columna «Qué propone la IA» es una propuesta. **Decididos el 2026-11-13 (sesión 05)**, todos menos H-15: apartado 4 |
 | **Escribe** | IA (Claude Code) |
-| **Estado del código** | El mismo que evaluó el informe (`bda2c65`). **No se ha implementado ninguna corrección** |
+| **Estado del código** | Los apartados 1 a 3 describen el código que evaluó el informe (`bda2c65`), sin ninguna corrección. **Las correcciones decididas están hechas** (commits del apartado 4, hasta `edbbb08`); el apartado 5 repite las sondas sobre ese código |
 
 Procedimiento: el informe del evaluador no se modifica; se responde a cada
 hallazgo. Antes de responder, la IA ha repetido por su cuenta cada sonda del
@@ -99,8 +99,74 @@ ha cambiado al ejecutarlas.
 
 ## 4. Decisiones del Tech Lead
 
-Pendientes. Esta tabla se rellena cuando decida cada hallazgo.
+Decididos el 2026-11-13, en el encargo de la sesión 05
+([`03-proceso/sesion-05.md`](../03-proceso/sesion-05.md)). Cada corrección
+se hizo con su test visto en rojo antes del código, salvo donde la columna
+«Commit» dice otra cosa, y con el oráculo en verde antes de cada commit.
 
-| Hallazgo | Decisión | Fecha |
-|---|---|---|
-| H-01 a H-15 y A-01 | — | — |
+| Hallazgo | Decisión del Tech Lead | Commit | Fecha |
+|---|---|---|---|
+| H-01 | **Se corrige.** Un entero bien escrito en la ruta, por largo que sea, responde `422` con `out_of_range`. Tests con 4301 y 20000 dígitos y con signo negativo; filas en SPEC-01 5.10 | `33eeb83` | 2026-11-13 |
+| H-02 y A-01 | **Se corrigen con una sola regla, en el guarda** (no la opción que recomendaba la IA): un cuerpo con un surrogate suelto, en un valor o en un nombre de campo, responde `400` `malformed_request`. Por qué: A-01 afecta a los tres `POST` y falla en puntos distintos, así que la regla por campo exigiría tres arreglos; RFC 8259 §8.2. Escrita en el índice de specs | `1b7fdd9` | 2026-11-13 |
+| H-03 | **La regla se escribe** en «Errores de validación» del índice. Sin cambio de código | `2e0913f` (añade un test del caso de la ruta, escrito después del código) | 2026-11-13 |
+| H-04 | **No se implementa. Limitación conocida L-05**: un entero JSON de más de 4300 dígitos se trata como cuerpo mal formado. Por qué: el límite es una protección de Python contra denegación de servicio, y cambiarlo obliga a sustituir la lectura del cuerpo que hace FastAPI. Un test fija 4300 dígitos en `422` y 4301 en `400` | `b345bc7` (test escrito después del código, sin rojo) | 2026-11-13 |
+| H-05 y H-11 | **Se corrigen juntos** (H-05, con la alternativa y no con la opción que recomendaba la IA): un `q` con U+0000 devuelve la lista vacía, sin cambio en el contrato; la decisión la toma el dominio y la condición `? <> ''` sale del SQL. Filas en SPEC-01 5.9 | `758b880` | 2026-11-13 |
+| H-06 | **Se mantiene L-04**, con la consecuencia añadida a su texto | `c223520` (solo documentación) | 2026-11-13 |
+| H-07 | **Se corrige.** El cuerpo se lee como UTF-8 estricto: UTF-16 y UTF-32, con BOM o sin él, y UTF-8 con BOM responden `400`. Frase en el índice | `1e0f839` | 2026-11-13 |
+| H-08 | **Se corrige con la alternativa estricta** (no la opción que recomendaba la IA): un email con cualquier separador Unicode (`Zs`, `Zl` y `Zp`) responde `invalid_email`. Por qué: un espacio de no separación llega al copiar y pegar un correo, y guardado así no sirve. SPEC-01 2.1 y filas en 5.7 | `861c6ca` | 2026-11-13 |
+| H-09 | **Se corrige en parte** (no como recomendaba la IA): se conservan `/docs` y `/openapi.json`, escritas ahora en el índice; se desactivan `/redoc` y `/docs/oauth2-redirect`, que responden `404` `not_found`. Por qué: quien revise la prueba abrirá `/docs`; `/redoc` lo duplica y no hay OAuth. Pendiente para el README: `/docs` carga recursos de un servidor externo | `a52cae5` | 2026-11-13 |
+| H-10 | **De acuerdo**: texto de SPEC-03 2.7 y valor exacto de la cabecera en los tests. Sin cambio de código | `b5411f8` (aserción escrita después del código; comprobada con una mutación) | 2026-11-13 |
+| H-12 | **Se corrige con un tipo concreto** para la fila. `CLAUDE.md` dice que el oráculo no comprueba esa regla; `scripts/` no se toca | `b579de3` (sin rojo: no cambia el comportamiento) | 2026-11-13 |
+| H-13 | **De acuerdo**: el mismo comentario en los demás tests escritos después del código | `e8194d3` (solo comentarios) | 2026-11-13 |
+| H-14 | **De acuerdo**: la prueba con la conexión que registra cubre también el alta de un cliente, su lectura y la de su país | `edbbb08` (tests escritos después del código; comprobados con una mutación de cada sentencia) | 2026-11-13 |
+| H-15 | **Sin decisión**: el encargo de la sesión 05 no lo nombra. Sigue como L-01, sin cambios | — | — |
+
+Además, por orden del Tech Lead: el ejemplo de H-08 del informe recupera su
+U+00A0 (`e71196f`) y el apartado 3 de esta respuesta se corrige (`ca85f85`).
+
+## 5. Las sondas, repetidas después de las correcciones
+
+Las mismas sondas del apartado 2, ejecutadas por la IA el 2026-11-13 a las
+19:26 sobre el código del commit `edbbb08`, con el cliente de test y una
+base de datos en el directorio temporal del sistema. El script está fuera
+del repositorio y ningún fichero del repositorio cambió al ejecutarlo.
+
+| Hallazgo | Sonda | Antes (`bda2c65`) | Después (`edbbb08`) |
+|---|---|---|---|
+| H-01 | `GET /customers/` y 4300 nueves | `422`, `id: out_of_range` | Igual |
+| H-01 | `GET /customers/` y 4301 nueves | `500` `internal_error` | `422`, `id: out_of_range` |
+| H-01 | 20000 nueves, y un signo menos con 4301 nueves | No probado | `422`, `id: out_of_range` los dos |
+| H-02 | `company_name` o `contact_email` con `\ud800` | `500` `internal_error` | `400` `malformed_request` |
+| H-02 | `tax_id`, `country` o `plan` con `\ud800` | `422` con el código de su campo | `400` `malformed_request`: la regla del guarda va antes que la validación de cualquier campo |
+| H-02 | `company_name` con un emoji escrito como pareja de escapes | Se acepta y se guarda | `201`, guardado como el carácter U+1F600 |
+| A-01 | Nombre de campo desconocido con `\ud800` en `POST /customers` y `POST /pricing/quote` | `500` `internal_error` | `400` `malformed_request` |
+| A-01 | Lo mismo en `POST /simulations` | No probado | `400` `malformed_request` |
+| H-03 | `POST /simulations?debug=1` con `{"customer_id":0}` | Solo `debug: unknown_field` | Igual; ahora es la regla escrita |
+| H-03 | `GET /customers/abc?x=1` | Solo `x: unknown_field` | Igual; ahora es la regla escrita |
+| H-04 | `active_users` de 4300 dígitos | `422`, `out_of_range` | Igual |
+| H-04 | `active_users` de 4301 dígitos | `400` `malformed_request` | Igual: limitación L-05 |
+| H-05 | `q=%00`, con tres clientes | Los tres clientes | Lista vacía |
+| H-05 | `q=zz%00` | Lista vacía | Igual |
+| H-05 | `q=a%00` | Buscaba «acaba en `a`» (visto en el patrón; no anotado el resultado) | Lista vacía |
+| H-05 | `q=%00a` | No probado | Lista vacía |
+| H-06 | `q` de 101 caracteres seguido de `q=a` | `200` | `200`: limitación L-04 |
+| H-06 | `q=a` seguido de un `q` de 101 caracteres | `422`, `q: too_long` | Igual |
+| H-07 | Cuerpo en UTF-16 | `200` | `400` `malformed_request` |
+| H-07 | Cuerpo en UTF-8 con BOM | `200` | `400` `malformed_request` |
+| H-07 | Cuerpo en UTF-16 sin BOM y en UTF-32 | No probado | `400` `malformed_request` |
+| H-07 | El mismo cuerpo en UTF-8 | — | `200` |
+| H-08 | Email con un espacio de no separación (U+00A0) | `201`, guardado tal cual | `422`, `contact_email: invalid_email` |
+| H-09 | `GET /docs` | `200` con HTML | Igual: se conserva |
+| H-09 | `GET /redoc` y `GET /docs/oauth2-redirect` | `200` con HTML | `404` `not_found` |
+| H-09 | `GET /openapi.json?x=1` y `GET /docs?x=1` | `200` | Igual; ahora es la regla escrita |
+| H-10 | `access-control-allow-headers` de la comprobación previa admitida | `Accept, Accept-Language, Content-Language, Content-Type` | Igual; ahora es el valor que dicen la spec y los tests |
+| H-11 | `app/repositories/customers.py` | La sentencia contenía `? <> ''` | No la contiene: una forma que no hay que comparar llega como nulo (leído en el código) |
+| H-12 | `app/repositories/simulations.py` | `list[tuple[Any, ...]]` sin comentario | Ningún `Any` en el fichero (leído en el código; `mypy --strict` en verde) |
+| H-13 | Tests escritos después del código | Uno con el comentario | Todos los que constan en la bitácora, y los de esta sesión (leído en el código) |
+| H-14 | Qué cubre la prueba de la conexión que registra | El alta de una simulación, el historial y la búsqueda | Además, el alta de un cliente, su lectura y la de su país |
+| H-15 | `company_name` de 2.000.000 de caracteres | `422`, `company_name: too_long` | Igual: limitación L-01, sin decisión nueva |
+
+**Lo que esta tabla no demuestra**: son sondas de la IA sobre su propio
+código, con el cliente de test y no con un servidor real. La comprobación
+independiente es la segunda pasada del evaluador
+([`evaluacion-backend-02.md`](evaluacion-backend-02.md)).
