@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-13 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | El Tech Lead decidió los hallazgos de la evaluación independiente del backend (H-01 a H-14 y A-01; H-15 quedó sin nombrar) y la IA los aplicó, uno o un grupo por commit y con el oráculo en verde antes de cada uno. **Corregidos en el código**: un `id` de ruta de miles de dígitos (`422`), un surrogate suelto en el cuerpo (`400`, una sola regla en el guarda), el cuerpo como UTF-8 estricto, un `q` con U+0000 (lista vacía, decidido en el dominio y sin condición en el SQL), el email con cualquier separador Unicode, `/redoc` y `/docs/oauth2-redirect` desactivadas y un tipo concreto en lugar de `Any`. **Solo specs, tests o documentación**: la regla del parámetro de consulta desconocido (H-03), CORS (H-10), los comentarios de los tests escritos después del código (H-13), la prueba de las sentencias (H-14) y las limitaciones L-04 (ampliada) y L-05 (nueva: H-04 no se implementa). El informe de la primera evaluación recupera su U+00A0 y la respuesta lleva la decisión y el commit de cada fila y la tabla de sondas de antes y después. 731 tests del backend (eran 639), `domain/` al 100 %, 92 de 92 ramas y oráculo en verde con 20 comprobaciones activas y 4 inactivas. **Segunda pasada del evaluador** (Opus 5.5, comprobado en su registro), en solo lectura: 12 hallazgos corregidos, 3 conformes a lo decidido y 1 sin veredicto posible (H-13); ninguna regresión; **tres hallazgos nuevos sin corregir**: N-01 (medio: un método no admitido sobre `/docs` o `/openapi.json` responde `500`; ya ocurría antes de esta sesión), N-02 y N-03 (bajos). Tres requisitos siguen en `NO CUMPLE` por las limitaciones aceptadas L-04 y L-05. Quedan sin aprobar las precisiones R-01 a R-23 y V-08 a V-11. Sesión parada: el Tech Lead decide N-01 a N-03, H-15 y las precisiones |
+| **Resultado** | El Tech Lead decidió los hallazgos de la evaluación independiente del backend (H-01 a H-14 y A-01; H-15 quedó sin nombrar) y la IA los aplicó, uno o un grupo por commit y con el oráculo en verde antes de cada uno. **Corregidos en el código**: un `id` de ruta de miles de dígitos (`422`), un surrogate suelto en el cuerpo (`400`, una sola regla en el guarda), el cuerpo como UTF-8 estricto, un `q` con U+0000 (lista vacía, decidido en el dominio y sin condición en el SQL), el email con cualquier separador Unicode, `/redoc` y `/docs/oauth2-redirect` desactivadas y un tipo concreto en lugar de `Any`. **Solo specs, tests o documentación**: la regla del parámetro de consulta desconocido (H-03), CORS (H-10), los comentarios de los tests escritos después del código (H-13), la prueba de las sentencias (H-14) y las limitaciones L-04 (ampliada) y L-05 (nueva: H-04 no se implementa). El informe de la primera evaluación recupera su U+00A0 y la respuesta lleva la decisión y el commit de cada fila y la tabla de sondas de antes y después. 731 tests del backend (eran 639), `domain/` al 100 %, 92 de 92 ramas y oráculo en verde con 20 comprobaciones activas y 4 inactivas. **Segunda pasada del evaluador** (Opus 5.5, comprobado en su registro), en solo lectura: 12 hallazgos corregidos, 3 conformes a lo decidido y 1 sin veredicto posible (H-13); ninguna regresión; **tres hallazgos nuevos sin corregir**: N-01 (medio: un método no admitido sobre `/docs` o `/openapi.json` responde `500`; ya ocurría antes de esta sesión), N-02 y N-03 (bajos). Tres requisitos siguen en `NO CUMPLE` por las limitaciones aceptadas L-04 y L-05. Quedan sin aprobar las precisiones R-01 a R-23 y V-08 a V-11. Sesión parada: el Tech Lead decide N-01 a N-03, H-15 y las precisiones. **Añadido a las 20:25**: el Tech Lead revisó las correcciones y la segunda pasada a las 20:06; admitió R-01 a R-23 y dice haber comprobado las sondas con un servidor real, sin regresiones. Decidió los hallazgos nuevos y la IA los aplicó, uno por commit: **N-01 corregido** (un método no admitido sobre `/docs` o `/openapi.json` responde `405` con `Allow: GET, HEAD`, con las seis filas vistas en rojo antes), **N-02** (ningún `Any` sin comentario en su línea, comprobado con una búsqueda), **N-03** (las specs citan L-04 y L-05, y SPEC-03 5.7 gana seis filas), **H-15** (L-01 se mantiene, con la medida y el cierre previsto en el proxy inverso) y una fila con su test para un `q` que solo lleva una marca diacrítica. Respuesta en `04-calidad/respuesta-evaluacion-backend-02.md`. 741 tests del backend, `domain/` al 100 %, 96 de 96 ramas y oráculo en verde con 20 comprobaciones activas y 4 inactivas. **No hay tercera pasada del evaluador**, por decisión del Tech Lead: estas cinco correcciones no tienen comprobación independiente ni prueba con servidor real. Tres requisitos siguen en `NO CUMPLE` en sus casos límite por L-04 y L-05, que ahora las specs citan. Quedan sin aprobar V-08 a V-11 y R-24 a R-30. Sesión parada |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -55,6 +55,9 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 19:31–19:39 | — | Segunda pasada del evaluador, en solo lectura, sobre `eb0a27f`. La IA no tocó el repositorio mientras trabajaba |
 | 19:41 | `99aeec2` | Informe guardado intacto en `04-calidad/evaluacion-backend-02.md` y commit propio (19:41:49 según `git log`). Oráculo en verde antes |
 | 19:43 | *(este commit)* | Comprobados por la IA los tres hallazgos nuevos, sin corregir ninguno (apartado 3). Cierre de esta bitácora. **La IA para aquí**: N-01, N-02 y N-03 esperan la decisión del Tech Lead |
+| 20:06 | — | El cierre anterior es `99e01a7` (19:45:28 según `git log`). El Tech Lead revisa las correcciones y la segunda pasada: admite R-01 a R-23 y decide N-01, N-02, N-03, H-15 y un caso sin fila (apartado 3). Anotado en esta bitácora antes de empezar |
+| 20:25 | `b5c468d` a `68ef17f` y *(este commit)* | Fila escrita a las 20:25; el detalle y las horas están en la tabla «Correcciones tras la revisión» del apartado 3. N-01: `b5c468d` (20:10:17). N-02: `7cc5858` (20:13:11). N-03: `040eba3` (20:15:43). H-15: `aef612a` (20:18:24). `q` con solo U+0301: `bd7d269` (20:22:13). Respuesta a la segunda pasada: `68ef17f` (20:24:58). Oráculo en verde antes de cada uno. Este commit solo cierra la bitácora. **La IA para aquí**; no hay tercera pasada del evaluador, por decisión del Tech Lead |
+| 20:28 | *(este commit, enmendado)* | **Enmienda** (norma n3): el cierre se hizo como `5777b9a` (20:27:43 según `git log`), era el último commit y no hay nada subido. La fila «Resultado» decía «bloque backend cerrado; lo siguiente es aprobar SPEC-04», una conclusión de la IA que el Tech Lead no ha dicho. Quitada; el resto no cambia |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -210,6 +213,57 @@ Precisiones de la IA sobre la segunda pasada, **sin aprobar**:
 | V-10 | El evaluador dice no haber ejecutado ninguna mutación (no puede modificar código): que los tests nuevos fallarían con el defecto original lo razona, no lo ve. Los rojos y las mutaciones de esta bitácora son de la IA | Límite del solo lectura, dicho en el apartado 5 de su informe |
 | V-11 | Un caso que el evaluador anota sin contarlo como defecto: un `q` que solo tiene una marca diacrítica (U+0301) devuelve todos los clientes, porque su forma de búsqueda queda vacía. Es el caso Y-25 de la sesión 04 (un `q` que queda vacío sin serlo), ya admitido | Para que no se lea como algo nuevo |
 
+### Revisión de las correcciones y de la segunda pasada por el Tech Lead (20:06)
+
+El cierre anterior de esta bitácora es `99e01a7` (19:45:28 según `git log`).
+
+**Correcciones revisadas.** Admitidas R-01 a R-23; en R-09 vale la
+representación con `None`. El Tech Lead dice haber comprobado contra un
+servidor real con `uvicorn` que las sondas de H-01 a H-14 y A-01 dan lo
+decidido y que no hay regresiones (lo afirma él; la IA no lo ha visto). El
+mensaje no nombra V-08 a V-11, que siguen sin aprobar.
+
+Decisión de los hallazgos nuevos y de lo que quedaba suelto:
+
+| # | Decisión del Tech Lead | Frente a lo que había |
+|---|---|---|
+| N-01 | **Se corrige.** Un método no admitido sobre `/docs` o `/openapi.json` responde `405` `method_not_allowed` con una cabecera `Allow` que diga los métodos que esa ruta admite de verdad (`HEAD` responde `200` en las dos). Por qué: el índice dice ahora que esas rutas existen, y un `500` nunca es respuesta a una petición del cliente. Confirmado por él con servidor real: `POST`, `PUT`, `DELETE` y `OPTIONS` sobre `/docs`, y `POST` y `DELETE` sobre `/openapi.json`, dan `500` con `KeyError: 'route'`. Tests en rojo antes, con esas seis filas. Una frase en «Documentación generada» del índice, con historial | La IA no había propuesto nada: el encargo anterior acababa en el informe |
+| N-02 | De acuerdo. Cada `Any` que queda lleva su comentario en esa línea o un tipo concreto. Al terminar, una búsqueda comprueba que no queda ninguno sin él | — |
+| N-03 | De acuerdo en las dos partes. (1) Las specs citan las limitaciones: una nota en SPEC-01 junto a E-30 hacia L-04 y una en la fila del `400` del índice hacia L-05, con historial. (2) Filas nuevas en SPEC-03 5.7 para el surrogate suelto, UTF-16 y UTF-32, el BOM, `/redoc`, `/docs?x=1` y las de N-01, con historial; los tests que ya existen citan esas filas | — |
+| H-15 | Se mantiene L-01. Se añade la medida (2.000.000 y 20.000.000 de caracteres se procesan enteros) y cómo se cerraría en producción: un límite en el proxy inverso | No había llegado en el encargo anterior |
+| V-11 | Un `q` que solo lleva una marca diacrítica (U+0301) devuelve el listado inicial, porque su forma de búsqueda queda vacía: es lo que dice 2.10. Se fija con una fila en SPEC-01 5.9 y un test, anotado como escrito después del código | El caso que anotó el evaluador sin contarlo como defecto |
+
+Cómo: rojo antes del código en N-01; un commit por hallazgo; oráculo en
+verde en cada uno. `04-calidad/respuesta-evaluacion-backend-02.md` con la
+decisión y el commit de cada fila. **No hace falta una tercera pasada del
+evaluador.** Cierre de esta bitácora con su resultado y la IA para.
+
+### Correcciones tras la revisión (desde las 20:07)
+
+Cada commit, con el oráculo en verde (20 correctas, 0 con fallo, 4
+inactivas) justo antes.
+
+| Hora | Hallazgo | Rojo visto antes del código | Qué se hizo | Verde, oráculo y commit |
+|---|---|---|---|---|
+| 20:10 | N-01 | 20:08: **6 en rojo por aserción** (`assert 500 == 405`; en el log, «Unexpected error in POST /docs» y las otras cinco): `POST`, `PUT`, `DELETE` y `OPTIONS /docs`, y `POST` y `DELETE /openapi.json`. Los dos tests de `HEAD` pasaron a la primera y llevan el comentario | Índice de specs: frase en «Documentación generada» e historial. `app/api/contract.py`: una petición a una ruta que no es del contrato no declara ningún método, en vez de fallar. `app/api/error_handling.py`: en ese caso, la cabecera `Allow` dice los métodos que el framework nombra para esa ruta, ordenados. Tests en `test_generated_docs.py`: las seis filas, con `Allow: GET, HEAD` y sin ningún error en el log | `79 passed` en los tres ficheros de errores genéricos; oráculo en verde a las 20:10, con 96 de 96 ramas. Commit `b5c468d` (20:10:17) |
+| 20:13 | N-02 | **No hay rojo**: no cambia el comportamiento. `ruff`, `mypy --strict` y los tests (`739 passed`), en verde a las 20:12 | `app/api/validation.py`: los errores de Pydantic se anotan con el tipo que la propia biblioteca les da (`ErrorDetails`) y el fichero ya no usa `Any`. `app/api/contract.py` y `app/api/problems.py`: un alias en cada uno para lo que FastAPI tipa con `Any` (el objeto de un documento OpenAPI y el parámetro `responses`), con el comentario en la misma línea. **Búsqueda al terminar**: en el código Python de `backend/` y `scripts/` la palabra solo aparece en dos `import`, en los dos alias comentados y en dos docstrings donde es la palabra inglesa | Oráculo en verde a las 20:13. Commit `7cc5858` (20:13:11) |
+| 20:15 | N-03 | No aplica: documentación y docstrings | SPEC-01: nota «Sobre E-30» hacia L-04 e historial. Índice: la fila del `400` cita L-05, e historial. SPEC-03 5.7: seis filas nuevas e historial. Cinco docstrings de `test_body_text.py` y `test_generated_docs.py` citan esas filas y CA-17; ningún test cambia | Oráculo en verde a las 20:15. Commit `040eba3` (20:15:43) |
+| 20:18 | H-15 | No aplica: documentación. **Medido antes de escribirlo**, a las 20:15, con un script fuera del repositorio y el cliente de test: un `company_name` de 2.000.000 de caracteres responde `422` con `too_long` en 0,32 s y uno de 20.000.000, en 2,14 s; después no hay ningún cliente guardado | `04-calidad/limitaciones-conocidas.md`: L-01 dice la medida, que es un riesgo de denegación de servicio, y cómo se cerraría en producción (un límite en el proxy inverso) | Oráculo en verde a las 20:18. Commit `aef612a` (20:18:24) |
+| 20:22 | `q` con solo U+0301 | **No hay rojo, por decisión**: el test fija lo que el código ya hace. Pasó a la primera a las 20:18 y lleva el comentario | SPEC-01 5.9: una fila e historial. Tests: uno de la API (con el `q` escrito como `%CC%81` y también como parámetro) y una fila del dominio | `167 passed` en los dos ficheros; oráculo en verde a las 20:22. Commit `bd7d269` (20:22:13) |
+| 20:24 | Respuesta | — | `04-calidad/respuesta-evaluacion-backend-02.md`: una fila por hallazgo, la decisión y el commit de cada una, la búsqueda de N-02 y lo que no demuestra | Oráculo en verde a las 20:24. Commit `68ef17f` (20:24:58) |
+
+Precisiones de la IA sobre estas correcciones, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| R-24 | N-01: en una ruta que no es del contrato, la cabecera `Allow` sale de lo que el framework dice de su propia ruta en el `405` que él mismo levanta, puesta en orden alfabético. En las rutas del contrato sigue saliendo del contrato, como antes | El framework solo nombra los métodos de la primera ruta que encaja; por eso las rutas de negocio miran el contrato. `/docs` y `/openapi.json` son una sola ruta cada una y no están en el contrato. El orden se fija porque el framework los escribe en el orden de un conjunto, que cambia entre ejecuciones |
+| R-25 | N-01: además de las seis filas, dos tests comprueban que `HEAD` responde `200` y sin cuerpo en las dos rutas, y las seis filas comprueban también que no se registra ningún error | `Allow: GET, HEAD` solo es verdad si `HEAD` funciona, y un `405` no es un fallo nuestro que deba ir al log |
+| R-26 | N-02: la regla y la búsqueda miran el `Any` que se escribe. Lo que una biblioteca devuelve sin tipo (las filas de `sqlite3`, el JSON leído) sigue llegando sin tipo hasta la línea que lo anota; y el `cast` del guarda (R-06) no es un `Any` | Para que «no queda ninguno» no se lea como más de lo que es |
+| R-27 | N-03: la fila de `/docs?x=1` de 5.7 responde `200`, no un error: de lo que pide CA-17 solo le aplica el estado, como a la fila del `Content-Type` con parámetros que ya había. No se han añadido filas para lo que el encargo no nombra: el emoji válido, la frontera de L-05 ni el `charset` del `Content-Type` | El encargo enumera las filas |
+| R-28 | N-03: la cita de L-05 está dentro de la celda de la fila del `400`, con un enlace a `04-calidad/limitaciones-conocidas.md`; la de L-04, en una nota bajo la tabla de requisitos del buscador | Donde lo pide el encargo |
+| R-29 | H-15: los tiempos son de una sola ejecución, en el equipo de desarrollo y con el cliente de test | Valen como orden de magnitud; el encargo pedía que constara que se procesan enteros |
+| R-30 | **Error de la IA, visto antes del commit**: en los dos tests del `q` con U+0301 escribió el carácter como escape (`́`) y la herramienta de edición lo guardó como el carácter literal, invisible. Lo vio al comprobar el fichero, lo sustituyó por `chr(0x0301)` y repasó todo el código versionado de `backend/`, `scripts/` y `CLAUDE.md`: ninguna línea con un carácter invisible literal. En `ai-workspace/` solo hay dos, los dos a propósito: el espacio de anchura cero del ejemplo de SPEC-01 5.7 y el U+00A0 del informe | Lo mismo que pasó con el U+00A0, al revés: lo que la IA escribe no siempre llega tal cual al fichero. Los caracteres invisibles se escriben por su código |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -224,6 +278,11 @@ Precisiones de la IA sobre la segunda pasada, **sin aprobar**:
 | Que el evaluador no tocó nada | `git status --short`, `git rev-parse --short HEAD` y `git stash list` (19:39) | Vacío, `eb0a27f` y ningún `stash` |
 | Segundo informe, intacto | Comparación con el mensaje del registro del subagente (19:40) | 106 líneas y 15.197 caracteres; ninguna línea distinta |
 | N-01 en el código actual y en el de `bda2c65` | Sondeo con el cliente de test; el código antiguo, extraído con `git archive` a una carpeta temporal (19:42) | `500` en los dos: no es una regresión |
+| Oráculo antes de cada commit tras la revisión | `uv run scripts/check.py`, 7 veces entre las 20:10 y las 20:26 | Siempre código de salida 0: 20 correctas, 0 con fallo y 4 inactivas. Las ramas del backend pasan de 92 de 92 a 96 de 96 |
+| Tests del backend al terminar | `uv run pytest` (20:22) | `741 passed` |
+| Ningún `Any` sin comentario en su línea (N-02) | `grep` de la palabra en el código Python de `backend/` y `scripts/`, sin el entorno virtual (20:13) | Dos `import`, dos alias con el comentario en la misma línea y dos docstrings con la palabra inglesa |
+| Cuerpos de 2 y 20 millones de caracteres (H-15) | Script fuera del repositorio, con el cliente de test (20:15) | `422` con `too_long` los dos, en 0,32 s y 2,14 s; ningún cliente guardado |
+| Caracteres invisibles literales | Recorrido de los ficheros versionados con Python (20:20 y 20:25) | Ninguno en `backend/`, `scripts/` ni `CLAUDE.md`. En `ai-workspace/`, dos, los dos a propósito (R-30) |
 
 ## 5. No verificado
 
@@ -253,8 +312,24 @@ Precisiones de la IA sobre la segunda pasada, **sin aprobar**:
 - Los tres requisitos que el evaluador mantiene en `NO CUMPLE`
   (SPEC-01/E-30, SPEC-02/E-14 y SPEC-03/E-07) siguen así por las
   limitaciones L-04 y L-05, aceptadas por el Tech Lead.
-- Los tres hallazgos nuevos (N-01, N-02 y N-03) están comprobados, no
-  corregidos.
+- ~~Los tres hallazgos nuevos (N-01, N-02 y N-03) están comprobados, no
+  corregidos~~: corregidos entre las 20:07 y las 20:15, por decisión del
+  Tech Lead.
+- ~~Nada con un servidor real~~, en parte: el Tech Lead dice haber
+  comprobado con `uvicorn` las sondas de H-01 a H-14 y A-01 y que N-01 se
+  reproducía (lo afirma él). **Las cinco correcciones hechas después de su
+  revisión no se han probado con un servidor real**, tampoco el `405` de
+  N-01.
+- **Ninguna comprobación independiente de las correcciones hechas tras la
+  revisión** (N-01, N-02, N-03, H-15 y el `q` con solo U+0301): no hay
+  tercera pasada del evaluador, por decisión del Tech Lead. Solo hay los
+  tests y las comprobaciones de la IA sobre su propio código.
+- Que la cabecera `Allow` de `/docs` y `/openapi.json` siga siendo
+  `GET, HEAD` con otra versión del framework: sale de lo que el framework
+  dice de sus rutas. Un test lo fija con la versión actual.
+- Los tiempos de H-15: una sola ejecución, en el equipo de desarrollo.
+- Cómo se comporta un proxy inverso con un límite de tamaño delante del
+  backend (el cierre previsto de L-01): no hay ninguno; es una previsión.
 
 ## 6. Tareas pendientes
 
@@ -262,11 +337,12 @@ Precisiones de la IA sobre la segunda pasada, **sin aprobar**:
 |---|---|
 | ~~Decidir cada hallazgo de la evaluación del backend: H-01 a H-15 y A-01~~ | Hecho a las 18:42, en el encargo, salvo H-15. Corregidos entre las 18:50 y las 19:25 |
 | ~~Aprobar o cambiar B-01 a B-04 y V-04 a V-07~~ | Admitidas a las 18:42 |
-| **Decidir N-01**: un método no admitido sobre `/docs` o `/openapi.json` responde `500` en vez de `405`. Defecto anterior a esta sesión, sin corregir | Ahora, por el Tech Lead |
-| **Decidir N-02**: `Any` sin comentario en su línea en `app/api/validation.py` y `app/api/contract.py` | A decidir por el Tech Lead |
-| **Decidir N-03**: si las limitaciones L-04 y L-05 se nombran en las specs (E-30 de SPEC-01, E-14 de SPEC-02 y E-07 de SPEC-03) y si la tabla 5.7 de SPEC-03 gana filas para las reglas nuevas del `400` y de la documentación generada | A decidir por el Tech Lead |
-| **H-15**: el encargo no lo nombra. Sigue como L-01, sin la medida que la IA proponía añadir (un nombre de 2.000.000 de caracteres se procesa entero) | A decidir por el Tech Lead |
-| Aprobar o cambiar R-01 a R-23 y V-08 a V-11. Las que piden una decisión: **R-09** (cuatro filas de un test que ya existía cambian su valor esperado de `""` a `None`), **R-10** (tres rojos que no fueron por aserción), **R-23** (un surrogate en `tax_id`, `country` o `plan` pasa de `422` a `400`) y R-15 (`app/domain/customers.py` está en 234 líneas de 250) | A decidir por el Tech Lead |
+| ~~Decidir N-01, N-02 y N-03~~ | Decididos a las 20:06. Hechos en `b5c468d`, `7cc5858` y `040eba3` |
+| ~~H-15~~ | Decidido a las 20:06: se mantiene L-01, con la medida y el cierre previsto. Hecho en `aef612a` |
+| ~~Aprobar o cambiar R-01 a R-23~~ | Admitidas a las 20:06; en R-09 vale la representación con `None` |
+| Aprobar o cambiar V-08 a V-11 (la revisión de las 20:06 no las nombra) y R-24 a R-30 | A decidir por el Tech Lead |
+| `app/domain/customers.py` está en 234 líneas de 250 (R-15): la próxima regla del alta o del buscador obligará a dividirlo | Cuando llegue esa regla |
+| Poner un límite de tamaño del cuerpo en el proxy inverso (cierre previsto de L-01) | Si el backend se despliega en producción |
 | **Documentar en el README que `/docs` carga recursos de un servidor externo** (decisión de H-09) | Al escribir el README |
 | Llevar la lista de `04-calidad/limitaciones-conocidas.md` al README, ahora con L-05 | Al escribir el README |
 | Pendientes heredados de la sesión 04 que esta sesión no toca: T-01 a T-08, la base de datos creada antes de `9ec6866` (P-03), documentar la estructura del backend en `02-arquitectura/README.md`, el margen de una semana en npm (ADR-007) y los heredados de la sesión 03 | A decidir por el Tech Lead |
