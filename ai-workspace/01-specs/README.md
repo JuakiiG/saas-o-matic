@@ -122,8 +122,11 @@ alternativas y el motivo de cada una están en
   y `errors` en el orden de los campos del contrato. `field` es el nombre
   del campo del cuerpo, `id` para el identificador de la ruta y el nombre
   del parámetro para los de consulta. Además:
-  - Los campos que no están en el contrato (`unknown_field`) van **después**
-    de los del contrato, en el orden en que llegan en la petición.
+  - Los campos del cuerpo que no están en el contrato (`unknown_field`) van
+    **después** de los del contrato, por orden alfabético de su nombre
+    (SPEC-01, 2.12), comparando por punto de código: las mayúsculas van
+    antes que las minúsculas. Los parámetros de consulta no documentados
+    van en el orden en que llegan en la petición.
   - Un **cuerpo ausente equivale a `{}`**: un `missing` por cada campo
     obligatorio.
   - Una validación que falla **sin tener un código en el contrato** es un
@@ -182,3 +185,4 @@ de cada spec.
 |---|---|
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-02: cualquier endpoint que no pueda abrir o consultar la base de datos responde `503` `service_unavailable`, igual que `GET /health`; no vale para un error de integridad. Fila nueva en la tabla de errores genéricos. Motivo: hasta ahora una petición válida a `POST /pricing/quote` con la base de datos inaccesible respondía `500` `internal_error`, y el frontend trata distinto «fallo nuestro» y «no disponible ahora». El porqué, en ADR-006 |
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-02: tres reglas que la IA había aplicado al implementar y que ninguna spec decía pasan a estar escritas en «Errores de validación»: el cuerpo ausente equivale a `{}`; una validación sin código en el contrato es un `500` registrado; los campos desconocidos van después de los del contrato, en el orden de la petición. Motivo: una regla que solo está en el código no es parte del contrato |
+| 2026-11-13 | Corrección decidida por el Tech Lead: los campos desconocidos del cuerpo van por **orden alfabético** de su nombre, no por el orden de la petición. Motivo: la regla escrita ese mismo día contradecía SPEC-01 (2.12), que ya decía «por orden alfabético»; la IA la había propuesto sin haber leído ese apartado. Los parámetros de consulta no documentados siguen en el orden de la petición |

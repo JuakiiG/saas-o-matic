@@ -776,6 +776,26 @@ Precisiones de la IA sobre SPEC-01, **sin aprobar**:
 | Y-09 | **Notas de SPEC-01 que ya no son ciertas y no se han tocado**: 2.7 («no se ha instalado ni ejecutado»), «Sobre CA-17» («`scripts/check.py` aún no existe») y «Sobre CA-19» («hoy no se puede decir»). El oráculo existe, la biblioteca está instalada y el resultado esperado se cumple | Es cambiar una spec con el visto bueno dado: lo decide el Tech Lead, como hizo con la nota de CA-09 de SPEC-02 |
 | Y-10 | **Contradicción entre dos textos, detectada al leer SPEC-01 entera**: 2.12 dice que los `unknown_field` van «por orden alfabético de su nombre»; la convención escrita hoy en el índice (s2, a partir de W-12) dice «en el orden en que llegan en la petición». La IA propuso W-12 sin haber leído 2.12 y afirmó que ninguna spec lo decía: era falso para `POST /customers` | Hay que decidirlo antes de la pieza (b). El código actual sigue el orden de la petición |
 
+### Dos decisiones del Tech Lead antes de la pieza (b) (13:43)
+
+La IA paró tras la pieza (a) y preguntó dos cosas. Respuestas:
+
+| # | Pregunta de la IA | Decisión del Tech Lead |
+|---|---|---|
+| t1 | Y-10: SPEC-01 2.12 ordena los `unknown_field` alfabéticamente y la convención del índice escrita hoy, por orden de la petición. La IA propuso tres salidas y recomendó la primera | **Alfabético en todos.** Vale SPEC-01 2.12. Se corrigen la convención del índice (con historial), el traductor y el test de la ruta de prueba. Los parámetros de consulta no documentados siguen en el orden de la petición |
+| t2 | Dónde vive la validación del alta: las reglas de 2.12 (orden de comprobaciones por campo, recorte solo de U+0020, formato de `tax_id` que depende de `country` pero se informa a la vez que los errores de otros campos) no encajan en validadores de Pydantic sin trucos, y `backend.md` dice que los esquemas de entrada de Pydantic rechazan campos desconocidos y acotan longitudes. La IA recomendó validar en `domain/` | **En `domain/`, a mano, con ADR-009 antes del código**, y tres condiciones que deben constar en el ADR: (1) el modelo que documenta el contrato y la validación real no pueden separarse: un test compara los campos, su orden, los obligatorios y el tipo que publica el OpenAPI de `POST /customers` con los que valida el dominio, y el OpenAPI sigue declarando que no se admiten campos adicionales; (2) el OpenAPI no declara ningún límite que el código no aplique exactamente así: si una longitud se mide tras recortar, no se publica como `maxLength` del valor recibido; (3) la excepción a `backend.md` es estrecha: Pydantic sigue validando los endpoints cuyas reglas son por campo y sin dependencias entre campos (como `POST /pricing/quote`), y el dominio valida a mano solo cuando la spec fija un orden de comprobaciones o una dependencia entre campos; la regla se escribe así en `backend.md`, no como permiso general. El cuerpo ausente sigue equivaliendo a `{}`: cinco `missing`. No hace falta parar tras el ADR |
+
+| Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
+|---|---|---|---|---|
+| 13:44 | t1 | 13:43: `At index 2 diff: ('zeta', 'unknown_field') != ('Beta', 'unknown_field')`, al cambiar el valor esperado del test de la ruta de prueba | `in_contract_order()` en `app/api/validation.py`: campos del contrato en su orden y después los desconocidos por nombre. Convención del índice corregida, con historial. El commit de la pieza (a) es `235322a` (13:30:18) | `302 passed`; oráculo en verde a las 13:44 (20 correctas, 0 con fallo, 4 inactivas) |
+
+Precisión de la IA, **sin aprobar**: «orden alfabético» se ha implementado
+como **orden por punto de código** (`Beta` va antes que `alpha`), y así
+queda escrito en la convención. SPEC-01 2.12 no dice qué pasa con las
+mayúsculas; es lo más simple y no depende de la configuración regional
+(Y-11). Un test que ya existía cambió su valor esperado, porque cambia la
+regla.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |

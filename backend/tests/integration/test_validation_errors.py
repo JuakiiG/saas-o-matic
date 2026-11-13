@@ -33,14 +33,16 @@ INVALID_BODIES = [
     ({"id": 1, "count": 5, "extra": 1}, [("extra", "unknown_field")]),
     # A field that fails twice is reported once, with its first error.
     ({"id": 1, "count": 5, "either": "x"}, [("either", "not_an_integer")]),
-    # Fields of the contract in its order, whatever the order of the request; then the unknown.
+    # Fields of the contract in its order, whatever the order of the request; then the
+    # unknown ones, in alphabetical order of their name.
     (
-        {"zeta": 1, "count": -1, "alpha": 2, "id": "x"},
+        {"zeta": 1, "count": -1, "alpha": 2, "id": "x", "Beta": 3},
         [
             ("id", "not_an_integer"),
             ("count", "out_of_range"),
-            ("zeta", "unknown_field"),
+            ("Beta", "unknown_field"),
             ("alpha", "unknown_field"),
+            ("zeta", "unknown_field"),
         ],
     ),
 ]

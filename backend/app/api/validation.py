@@ -1,10 +1,11 @@
 """Translation of the framework's validation errors to the errors of the contract.
 
 Index of specs, "Errores de validación": one error per field, the first that
-fails, in the order of the fields of the contract; then the unknown fields.
+fails, in the order of the fields of the contract; then the unknown fields,
+in alphabetical order of their name.
 """
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any
 
 from app.api.problems import FieldCode, FieldError
@@ -32,13 +33,23 @@ def field_errors(
     raw_errors: Sequence[Mapping[str, Any]], body_schema: Mapping[str, Any]
 ) -> tuple[FieldError, ...]:
     """The errors of the contract for the raw errors of one request."""
-    position = {name: index for index, name in enumerate(body_schema.get("properties", {}))}
     first: dict[str, FieldError] = {}
     for field, raw in _failed_fields(raw_errors, body_schema):
         if field not in first:
             first[field] = _field_error(field, raw)
-    # A stable sort: the unknown fields keep the order of the request, after the known ones.
-    return tuple(sorted(first.values(), key=lambda error: position.get(error.field, len(position))))
+    return in_contract_order(first.values(), list(body_schema.get("properties", {})))
+
+
+def in_contract_order(
+    errors: Iterable[FieldError], contract_fields: Sequence[str]
+) -> tuple[FieldError, ...]:
+    """Fields of the contract in its order; then the unknown ones, by name (SPEC-01, 2.12)."""
+    position = {name: index for index, name in enumerate(contract_fields)}
+
+    def order(error: FieldError) -> tuple[bool, int, str]:
+        return (error.field not in position, position.get(error.field, 0), error.field)
+
+    return tuple(sorted(errors, key=order))
 
 
 def _failed_fields(
