@@ -15,13 +15,14 @@ SELECT_CUSTOMER = (
     "SELECT id, company_name, tax_id, contact_email, country, plan, created_at"
     " FROM customers WHERE id = ?"
 )
-# An empty identifier would match every customer, so it is not compared: the text
-# searched had nothing of an identifier (SPEC-01, 2.10).
+# It compares what it is given and decides nothing: what a text is compared with is a
+# rule of the domain (SPEC-01, 2.10). A form that the domain leaves out arrives as a null,
+# and LIKE with a null pattern is true for no row.
 SEARCH_CUSTOMERS = (
     "SELECT id, company_name, tax_id, contact_email, country, plan, created_at"
     " FROM customers"
     " WHERE company_name_search LIKE ? ESCAPE '\\'"
-    " OR (? <> '' AND tax_id LIKE ? ESCAPE '\\')"
+    " OR tax_id LIKE ? ESCAPE '\\'"
     " ORDER BY company_name_search, id LIMIT ?"
 )
 # What SQLite calls the violation of a UNIQUE constraint; any other one is not a duplicate.
@@ -34,8 +35,13 @@ class DuplicateCustomerError(Exception):
     """There is already a customer with that country and tax identifier."""
 
 
-def _contains(text: str) -> str:
-    """The LIKE pattern for "contains this text", with its wildcards taken literally."""
+def _contains(text: str | None) -> str | None:
+    """The LIKE pattern for "contains this text", with its wildcards taken literally.
+
+    No text, no pattern: the null that matches no row.
+    """
+    if text is None:
+        return None
     # The escape character first: escaping it later would escape the escapes just added.
     literal = text.replace(LIKE_ESCAPE, LIKE_ESCAPE + LIKE_ESCAPE)
     for wildcard in LIKE_WILDCARDS:
@@ -87,7 +93,7 @@ class CustomerRepository:
 
         One statement, and the text only in its parameters (SPEC-01/E-28).
         """
-        parameters = (_contains(search.name), search.tax_id, _contains(search.tax_id), limit)
+        parameters = (_contains(search.name), _contains(search.tax_id), limit)
         with self._database.connection() as connection:
             rows = connection.execute(SEARCH_CUSTOMERS, parameters).fetchall()
         return [Customer(*row) for row in rows]

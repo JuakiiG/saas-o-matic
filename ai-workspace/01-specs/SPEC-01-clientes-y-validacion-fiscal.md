@@ -199,6 +199,14 @@ mayúsculas ni los acentos distinguen, y la `Ñ` busca y ordena como `N`.
   la forma de búsqueda de su nombre, o si `q` normalizado como en 2.2 (sin
   espacios, guiones ni puntos, en mayúsculas) no queda vacío y aparece
   dentro del identificador fiscal guardado.
+- Un `q` que contiene el carácter U+0000 **no coincide con ningún
+  cliente**, esté donde esté el carácter: la respuesta es `200` con la
+  lista vacía. *Por qué: ningún nombre ni identificador guardado puede
+  contenerlo (es de la categoría Cc y no es `0`–`9` ni `A`–`Z`).*
+- **Qué se compara lo decide el dominio**: que un `q` normalizado vacío no
+  se compara con el identificador y que un `q` con U+0000 no se compara
+  con nada. La sentencia SQL solo compara lo que recibe y no contiene
+  ninguna de esas dos condiciones (2.11).
 - Las dos comparaciones se hacen con `LIKE` y una cláusula `ESCAPE` cuyo
   carácter de escape es la barra invertida `\` (U+005C). `%`, `_` y `\` del
   texto buscado se escapan con ella y se buscan como texto literal.
@@ -675,6 +683,9 @@ Datos de partida (todos de `ES` salvo que se indique):
 | `\` | — | El carácter de escape es literal |
 | `' OR 1=1 --` | — | Texto tratado como dato |
 | `noexiste` | — | `200` con lista vacía |
+| `%00` (solo el carácter U+0000) | — | `200` con lista vacía: no coincide con nada, y no devuelve el listado inicial |
+| `a%00` | — | `200` con lista vacía, aunque hay nombres con `a` |
+| `%00a` | — | `200` con lista vacía |
 | ausente, vacío o solo espacios | 5, 2, 3, 6, 7, 4, 1 | Listado inicial; `Ñandú` ordena como `nandu`, entre la `j` y la `z` |
 | 101 caracteres | `422` | `too_long`, en el campo `q` |
 | 100 caracteres seguidos de un espacio | `422` | `too_long`: el límite se mide antes de recortar |
@@ -825,3 +836,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-13 | Decisión del Tech Lead al revisar la implementación: fila `503` `service_unavailable` en las tablas de errores de 4.1, 4.2 y 4.3. Motivo: todo endpoint que lee la base de datos declara el `503` que ya responde (regla de las convenciones comunes); `GET /meta` no la lee y no lo declara. El OpenAPI de las tres operaciones lo declara (CA-16) |
 | 2026-11-13 | Corrección ordenada por el Tech Lead: tres notas que habían quedado desfasadas dicen ahora lo que ya es un hecho. 2.7: `python-stdnum` 2.2 está instalada y la prueba diferencial se ha ejecutado. «Sobre CA-17»: `scripts/check.py` existe y comprueba el criterio en cada ejecución. «Sobre CA-19»: el resultado esperado se cumple, con sus cifras. Sin cambios en reglas, requisitos, criterios ni casos |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-01), decidida por el Tech Lead: un entero bien escrito en la ruta, por largo que sea, responde `422` con `out_of_range`. Tres filas nuevas en 5.10 (4301 nueves, 20000 nueves y un signo menos con 4301 nueves); E-24 y CA-12 no cambian de texto y las cubren. Motivo: un `id` de 4301 dígitos o más respondía `500` `internal_error`, porque la biblioteca de validación deja de leerlo como número y su error no tenía código en el contrato |
+| 2026-11-13 | Corrección de la evaluación independiente del backend (H-05 y H-11), decidida por el Tech Lead: un `q` con U+0000 devuelve la lista vacía, sin cambio en el contrato, y qué se compara lo decide el dominio, no la sentencia SQL. Dos puntos nuevos en 2.10 y tres filas en 5.9 (`%00`, `a%00` y `%00a`); E-25, E-31 y CA-13 no cambian de texto y las cubren. Motivo: SQLite corta el patrón de `LIKE` en ese carácter, de modo que `%00` devolvía el listado inicial y `a%00` buscaba «acaba en `a`»; y la condición de no comparar un identificador vacío estaba escrita en el SQL (`? <> ''`), contra 2.11 |

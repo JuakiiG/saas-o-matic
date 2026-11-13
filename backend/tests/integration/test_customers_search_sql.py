@@ -6,7 +6,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import cast
 
-from app.domain.customers import NewCustomer, customer_search
+import pytest
+
+from app.domain.customers import CustomerSearch, NewCustomer, customer_search
 from app.repositories.customers import CustomerRepository
 from app.repositories.database import Database
 
@@ -70,3 +72,33 @@ def test_wildcards_of_the_searched_text_are_escaped_in_the_parameters(tmp_path: 
     statement, parameters = database.statements[0]
     assert "100" not in statement
     assert "%100\\%\\_\\\\%" in parameters
+
+
+def test_statement_compares_what_the_domain_gives_and_decides_nothing(tmp_path: Path) -> None:
+    """SPEC-01/E-25, SPEC-01/E-28: what is compared is decided in the domain, not in SQL (2.10).
+
+    The domain never gives an empty identifier. Given one by hand, the statement compares
+    it like any other text, and every customer contains it: it holds no condition of its own.
+    """
+    repository, database = recording_repository(tmp_path)
+    found = repository.search(CustomerSearch("noexiste", ""), 20)
+    assert [customer.tax_id for customer in found] == ["B12345674"]
+    assert database.statements[0][1] == ("%noexiste%", "%%", 20)
+
+
+@pytest.mark.parametrize(
+    ("search", "parameters", "found"),
+    [
+        (CustomerSearch("noexiste", None), ("%noexiste%", None, 20), 0),
+        (CustomerSearch(None, None), (None, None, 20), 0),
+        (CustomerSearch("", None), ("%%", None, 20), 1),
+    ],
+    ids=["no-identifier", "nothing-to-compare", "empty-name"],
+)
+def test_form_that_the_domain_leaves_out_reaches_the_database_as_a_null(
+    tmp_path: Path, search: CustomerSearch, parameters: tuple[object, ...], found: int
+) -> None:
+    """SPEC-01/E-25, SPEC-01/E-28: a form with nothing to compare matches no customer (2.10)."""
+    repository, database = recording_repository(tmp_path)
+    assert len(repository.search(search, 20)) == found
+    assert database.statements[0][1] == parameters

@@ -112,18 +112,28 @@ def test_search_form_ignores_case_and_accents(name: str, expected: str) -> None:
         ("b.1234", "b.1234", "B1234"),
         ("Alfa Uno", "alfa uno", "ALFAUNO"),
         ("100%_\\", "100%_\\", "100%_\\"),
-        ("- .", "- .", ""),
+        # Session 05 (H-11): an identifier that is left empty is none to compare with, and
+        # it is the domain that says so. These four rows expected `""` until then.
+        ("- .", "- .", None),
         ("\t", "\t", "\t"),
-        ("", "", ""),
-        ("   ", "", ""),
-        (None, "", ""),
+        ("", "", None),
+        ("   ", "", None),
+        (None, "", None),
+        # Session 05 (H-05): no stored name or identifier can hold U+0000, wherever it is.
+        ("\x00", None, None),
+        ("a\x00", None, None),
+        ("\x00a", None, None),
+        (" b-1\x002 ", None, None),
     ],
     ids=ascii,
 )
 def test_customer_search_gives_the_two_forms_of_the_trimmed_text(
-    text: str | None, name: str, tax_id: str
+    text: str | None, name: str | None, tax_id: str | None
 ) -> None:
-    """SPEC-01/E-25, SPEC-01/E-29: search form of the name and normalized identifier (2.10)."""
+    """SPEC-01/E-25, SPEC-01/E-29: search form of the name and normalized identifier (2.10).
+
+    `None` is nothing to compare with: no customer matches by that form.
+    """
     assert customer_search(text) == CustomerSearch(name, tax_id)
 
 

@@ -41,6 +41,10 @@ SEARCH_ROWS = [
     ("\\", []),
     ("' OR 1=1 --", []),
     ("noexiste", []),
+    # U+0000 matches nothing, wherever it is: neither the initial list nor the names with `a`.
+    ("\x00", []),
+    ("a\x00", []),
+    ("\x00a", []),
     ("", EVERY_CUSTOMER),
     ("   ", EVERY_CUSTOMER),
     # Not a row of the table: 100 characters is the limit, and it is valid.

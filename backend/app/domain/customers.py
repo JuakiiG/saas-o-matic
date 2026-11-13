@@ -25,6 +25,8 @@ MAX_SEARCH_TEXT_LENGTH = 100
 MAX_SEARCH_RESULTS = 20
 # The only character that is trimmed: a tab or a line break at an end is not.
 SPACE = " "
+# U+0000. A search text that holds it matches no customer (2.10).
+NUL = "\x00"
 # Unicode categories never admitted: control and invisible format characters.
 FORBIDDEN_CATEGORIES = ("Cc", "Cf")
 DIACRITICAL_MARK = "Mn"
@@ -103,16 +105,24 @@ class InvalidCustomerError(Exception):
 
 @dataclass(frozen=True)
 class CustomerSearch:
-    """What a search text is compared with: the names and the tax identifiers."""
+    """What a search text is compared with: the names and the tax identifiers.
 
-    name: str
-    tax_id: str
+    `None` is nothing to compare with: no customer matches by that form. It is decided
+    here and not in the statement that searches (SPEC-01, 2.10 and 2.11).
+    """
+
+    name: str | None
+    tax_id: str | None
 
 
 def customer_search(text: str | None) -> CustomerSearch:
     """The two forms of a search text. No text, or only spaces, is the empty search (2.10)."""
     trimmed = (text or "").strip(SPACE)
-    return CustomerSearch(search_form(trimmed), normalize_tax_id(trimmed))
+    if NUL in trimmed:
+        # No stored name (it is Cc) or identifier (it is not 0-9 or A-Z) can hold it.
+        return CustomerSearch(None, None)
+    # An empty identifier would be inside every stored one: the text had nothing of one.
+    return CustomerSearch(search_form(trimmed), normalize_tax_id(trimmed) or None)
 
 
 def search_form(text: str) -> str:
