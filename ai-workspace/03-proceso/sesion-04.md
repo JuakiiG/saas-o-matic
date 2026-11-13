@@ -829,6 +829,54 @@ mayúsculas; es lo más simple y no depende de la configuración regional
 (Y-11). Un test que ya existía cambió su valor esperado, porque cambia la
 regla.
 
+### Revisión de SPEC-01 por el Tech Lead (14:32)
+
+**SPEC-01 revisada y dada por buena.** El Tech Lead dice haber comprobado
+el oráculo, el validador fiscal contra una implementación aparte y contra
+`python-stdnum` en más de 300.000 identificadores, y unos 70 casos contra
+un servidor real con `uvicorn`, también con la base de datos apartada (lo
+afirma él; la IA no lo ha visto). El cierre anterior de esta bitácora es
+`a4a35b6` (14:12:45 según `git log`).
+
+Admitidas X-01 a X-13 e Y-01 a Y-33, con estos cambios:
+
+| # | Precisión | Decisión del Tech Lead |
+|---|---|---|
+| r1 | Y-23 | **Cambia: el `id` de la ruta tiene una sola forma.** Es un entero si es `0` o un signo menos opcional seguido de dígitos ASCII sin ceros a la izquierda. Todo lo demás es `not_an_integer`: `1.0`, `+1`, `01`, `1_0`, un espacio delante o detrás. Después se aplica el rango (`0` y los negativos, `out_of_range`). Por qué: un cliente, una dirección; hoy `1_0` se lee como 10. Regla nueva en «Identificadores» del índice de specs y filas nuevas en 5.10 de SPEC-01, con historial. Test en rojo antes |
+| r2 | Y-15, Y-31, X-02 | **Todo endpoint que lee la base de datos declara el `503`**: fila en las tablas de errores de 4.1, 4.2 y 4.3 de SPEC-01 y en 5.7 de SPEC-03, con historial, y declarado en el OpenAPI de las tres operaciones. Test en rojo antes |
+| r3 | Y-09 | Actualizar las tres notas caducadas de SPEC-01 (2.7, «Sobre CA-17» y «Sobre CA-19») con lo que ya es un hecho, y fila de historial |
+| r4 | Y-30, Y-24 | Añadir el test unitario de `customer_search`, anotado como escrito después del código. `q` repetido pasa a la lista de limitaciones conocidas como L-04 |
+| r5 | Y-22 | **Queda como está**: la ficha recibe `simulation_count` y `simulations` con SPEC-03, no antes con valores fijos. E-22 no se da por cubierto hasta entonces |
+| n4 | Norma n2 (aclaración) | `ruff format` **sí** puede ejecutarse sobre `backend/`: es una herramienta determinista y el oráculo ya comprueba su resultado. Lo que no se hace por la terminal es escribir contenido (`sed`, `printf`, redirecciones), y las specs se tocan solo con la herramienta de edición |
+
+Commits pedidos: uno para la forma del `id` de la ruta, uno para el `503`
+en el contrato y uno para notas, test y limitación; oráculo en verde tras
+cada uno. Después, SPEC-03 completa, en dos piezas: (a) `POST /simulations`
+(validación, el mismo cálculo del dominio que usa `POST /pricing/quote` con
+el test que lo demuestra, el desglose de los tres tramos guardado y la
+escritura atómica, con un test que provoque un fallo a mitad y compruebe que
+no queda ninguna fila) y (b) el historial en `GET /customers/{id}` (las 50
+de `id` más alto, sin recalcular importes ni leer el país actual del
+cliente, y sin simulaciones de otro cliente, probado con dos clientes). Un
+commit por pieza. Al terminar SPEC-03, la IA para: el Tech Lead revisa el
+backend entero antes del frontend.
+
+### Cambios tras la revisión de SPEC-01 (desde las 14:32)
+
+| Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
+|---|---|---|---|---|
+| 14:35 | r1 | 14:33: **10 en rojo, todos por aserción** (`200 == 422`, `404 == 422` para `1_0` y `out_of_range` en vez de `not_an_integer` para `-0`, `00` y `-01`); 6 en verde: las cinco filas que ya había y el dígito árabe, que la biblioteca ya rechazaba | Regla en «Identificadores» del índice, con historial; seis filas nuevas en 5.10 de SPEC-01, con historial. `app/api/identifiers.py`: el `id` de la ruta pasa primero por una expresión regular (`0` o un menos opcional y dígitos ASCII sin ceros a la izquierda) y después por el rango | `518 passed`; oráculo en verde a las 14:35 (20 correctas, 0 con fallo, 4 inactivas; 84 de 84 ramas) |
+
+Precisiones de la IA sobre los cambios de la revisión, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| Z-01 | **`-0`, `00` y `-01` son `not_an_integer`**, igual que un salto de línea al final (`1%0A`) y un dígito de otra escritura (`١`). La regla es la expresión `0` o `-?[1-9][0-9]*`, comparada con el texto entero | «Sin ceros a la izquierda» no dice qué pasa con `-0`; la IA lo ha leído como «el cero solo se escribe `0`». Cinco filas de test que no están en 5.10 |
+| Z-02 | La regla solo vale para la ruta. En el cuerpo, un `id` sigue siendo un entero de JSON en modo estricto, donde esas formas no existen (`01` y `+1` no son JSON; `1.0` ya daba `not_an_integer`) | Así lo dice la decisión («el id de la ruta») |
+| Z-03 | El código importa `PydanticCustomError` de `pydantic_core`, que no figura en `pyproject.toml`: es el núcleo de Pydantic, llega con él y está fijado en `uv.lock`. Es la forma documentada de lanzar un error con un tipo propio | No es una dependencia nueva, pero sí una importación directa de un paquete que el proyecto no declara. Si el Tech Lead prefiere declararlo, es una línea |
+| Z-04 | **Defecto propio visto antes del commit**: con el control de la forma escrito delante de los límites, el OpenAPI de la ruta publicaba `ge` y `le` (que no son JSON Schema) en vez de `minimum` y `maximum`, y ningún test lo detectaba. Corregido cambiando el orden. El test que lo fija se escribió **después** del código; a las 14:34 se comprobó con una mutación (el orden anterior) que falla: `(None, None) == (1, 9223372036854775807)` | Lo vio la IA al mirar el documento generado, no un test |
+| Z-05 | El test del `id` no válido crea ahora el cliente 1 en cada fila | Sin él, `1.0` o `01` habrían dado `404` y no `200`: el rojo no habría demostrado que la forma abría la ficha de un cliente |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |

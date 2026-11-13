@@ -109,12 +109,26 @@ def test_customer_that_does_not_exist_returns_404(client: TestClient, customer_i
         (str(MAX_ID + 1), "out_of_range"),
         ("abc", "not_an_integer"),
         ("1.5", "not_an_integer"),
+        # The only form of an integer in the route: the customer 1 exists, and only `1` reads it.
+        ("1.0", "not_an_integer"),
+        ("+1", "not_an_integer"),
+        ("01", "not_an_integer"),
+        ("1_0", "not_an_integer"),
+        ("%201", "not_an_integer"),
+        ("1%20", "not_an_integer"),
+        # Not rows of the table: other writings that the rule leaves out.
+        ("-0", "not_an_integer"),
+        ("00", "not_an_integer"),
+        ("-01", "not_an_integer"),
+        ("1%0A", "not_an_integer"),
+        ("%D9%A1", "not_an_integer"),
     ],
 )
 def test_customer_with_an_invalid_id_returns_422_in_the_field_id(
     client: TestClient, customer_id: str, code: str
 ) -> None:
     """SPEC-01/E-24: the error is of the field `id`, whatever the route calls it (5.10, CA-12)."""
+    assert client.post("/customers", json=customer_with({})).status_code == 201
     assert field_codes(client.get(f"/customers/{customer_id}")) == [("id", code)]
 
 
@@ -196,6 +210,8 @@ def test_openapi_declares_the_contract_of_reading_customers(client: TestClient) 
     assert [(p["name"], p["in"], p["schema"]["type"]) for p in one["parameters"]] == [
         ("id", "path", "integer")
     ]
+    limits = one["parameters"][0]["schema"]
+    assert (limits.get("minimum"), limits.get("maximum")) == (1, MAX_ID)
     answered = one["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
     assert list(schemas[answered.rsplit("/", maxsplit=1)[-1]]["properties"]) == CUSTOMER_FIELDS
     search = document["paths"].get("/customers", {}).get("get", {})

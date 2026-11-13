@@ -692,6 +692,16 @@ Además, con 25 clientes cuyo nombre contiene `Ejemplo`, la búsqueda
 | `9223372036854775808` (2^63) | `422` | `out_of_range` |
 | `abc` | `422` | `not_an_integer` |
 | `1.5` | `422` | `not_an_integer` |
+| `1.0` | `422` | `not_an_integer` |
+| `+1` | `422` | `not_an_integer` |
+| `01` | `422` | `not_an_integer` |
+| `1_0` | `422` | `not_an_integer` |
+| `1` con un espacio delante (`%201`) | `422` | `not_an_integer` |
+| `1` con un espacio detrás (`1%20`) | `422` | `not_an_integer` |
+
+Las seis últimas filas son la forma única del `id` de la ruta (convenciones
+del índice, «Identificadores»): con la forma se decide si es un entero y
+después se aplica el rango.
 
 ## 6. Criterios de aceptación
 
@@ -785,3 +795,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-02 y SPEC-03 (bloque backend) |
 | 2026-11-13 | Confirmación del Tech Lead sobre el apartado 8: aprobó esta spec sabiendo que la lectura directa de la página del Ministerio del Interior sigue sin verificar. Motivo: el algoritmo queda cubierto por los vectores de prueba y por la prueba diferencial de CA-19. Sin cambios en requisitos, criterios ni casos |
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A2 (plan informativo, valores de libre elección) y, de A4, solo el uso del tipo general; la lista de países sigue siendo decisión propia. El Tech Lead mantiene los planes de D-04 y su visto bueno a esta spec. Cabecera y apartado 8 actualizados; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |
+| 2026-11-13 | Decisión del Tech Lead al revisar la implementación: el `id` de la ruta tiene una sola forma, escrita en las convenciones del índice («Identificadores»). Seis filas nuevas en 5.10 (`1.0`, `+1`, `01`, `1_0` y un espacio delante o detrás), todas `not_an_integer`; E-24 y CA-12 no cambian de texto y las cubren. Motivo: un cliente, una dirección; antes esas formas devolvían un cliente (`1_0`, el 10) |

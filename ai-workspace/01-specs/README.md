@@ -92,7 +92,12 @@ alternativas y el motivo de cada una están en
 - **Identificadores**: todo `id`, vaya en la ruta o en el cuerpo, es un
   entero de 1 a 9223372036854775807, el máximo de `INTEGER` en SQLite. Fuera
   de ese rango, `422` con el código de campo `out_of_range`; si no es un
-  entero, `not_an_integer`.
+  entero, `not_an_integer`. **En la ruta, un `id` tiene una sola forma**: es
+  un entero si es `0` o un signo menos opcional seguido de dígitos ASCII
+  (`0` a `9`) sin ceros a la izquierda. Todo lo demás es `not_an_integer`:
+  `1.0`, `+1`, `01`, `1_0` o un espacio delante o detrás. Después se aplica
+  el rango: `0` y los negativos dan `out_of_range`. *Por qué: un cliente,
+  una dirección.*
 - **Fechas con hora**: UTC, ISO 8601 y precisión de segundos
   (`2026-11-12T14:30:00Z`).
 - **Errores**: `application/problem+json` (RFC 9457) con esta forma (A14):
@@ -186,3 +191,4 @@ de cada spec.
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-02: cualquier endpoint que no pueda abrir o consultar la base de datos responde `503` `service_unavailable`, igual que `GET /health`; no vale para un error de integridad. Fila nueva en la tabla de errores genéricos. Motivo: hasta ahora una petición válida a `POST /pricing/quote` con la base de datos inaccesible respondía `500` `internal_error`, y el frontend trata distinto «fallo nuestro» y «no disponible ahora». El porqué, en ADR-006 |
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-02: tres reglas que la IA había aplicado al implementar y que ninguna spec decía pasan a estar escritas en «Errores de validación»: el cuerpo ausente equivale a `{}`; una validación sin código en el contrato es un `500` registrado; los campos desconocidos van después de los del contrato, en el orden de la petición. Motivo: una regla que solo está en el código no es parte del contrato |
 | 2026-11-13 | Corrección decidida por el Tech Lead: los campos desconocidos del cuerpo van por **orden alfabético** de su nombre, no por el orden de la petición. Motivo: la regla escrita ese mismo día contradecía SPEC-01 (2.12), que ya decía «por orden alfabético»; la IA la había propuesto sin haber leído ese apartado. Los parámetros de consulta no documentados siguen en el orden de la petición |
+| 2026-11-13 | Decisión del Tech Lead al revisar SPEC-01: en la ruta, un `id` tiene una sola forma (`0`, o un signo menos opcional y dígitos ASCII sin ceros a la izquierda); todo lo demás es `not_an_integer`, y el rango se aplica después. Regla nueva en «Identificadores». Motivo: un cliente, una dirección; hasta ahora `1.0`, `+1` y `01` devolvían el cliente 1 y `1_0` se leía como 10, porque lo decidía la biblioteca de validación |
