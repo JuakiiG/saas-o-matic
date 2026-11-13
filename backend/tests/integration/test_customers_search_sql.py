@@ -14,6 +14,20 @@ from app.repositories.database import Database
 
 INJECTION = "' OR 1=1 --"
 WILDCARDS = "100%_\\"
+CREATED_AT = "2026-11-13T10:00:00Z"
+# Values that would change the statement if any of them were written into it. The
+# repository stores what it is given: validating it is the job of the domain.
+HOSTILE_VALUES = (INJECTION, "' OR 1=1 -- search", "X' OR '1'='1", "'); DROP TABLE customers;--")
+HOSTILE_CUSTOMER = NewCustomer(
+    company_name=INJECTION,
+    company_name_search=HOSTILE_VALUES[1],
+    tax_id=HOSTILE_VALUES[2],
+    contact_email=INJECTION,
+    country="ES",
+    plan=HOSTILE_VALUES[3],
+)
+# An id of several digits, so that it could not be in a statement by chance.
+CUSTOMER_ID = 12
 
 
 class RecordingConnection:
@@ -102,3 +116,43 @@ def test_form_that_the_domain_leaves_out_reaches_the_database_as_a_null(
     repository, database = recording_repository(tmp_path)
     assert len(repository.search(search, 20)) == found
     assert database.statements[0][1] == parameters
+
+
+def assert_no_value_in(statement: str) -> None:
+    """Neither a number nor a text literal: nothing that could be a value."""
+    assert not any(character.isdigit() for character in statement)
+    assert "'" not in statement
+
+
+# Written after the code that it tests (session 05, H-14): it was never seen failing.
+def test_values_of_a_new_customer_reach_the_database_only_as_parameters(tmp_path: Path) -> None:
+    """SPEC-03/E-23: the statement that stores a customer carries no value (CA-13)."""
+    database = RecordingDatabase(tmp_path / "insert.db")
+    database.create_schema()
+    stored = CustomerRepository(database).add(HOSTILE_CUSTOMER, CREATED_AT)
+    assert len(database.statements) == 1
+    statement, parameters = database.statements[0]
+    assert_no_value_in(statement)
+    for value in (*HOSTILE_VALUES, CREATED_AT):
+        assert value not in statement
+        assert value in parameters
+    # Stored as text, to the letter: nothing of it was run.
+    assert (stored.id, stored.company_name, stored.contact_email) == (1, INJECTION, INJECTION)
+
+
+# Written after the code that it tests (session 05, H-14): it was never seen failing.
+def test_id_of_a_customer_reaches_the_database_only_as_a_parameter(tmp_path: Path) -> None:
+    """SPEC-03/E-23: reading a customer and reading its country carry no value (CA-13)."""
+    database = RecordingDatabase(tmp_path / "read.db")
+    database.create_schema()
+    repository = CustomerRepository(database)
+    for number in range(CUSTOMER_ID):
+        new = NewCustomer("Acme", "acme", f"FR{number:04d}", "a@b.example", "FR", "starter")
+        repository.add(new, CREATED_AT)
+    database.statements.clear()
+    found = repository.find(CUSTOMER_ID)
+    assert found is not None
+    assert (found.id, repository.country_of(CUSTOMER_ID)) == (CUSTOMER_ID, "FR")
+    assert [parameters for _, parameters in database.statements] == [(CUSTOMER_ID,), (CUSTOMER_ID,)]
+    for statement, _ in database.statements:
+        assert_no_value_in(statement)
