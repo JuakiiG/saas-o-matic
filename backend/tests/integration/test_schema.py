@@ -252,10 +252,10 @@ def test_database_rejects_deleting_a_customer_with_simulations(
 def test_database_rejects_a_second_customer_with_the_same_country_and_tax_id(
     connection: sqlite3.Connection,
 ) -> None:
-    """SPEC-03/E-22: `customers` is created with the UNIQUE (country, tax id) of 2.6.
+    """SPEC-03/E-22, SPEC-01/E-19: the UNIQUE (country, tax id) of 2.6 rejects the second row.
 
-    The rule about duplicates belongs to SPEC-01 and is tested there, with its endpoint;
-    it is not cited here so that traceability does not count it as covered.
+    A direct insertion (SPEC-01, CA-11): the constraint is what guarantees that there are
+    no duplicates. The 409 of the endpoint is tested with `POST /customers`.
     """
     with closing(connection):
         connection.execute(INSERT_CUSTOMER, {**CUSTOMER, "id": 2, "country": "PT"})

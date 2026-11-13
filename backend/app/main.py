@@ -5,16 +5,18 @@ Run it from this folder with `uv run uvicorn --factory app.main:create_app`.
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health, pricing
+from app.api import customers, health, meta, pricing
 from app.api.error_handling import install_error_handling
 from app.api.request_guard import RequestBodyGuard, reject_undocumented_query_parameters
 from app.config import load_settings
 from app.repositories.customers import CustomerRepository
 from app.repositories.database import Database, DatabaseUnavailableError
+from app.services.customers import CustomerService
 from app.services.health import HealthService
 from app.services.pricing import PricingService
 
@@ -22,6 +24,18 @@ API_TITLE = "SaaS-O-Matic API"
 # What the frontend needs and nothing else (SPEC-03, 2.7).
 CORS_METHODS = ["GET", "POST"]
 CORS_HEADERS = ["Content-Type"]
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+def _install_services(app: FastAPI, database: Database) -> None:
+    """Built here and handed to the endpoints through `Depends`: no global state."""
+    customers = CustomerRepository(database)
+    app.state.health_service = HealthService(database)
+    app.state.customer_service = CustomerService(customers, utc_now=_utc_now)
+    app.state.pricing_service = PricingService(customers)
 
 
 def create_app() -> FastAPI:
@@ -46,11 +60,9 @@ def create_app() -> FastAPI:
         redirect_slashes=False,
         dependencies=[Depends(reject_undocumented_query_parameters)],
     )
-    # Built here and handed to the endpoints through `Depends`: no global state.
-    app.state.health_service = HealthService(database)
-    app.state.pricing_service = PricingService(CustomerRepository(database))
-    app.include_router(health.router)
-    app.include_router(pricing.router)
+    _install_services(app, database)
+    for module in (health, meta, customers, pricing):
+        app.include_router(module.router)
     # The middleware added last is the outermost. CORS goes outside the guards so that
     # every response, error or not, leaves with its headers (SPEC-03/E-24).
     app.add_middleware(RequestBodyGuard)

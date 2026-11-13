@@ -12,7 +12,9 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from app.api.contract import body_schema_of
+from app.api.customer_errors import customer_field_errors
 from app.api.problems import (
+    CUSTOMER_ALREADY_EXISTS,
     CUSTOMER_NOT_FOUND,
     INTERNAL_ERROR,
     METHOD_NOT_ALLOWED,
@@ -25,6 +27,8 @@ from app.api.problems import (
 )
 from app.api.validation import field_errors
 from app.domain.countries import TaxRateNotDefinedError
+from app.domain.customers import InvalidCustomerError
+from app.services.customers import CustomerAlreadyExistsError
 from app.services.pricing import CustomerNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -84,6 +88,14 @@ def _install_request_handlers(app: FastAPI) -> None:
 
 def _install_use_case_handlers(app: FastAPI, unavailable: type[Exception]) -> None:
     """Errors that a service, the domain or the database raise while answering."""
+
+    @app.exception_handler(InvalidCustomerError)
+    async def handle_invalid_customer(request: Request, error: InvalidCustomerError) -> Response:
+        return problem_response(validation_problem(customer_field_errors(error.problems)))
+
+    @app.exception_handler(CustomerAlreadyExistsError)
+    async def handle_duplicate(request: Request, error: CustomerAlreadyExistsError) -> Response:
+        return problem_response(CUSTOMER_ALREADY_EXISTS)
 
     @app.exception_handler(CustomerNotFoundError)
     async def handle_unknown_customer(request: Request, error: CustomerNotFoundError) -> Response:

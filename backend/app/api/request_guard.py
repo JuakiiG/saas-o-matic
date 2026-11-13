@@ -68,6 +68,17 @@ class RequestBodyGuard(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+async def received_json_object(request: Request) -> dict[str, object]:
+    """Dependency: the JSON object of the body, for an endpoint that validates it by hand.
+
+    The guard has already seen that the body, if there is one, is a JSON object. An
+    absent body is an empty object (index of specs, "Errores de validación").
+    """
+    body = await request.body()
+    received: dict[str, object] = json.loads(body) if body else {}
+    return received
+
+
 def reject_undocumented_query_parameters(request: Request) -> None:
     """Dependency of every endpoint: an undocumented query parameter is a 422, not ignored."""
     documented = query_parameters_of(request)

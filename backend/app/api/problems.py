@@ -18,6 +18,7 @@ TITLES = {
     400: "Bad Request",
     404: "Not Found",
     405: "Method Not Allowed",
+    409: "Conflict",
     415: "Unsupported Media Type",
     422: "Unprocessable Content",
     500: "Internal Server Error",
@@ -35,6 +36,7 @@ class ErrorCode(StrEnum):
     SERVICE_UNAVAILABLE = "service_unavailable"
     CUSTOMER_NOT_FOUND = "customer_not_found"
     TAX_RATE_NOT_DEFINED = "tax_rate_not_defined"
+    CUSTOMER_ALREADY_EXISTS = "customer_already_exists"
 
 
 class FieldCode(StrEnum):
@@ -42,6 +44,15 @@ class FieldCode(StrEnum):
     NOT_AN_INTEGER = "not_an_integer"
     OUT_OF_RANGE = "out_of_range"
     UNKNOWN_FIELD = "unknown_field"
+    NOT_A_STRING = "not_a_string"
+    INVALID_CHARACTERS = "invalid_characters"
+    TOO_SHORT = "too_short"
+    TOO_LONG = "too_long"
+    INVALID_EMAIL = "invalid_email"
+    UNSUPPORTED_COUNTRY = "unsupported_country"
+    UNSUPPORTED_PLAN = "unsupported_plan"
+    INVALID_TAX_ID_FORMAT = "invalid_tax_id_format"
+    INVALID_TAX_ID_CHECK_CHARACTER = "invalid_tax_id_check_character"
 
 
 @dataclass(frozen=True)
@@ -86,6 +97,12 @@ SERVICE_UNAVAILABLE = Problem(
     503, ErrorCode.SERVICE_UNAVAILABLE, "El servicio no está disponible en este momento."
 )
 CUSTOMER_NOT_FOUND = Problem(404, ErrorCode.CUSTOMER_NOT_FOUND, "No existe un cliente con ese id.")
+# Nothing about the customer that already exists, not even its id (SPEC-01, D-06).
+CUSTOMER_ALREADY_EXISTS = Problem(
+    409,
+    ErrorCode.CUSTOMER_ALREADY_EXISTS,
+    "Ya existe un cliente con ese identificador fiscal en ese país.",
+)
 TAX_RATE_NOT_DEFINED = Problem(
     500,
     ErrorCode.TAX_RATE_NOT_DEFINED,
