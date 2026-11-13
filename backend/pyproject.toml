@@ -5,24 +5,27 @@ description = "REST API of SaaS-O-Matic: customers, tiered pricing, taxes and si
 requires-python = "==3.12.*"
 # Exact versions here; uv.lock pins the transitive ones with their hashes.
 dependencies = [
-    "fastapi==0.162.5",
+    "fastapi==0.162.0",
     "pydantic==2.14.3",
     "uvicorn==0.54.0",
 ]
 
 [dependency-groups]
-# Never imported from app/: tools, the test client (httpx) and the reference
+# Never imported from app/: tools, the test client (httpx2) and the reference
 # implementation for the differential test of the tax id (python-stdnum, ADR-005).
 dev = [
-    "httpx==0.28.1",
+    "httpx2==2.16.0",
     "mypy==2.4.1",
     "pytest==9.2.0",
     "pytest-cov==7.1.0",
     "python-stdnum==2.2",
-    "ruff==0.17.5",
+    "ruff==0.17.4",
 ]
 
 [tool.uv]
+# One week of margin: a release younger than this date is not eligible yet (ADR-007).
+# To update, move the date forward and lock again.
+exclude-newer = "2026-11-06T00:00:00Z"
 # An application run from this folder, not a library: there is nothing to build.
 package = false
 
@@ -31,6 +34,8 @@ testpaths = ["tests"]
 # Makes `app` importable without installing the project.
 pythonpath = ["."]
 addopts = ["--strict-markers", "--strict-config"]
+# A warning, such as a deprecation in a dependency, fails the test instead of scrolling by.
+filterwarnings = ["error"]
 
 [tool.coverage.run]
 source = ["app"]
