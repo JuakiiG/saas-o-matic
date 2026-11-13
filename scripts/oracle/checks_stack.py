@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from oracle import report
+from oracle import checks_coverage, report
 from oracle.repo import OracleError, tail
 
 Runner = Callable[[list[str], Path], tuple[int, str]]
@@ -15,19 +15,23 @@ FRONTEND = "Frontend"
 BACKEND_MARKER = "pyproject.toml"
 FRONTEND_MARKER = "package.json"
 
-# Coverage thresholds decided by the Tech Lead on 2026-11-12.
+# `--locked`: a lock file that no longer matches pyproject.toml fails instead of being rewritten.
+UV_RUN = ["uv", "run", "--locked"]
+# Coverage thresholds decided by the Tech Lead on 2026-11-12. `--cov-fail-under` judges
+# statements and branches together; branches alone are judged by `checks_coverage`.
 BACKEND_COMMANDS: tuple[tuple[str, list[str]], ...] = (
-    ("ruff check", ["uv", "run", "ruff", "check", "."]),
-    ("ruff format --check", ["uv", "run", "ruff", "format", "--check", "."]),
-    ("mypy --strict", ["uv", "run", "mypy", "--strict", "."]),
+    ("ruff check", [*UV_RUN, "ruff", "check", "."]),
+    ("ruff format --check", [*UV_RUN, "ruff", "format", "--check", "."]),
+    ("mypy --strict", [*UV_RUN, "mypy", "--strict", "."]),
     (
-        "pytest con el 90 % de ramas en todo el backend",
-        ["uv", "run", "pytest", "--cov=app", "--cov-branch", "--cov-fail-under=90"],
+        "pytest con el 90 % de sentencias y ramas, en conjunto, en todo el backend",
+        [*UV_RUN, "pytest", "--cov=app", "--cov-branch", "--cov-fail-under=90"],
     ),
-    (
-        "100 % de ramas en domain/",
-        ["uv", "run", "coverage", "report", "--include=app/domain/*", "--fail-under=100"],
-    ),
+)
+# 100 % of statements and branches together means every branch is covered.
+DOMAIN_COMMAND = (
+    "100 % de sentencias y ramas en domain/",
+    [*UV_RUN, "coverage", "report", "--include=app/domain/*", "--fail-under=100"],
 )
 # The frontend project must define these npm scripts; `test:ci` enforces 80 % of lines.
 FRONTEND_COMMANDS: tuple[tuple[str, list[str]], ...] = (
@@ -50,10 +54,16 @@ def _run_one(block: str, name: str, command: list[str], cwd: Path, runner: Runne
 
 def backend_checks(root: Path, runner: Runner) -> list[report.Result]:
     folder = root / "backend"
+    domain_name, domain_command = DOMAIN_COMMAND
     if not (folder / BACKEND_MARKER).is_file():
         reason = f"no existe backend/{BACKEND_MARKER}"
-        return [report.inactive(BACKEND, name, reason) for name, _ in BACKEND_COMMANDS]
-    return [_run_one(BACKEND, name, command, folder, runner) for name, command in BACKEND_COMMANDS]
+        names = [name for name, _ in BACKEND_COMMANDS] + [checks_coverage.NAME, domain_name]
+        return [report.inactive(BACKEND, name, reason) for name in names]
+    results = [_run_one(BACKEND, name, command, folder, runner) for name, command in BACKEND_COMMANDS]
+    # Both read the coverage data that pytest has just written.
+    results.append(checks_coverage.check_branches(folder, runner))
+    results.append(_run_one(BACKEND, domain_name, domain_command, folder, runner))
+    return results
 
 
 def frontend_checks(root: Path, runner: Runner, e2e: bool) -> list[report.Result]:

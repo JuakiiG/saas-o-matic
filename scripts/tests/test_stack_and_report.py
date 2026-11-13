@@ -9,23 +9,10 @@ from oracle import checks_stack, report
 from tests import support
 
 
-class FakeRunner:
-    """Stands in for the real process runner and records what it was asked to run."""
-
-    def __init__(self, failing: str = "") -> None:
-        self.failing = failing
-        self.commands: list[list[str]] = []
-
-    def __call__(self, command: list[str], cwd: Path) -> tuple[int, str]:
-        self.commands.append(command)
-        failed = bool(self.failing) and self.failing in command
-        return (1, "boom") if failed else (0, "")
-
-
 class StackTest(unittest.TestCase):
     def test_everything_is_inactive_without_projects(self) -> None:
         root = support.make_repo(self, support.BORRADOR)
-        runner = FakeRunner()
+        runner = support.FakeRunner()
         results = checks_stack.backend_checks(root, runner) + checks_stack.frontend_checks(root, runner, False)
         self.assertTrue(results)
         self.assertEqual({r.status for r in results}, {report.INACTIVE})
@@ -34,7 +21,7 @@ class StackTest(unittest.TestCase):
     def test_backend_runs_its_tools_once_the_project_exists(self) -> None:
         root = support.make_repo(self, support.BACKEND_OK)
         support.write(root / "backend" / "pyproject.toml", "[project]\n")
-        runner = FakeRunner()
+        runner = support.FakeRunner()
         results = checks_stack.backend_checks(root, runner)
         self.assertEqual({r.status for r in results}, {report.OK})
         flat = [" ".join(command) for command in runner.commands]
@@ -44,7 +31,7 @@ class StackTest(unittest.TestCase):
     def test_a_failing_tool_fails_its_check_with_its_output(self) -> None:
         root = support.make_repo(self, support.BACKEND_OK)
         support.write(root / "backend" / "pyproject.toml", "[project]\n")
-        results = checks_stack.backend_checks(root, FakeRunner(failing="mypy"))
+        results = checks_stack.backend_checks(root, support.FakeRunner(failing="mypy"))
         failed = [r for r in results if r.status == report.FAIL]
         self.assertEqual(len(failed), 1)
         self.assertIn("boom", failed[0].details[-1])
@@ -52,10 +39,10 @@ class StackTest(unittest.TestCase):
     def test_frontend_runs_its_scripts_and_e2e_only_on_request(self) -> None:
         root = support.make_repo(self, support.ALL_OK)
         support.write(root / "frontend" / "package.json", "{}\n")
-        results = checks_stack.frontend_checks(root, FakeRunner(), False)
+        results = checks_stack.frontend_checks(root, support.FakeRunner(), False)
         by_name = {r.name: r.status for r in results}
         self.assertEqual(sorted(by_name.values()), [report.INACTIVE, report.OK, report.OK, report.OK])
-        results = checks_stack.frontend_checks(root, FakeRunner(), True)
+        results = checks_stack.frontend_checks(root, support.FakeRunner(), True)
         self.assertEqual({r.status for r in results}, {report.OK})
 
 

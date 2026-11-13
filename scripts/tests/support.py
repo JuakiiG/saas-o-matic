@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 import tempfile
 import unittest
@@ -89,3 +90,25 @@ def git_init(root: Path) -> None:
 def commit_all(root: Path, message: str) -> None:
     git(root, "add", "-A")
     git(root, "commit", "-q", "--no-verify", "-m", message)
+
+
+class FakeRunner:
+    """Stands in for the real process runner and records what it was asked to run.
+
+    When asked for `coverage json -o <file>`, it writes a report with `totals`,
+    which is how the oracle reads the branch coverage.
+    """
+
+    def __init__(self, failing: str = "", totals: dict[str, object] | None = None) -> None:
+        self.failing = failing
+        self.totals = {"covered_branches": 9, "num_branches": 10} if totals is None else totals
+        self.commands: list[list[str]] = []
+
+    def __call__(self, command: list[str], cwd: Path) -> tuple[int, str]:
+        self.commands.append(command)
+        if self.failing and self.failing in command:
+            return 1, "boom"
+        if "json" in command and "-o" in command:
+            target = Path(command[command.index("-o") + 1])
+            target.write_text(json.dumps({"totals": self.totals}), encoding="utf-8")
+        return 0, ""

@@ -42,7 +42,9 @@ source = ["app"]
 branch = true
 
 [tool.coverage.report]
-# Whole backend: 90 % of branches. The oracle also demands 100 % in app/domain/.
+# `fail_under` compares statements and branches taken together, not branches alone.
+# The oracle also demands 90 % of the branches by themselves (covered / existing,
+# read from `coverage json`) and 100 % in app/domain/.
 fail_under = 90
 show_missing = true
 
