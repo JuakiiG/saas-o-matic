@@ -4,6 +4,8 @@ The unit test runs them against the domain and the integration test against
 `POST /customers`: one table, so that the two cannot drift apart.
 """
 
+from collections.abc import Mapping
+
 ABSENT = object()
 VALID_CUSTOMER: dict[str, object] = {
     "company_name": "Ejemplo Uno SL",
@@ -130,7 +132,7 @@ EXTRA_INVALID_ROWS: list[InvalidRow] = [
 ]
 
 
-def customer_with(changes: dict[str, object]) -> dict[str, object]:
+def customer_with(changes: Mapping[str, object]) -> dict[str, object]:
     """The valid customer with some fields changed; `ABSENT` leaves a field out."""
     fields = {**VALID_CUSTOMER, **changes}
     return {name: value for name, value in fields.items() if value is not ABSENT}

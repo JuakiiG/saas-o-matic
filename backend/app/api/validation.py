@@ -18,6 +18,9 @@ TRANSLATIONS = {
     "missing": (FieldCode.MISSING, "Campo obligatorio."),
     "extra_forbidden": (FieldCode.UNKNOWN_FIELD, "Campo no documentado."),
     "int_type": (FieldCode.NOT_AN_INTEGER, "Debe ser un número entero."),
+    # In the route everything is text: what cannot be read as an integer is not one.
+    "int_parsing": (FieldCode.NOT_AN_INTEGER, "Debe ser un número entero."),
+    "string_too_long": (FieldCode.TOO_LONG, "Debe tener {max_length} caracteres como máximo."),
     "greater_than_equal": (FieldCode.OUT_OF_RANGE, "Debe ser mayor o igual que {ge}."),
     "less_than_equal": (FieldCode.OUT_OF_RANGE, "Debe ser menor o igual que {le}."),
 }

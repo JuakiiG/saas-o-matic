@@ -59,6 +59,19 @@ def test_request_with_unsupported_method_returns_405_method_not_allowed(
     assert_problem(client.request(method, "/probe"), 405, "method_not_allowed")
 
 
+@pytest.mark.parametrize(
+    ("path", "allowed"),
+    [("/probe", "GET, POST"), ("/customers", "GET, POST"), ("/health", "GET"), ("/meta", "GET")],
+)
+def test_405_tells_every_method_that_the_route_admits(
+    client: TestClient, path: str, allowed: str
+) -> None:
+    """SPEC-03/E-29: `Allow` names all the methods of the route, not only one of them."""
+    response = client.delete(path)
+    assert_problem(response, 405, "method_not_allowed")
+    assert response.headers.get("allow") == allowed
+
+
 def test_options_that_is_not_a_preflight_returns_405_method_not_allowed(client: TestClient) -> None:
     """SPEC-03/E-33: an OPTIONS without `Origin` is not a preflight and answers 405."""
     assert_problem(client.options("/probe"), 405, "method_not_allowed")

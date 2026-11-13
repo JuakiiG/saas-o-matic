@@ -9,6 +9,8 @@ from typing import Any
 from fastapi import Request
 
 JSON_MEDIA_TYPE = "application/json"
+# A path of an OpenAPI document also has keys that are not methods, such as `parameters`.
+HTTP_METHODS = ("get", "post", "put", "patch", "delete", "head", "options")
 
 
 # `Any` in the values: an OpenAPI document is JSON, and FastAPI types it so.
@@ -19,6 +21,13 @@ def operation_of(request: Request) -> dict[str, Any]:
         request.method.lower(), {}
     )
     return operation
+
+
+def methods_of(request: Request) -> list[str]:
+    """Every method that the contract declares for the route of the request, in upper case."""
+    paths: dict[str, Any] = request.app.openapi()["paths"]
+    declared = paths.get(request.scope["route"].path, {})
+    return sorted(method.upper() for method in declared if method in HTTP_METHODS)
 
 
 def query_parameters_of(request: Request) -> set[str]:

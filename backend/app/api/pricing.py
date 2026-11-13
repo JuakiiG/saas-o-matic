@@ -5,12 +5,10 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.api.identifiers import BodyId
 from app.api.problems import problem_responses
 from app.domain.pricing import MAX_ACTIVE_USERS
 from app.services.pricing import PricingService
-
-# The largest INTEGER of SQLite: the maximum of every identifier of the contract.
-MAX_ID = 9223372036854775807
 
 router = APIRouter()
 
@@ -20,7 +18,7 @@ class QuoteRequest(BaseModel):
     # A comment and not a docstring: a docstring is published in the OpenAPI document.
     model_config = ConfigDict(extra="forbid")
 
-    customer_id: Annotated[int, Field(strict=True, ge=1, le=MAX_ID)]
+    customer_id: BodyId
     active_users: Annotated[int, Field(strict=True, ge=0, le=MAX_ACTIVE_USERS)]
 
 

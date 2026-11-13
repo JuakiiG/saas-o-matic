@@ -2,10 +2,7 @@
 
 from app.domain.pricing import Quote, calculate_quote
 from app.repositories.customers import CustomerRepository
-
-
-class CustomerNotFoundError(Exception):
-    """There is no customer with that id."""
+from app.services.customers import CustomerNotFoundError
 
 
 class PricingService:

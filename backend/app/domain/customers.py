@@ -20,6 +20,9 @@ MAX_NAME_LENGTH = 120
 # Measured on what is received, before normalizing.
 MAX_TAX_ID_INPUT_LENGTH = 30
 MAX_EMAIL_LENGTH = 254
+# Measured on what is received, before trimming.
+MAX_SEARCH_TEXT_LENGTH = 100
+MAX_SEARCH_RESULTS = 20
 # The only character that is trimmed: a tab or a line break at an end is not.
 SPACE = " "
 # Unicode categories never admitted: control and invisible format characters.
@@ -96,6 +99,20 @@ class InvalidCustomerError(Exception):
     def __init__(self, problems: tuple[tuple[str, FieldProblem], ...]) -> None:
         super().__init__(", ".join(field for field, _ in problems))
         self.problems = problems
+
+
+@dataclass(frozen=True)
+class CustomerSearch:
+    """What a search text is compared with: the names and the tax identifiers."""
+
+    name: str
+    tax_id: str
+
+
+def customer_search(text: str | None) -> CustomerSearch:
+    """The two forms of a search text. No text, or only spaces, is the empty search (2.10)."""
+    trimmed = (text or "").strip(SPACE)
+    return CustomerSearch(search_form(trimmed), normalize_tax_id(trimmed))
 
 
 def search_form(text: str) -> str:

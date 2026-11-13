@@ -5,13 +5,14 @@ client only gets `internal_error`.
 """
 
 import logging
+from http import HTTPStatus
 
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from app.api.contract import body_schema_of
+from app.api.contract import body_schema_of, methods_of
 from app.api.customer_errors import customer_field_errors
 from app.api.problems import (
     CUSTOMER_ALREADY_EXISTS,
@@ -28,13 +29,9 @@ from app.api.problems import (
 from app.api.validation import field_errors
 from app.domain.countries import TaxRateNotDefinedError
 from app.domain.customers import InvalidCustomerError
-from app.services.customers import CustomerAlreadyExistsError
-from app.services.pricing import CustomerNotFoundError
+from app.services.customers import CustomerAlreadyExistsError, CustomerNotFoundError
 
 logger = logging.getLogger(__name__)
-
-# Statuses that the framework raises on its own, mapped to the generic errors of the contract.
-HTTP_PROBLEMS = {404: NOT_FOUND, 405: METHOD_NOT_ALLOWED}
 
 
 class UnexpectedErrorGuard(BaseHTTPMiddleware):
@@ -78,12 +75,15 @@ def _install_request_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(HTTPException)
     async def handle_http_error(request: Request, error: HTTPException) -> Response:
-        problem = HTTP_PROBLEMS.get(error.status_code)
-        if problem is None:
-            # An HTTP error that the contract does not define is a bug of ours, not of the caller.
-            logger.error("HTTP error outside the contract: %s", error.status_code)
-            return problem_response(INTERNAL_ERROR)
-        return problem_response(problem, error.headers)
+        if error.status_code == HTTPStatus.NOT_FOUND:
+            return problem_response(NOT_FOUND)
+        if error.status_code == HTTPStatus.METHOD_NOT_ALLOWED:
+            # The framework names only the methods of the first route that fits the path;
+            # the contract knows them all.
+            return problem_response(METHOD_NOT_ALLOWED, {"Allow": ", ".join(methods_of(request))})
+        # An HTTP error that the contract does not define is a bug of ours, not of the caller.
+        logger.error("HTTP error outside the contract: %s", error.status_code)
+        return problem_response(INTERNAL_ERROR)
 
 
 def _install_use_case_handlers(app: FastAPI, unavailable: type[Exception]) -> None:

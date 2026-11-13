@@ -1,9 +1,14 @@
-"""Use cases of the customers: registering one."""
+"""Use cases of the customers: registering one, reading one and searching them."""
 
 from collections.abc import Callable, Mapping
 from datetime import datetime
 
-from app.domain.customers import Customer, validate_new_customer
+from app.domain.customers import (
+    MAX_SEARCH_RESULTS,
+    Customer,
+    customer_search,
+    validate_new_customer,
+)
 from app.repositories.customers import CustomerRepository, DuplicateCustomerError
 
 # UTC, ISO 8601, to the second (index of specs, "Fechas con hora").
@@ -12,6 +17,10 @@ TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 class CustomerAlreadyExistsError(Exception):
     """There is already a customer with that country and normalized tax identifier."""
+
+
+class CustomerNotFoundError(Exception):
+    """There is no customer with that id."""
 
 
 class CustomerService:
@@ -31,3 +40,14 @@ class CustomerService:
             return self._customers.add(new, created_at)
         except DuplicateCustomerError as error:
             raise CustomerAlreadyExistsError(new.country) from error
+
+    def get(self, customer_id: int) -> Customer:
+        """The stored customer with that id (SPEC-01/E-22, E-23)."""
+        customer = self._customers.find(customer_id)
+        if customer is None:
+            raise CustomerNotFoundError(customer_id)
+        return customer
+
+    def search(self, text: str | None) -> list[Customer]:
+        """The first customers by name that the text matches; without text, the first ones."""
+        return self._customers.search(customer_search(text), MAX_SEARCH_RESULTS)

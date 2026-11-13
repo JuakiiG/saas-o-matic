@@ -1,13 +1,19 @@
-"""`POST /customers`: register a customer (SPEC-01, 4.1)."""
+"""The customers: registering one, reading one and searching them (SPEC-01: 4.1 to 4.3)."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.api.identifiers import PathId
 from app.api.problems import problem_responses
 from app.api.request_guard import received_json_object
-from app.domain.customers import COUNTRY_CODES, MAX_TAX_ID_INPUT_LENGTH, PLAN_CODES
+from app.domain.customers import (
+    COUNTRY_CODES,
+    MAX_SEARCH_TEXT_LENGTH,
+    MAX_TAX_ID_INPUT_LENGTH,
+    PLAN_CODES,
+)
 from app.services.customers import CustomerService
 
 router = APIRouter()
@@ -36,6 +42,21 @@ class CustomerResponse(BaseModel):
     country: str
     plan: str
     created_at: str
+
+
+class CustomerItem(BaseModel):
+    # A customer in a list: without the email and the date (SPEC-01, 4.3).
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    company_name: str
+    tax_id: str
+    country: str
+    plan: str
+
+
+class CustomerListResponse(BaseModel):
+    items: list[CustomerItem]
 
 
 REQUEST_BODY = {
@@ -70,3 +91,33 @@ def create_customer(
     customer = service.register(received)
     response.headers["Location"] = f"/customers/{customer.id}"
     return CustomerResponse.model_validate(customer)
+
+
+@router.get(
+    "/customers/{id}",
+    response_model=CustomerResponse,
+    responses=problem_responses(
+        {
+            404: "No existe un cliente con ese `id`",
+            422: "El `id` no es un entero de 1 a 9223372036854775807",
+        }
+    ),
+)
+def read_customer(
+    customer_id: PathId, service: Annotated[CustomerService, Depends(get_customer_service)]
+) -> CustomerResponse:
+    return CustomerResponse.model_validate(service.get(customer_id))
+
+
+@router.get(
+    "/customers",
+    response_model=CustomerListResponse,
+    responses=problem_responses({422: "`q` es demasiado largo o hay un parámetro desconocido"}),
+)
+def search_customers(
+    service: Annotated[CustomerService, Depends(get_customer_service)],
+    # The length is measured on what is received: the service trims it afterwards.
+    q: Annotated[str | None, Query(max_length=MAX_SEARCH_TEXT_LENGTH)] = None,
+) -> CustomerListResponse:
+    items = [CustomerItem.model_validate(customer) for customer in service.search(q)]
+    return CustomerListResponse(items=items)
