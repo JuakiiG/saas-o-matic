@@ -597,6 +597,17 @@ Directiva: el documento lo dice en su apartado de no verificado.
 specs, para que ningún enlace apunte a un documento que aún no existe (el
 error de `9344eed`).
 
+### Correcciones del paso 1 (desde las 12:11)
+
+Una fila por corrección, escrita al terminarla. En todas: primero el test,
+después su ejecución con el rojo a la vista y solo entonces el código, en
+pasos separados (norma n1); el código de `backend/`, con las herramientas de
+edición (norma n2).
+
+| Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
+|---|---|---|---|---|
+| 12:11 | p1 | `assert 200 == 503`: con el fichero apartado, `/health` respondía `200` | `Database.connect()` abre el fichero en modo `rw` (URI de SQLite) y falla si no existe; solo `create_schema()` lo abre en modo `rwc`. **Cambio en un test que ya existía**: el del `200` arrancaba la aplicación sin su fase de arranque y dependía de que la conexión creara el fichero, que era el defecto; ahora la arranca como un servidor real. Su aserción no cambia | `65 passed`; oráculo en verde, 20 correctas y 4 inactivas |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |

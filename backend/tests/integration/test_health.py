@@ -21,9 +21,29 @@ def test_health_with_database_that_answers_returns_200_ok(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """SPEC-03/E-27: the backend is up and the database answers a trivial query."""
-    response = client_for(tmp_path / "health.db", monkeypatch).get("/health")
+    # Started as a real server is: the database only exists after the startup.
+    with client_for(tmp_path / "health.db", monkeypatch) as client:
+        response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_health_after_the_database_file_disappears_returns_503_and_creates_nothing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """SPEC-03/E-28: without its file the database does not answer, and asking creates nothing.
+
+    `GET /health` neither reads nor writes (2.7): it must not leave an empty database behind.
+    """
+    path = tmp_path / "data" / "health.db"
+    with client_for(path, monkeypatch) as client:
+        assert client.get("/health").status_code == 200
+        path.rename(tmp_path / "moved-away.db")
+        with caplog.at_level(logging.ERROR):
+            response = client.get("/health")
+    assert response.status_code == 503
+    assert response.json()["code"] == "service_unavailable"
+    assert not path.exists()
 
 
 def test_health_with_database_that_does_not_answer_returns_503(
