@@ -78,12 +78,26 @@ def _install_request_handlers(app: FastAPI) -> None:
         if error.status_code == HTTPStatus.NOT_FOUND:
             return problem_response(NOT_FOUND)
         if error.status_code == HTTPStatus.METHOD_NOT_ALLOWED:
-            # The framework names only the methods of the first route that fits the path;
-            # the contract knows them all.
-            return problem_response(METHOD_NOT_ALLOWED, {"Allow": ", ".join(methods_of(request))})
+            allowed = ", ".join(_admitted_methods(request, error))
+            return problem_response(METHOD_NOT_ALLOWED, {"Allow": allowed})
         # An HTTP error that the contract does not define is a bug of ours, not of the caller.
         logger.error("HTTP error outside the contract: %s", error.status_code)
         return problem_response(INTERNAL_ERROR)
+
+
+def _admitted_methods(request: Request, error: HTTPException) -> list[str]:
+    """The methods that the route of a 405 admits, for its `Allow` header.
+
+    The framework names only the methods of the first route that fits the path; the
+    contract knows them all. A route outside the contract (`/docs`, `/openapi.json`) is
+    a single route, so there what the framework names is all there is, `HEAD` included.
+    """
+    declared = methods_of(request)
+    if declared:
+        return declared
+    named = (error.headers or {}).get("Allow", "")
+    # Sorted: the framework writes them in the order of a set, which changes between runs.
+    return sorted(method.strip() for method in named.split(","))
 
 
 def _install_use_case_handlers(app: FastAPI, unavailable: type[Exception]) -> None:

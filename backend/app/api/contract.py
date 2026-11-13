@@ -24,9 +24,16 @@ def operation_of(request: Request) -> dict[str, Any]:
 
 
 def methods_of(request: Request) -> list[str]:
-    """Every method that the contract declares for the route of the request, in upper case."""
+    """Every method that the contract declares for the route of the request, in upper case.
+
+    None for a route that is not in the contract, which leaves no route in the request:
+    the pages of the generated documentation.
+    """
+    route = request.scope.get("route")
+    if route is None:
+        return []
     paths: dict[str, Any] = request.app.openapi()["paths"]
-    declared = paths.get(request.scope["route"].path, {})
+    declared = paths.get(route.path, {})
     return sorted(method.upper() for method in declared if method in HTTP_METHODS)
 
 

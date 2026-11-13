@@ -208,7 +208,10 @@ alternativas y el motivo de cada una están en
   ninguna spec de negocio: `GET /openapi.json`, el contrato en formato
   OpenAPI, y `GET /docs`, una página para explorarlo. **Existen, no son
   endpoints de negocio y no aplican la regla del parámetro desconocido**:
-  `GET /docs?x=1` y `GET /openapi.json?x=1` responden `200`. La página de
+  `GET /docs?x=1` y `GET /openapi.json?x=1` responden `200`. Las dos
+  admiten `GET` y `HEAD`; **cualquier otro método responde `405`
+  `method_not_allowed`, con la cabecera `Allow: GET, HEAD`**, como en
+  cualquier otra ruta que no admite un método. La página de
   `/docs` carga sus scripts y estilos de un servidor externo. Las otras dos
   rutas que el framework publica por defecto, `GET /redoc` y
   `GET /docs/oauth2-redirect`, **están desactivadas** y responden `404`
@@ -231,3 +234,4 @@ de cada spec.
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-07), decidida por el Tech Lead: el cuerpo se lee como UTF-8 estricto; UTF-16 y UTF-32, con BOM o sin él, y UTF-8 con BOM responden `400` `malformed_request`. Fila del `400` («JSON válido en UTF-8») y primera frase de «El texto del cuerpo». Motivo: esos cuerpos se aceptaban, porque el lector de JSON adivinaba la codificación; RFC 8259 (8.1) fija UTF-8 y sin BOM |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-03), decidida por el Tech Lead: pasa a estar escrita en «Errores de validación» la regla de que los parámetros de consulta se comprueban antes que la ruta y el cuerpo y, si alguno no está documentado, se responde solo con ellos. Sin cambio de comportamiento. Motivo: la regla solo estaba en el código y en un test (precisión W-15 de la sesión 04), y una regla que no está escrita no es parte del contrato |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-09), decidida por el Tech Lead: se conservan `/docs` y `/openapi.json`, que pasan a estar escritas en las convenciones («Documentación generada») como rutas que existen, no son de negocio y no aplican la regla del parámetro desconocido; `/redoc` y `/docs/oauth2-redirect` se desactivan y responden `404` `not_found`. Motivo: eran cuatro rutas que el framework publica por defecto y que ninguna spec definía; quien revise la prueba abrirá `/docs`, `/redoc` lo duplica y no hay OAuth |
+| 2026-11-13 | Corrección de la segunda pasada de la evaluación independiente del backend (`04-calidad/evaluacion-backend-02.md`, N-01), decidida por el Tech Lead: un método no admitido sobre `/docs` o `/openapi.json` responde `405` `method_not_allowed`, con una cabecera `Allow` que dice los métodos que la ruta admite de verdad (`GET, HEAD`). Frase nueva en «Documentación generada». Motivo: respondía `500` `internal_error`; el índice dice que esas rutas existen, y un `500` nunca es respuesta a una petición del cliente |
