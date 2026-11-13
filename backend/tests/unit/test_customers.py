@@ -37,6 +37,8 @@ SEARCH_FORMS = [
 ]
 
 
+# U+0301, a diacritical mark on its own. By code point, so that no editor changes it.
+COMBINING_ACUTE = chr(0x0301)
 # Every character that Unicode calls a separator: space (Zs), line (Zl) and paragraph (Zp).
 SEPARATORS = [
     chr(code_point)
@@ -140,6 +142,9 @@ def test_search_form_ignores_case_and_accents(name: str, expected: str) -> None:
         ("", "", None),
         ("   ", "", None),
         (None, "", None),
+        # Session 05, written after the code: a diacritical mark alone leaves an empty search
+        # form, which is inside every name, and stays in the identifier, where it matches none.
+        (COMBINING_ACUTE, "", COMBINING_ACUTE),
         # Session 05 (H-05): no stored name or identifier can hold U+0000, wherever it is.
         ("\x00", None, None),
         ("a\x00", None, None),

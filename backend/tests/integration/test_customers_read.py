@@ -162,6 +162,15 @@ def test_search_returns_the_customers_of_the_table_in_its_order(
     assert found_ids(searchable.get("/customers", params={"q": text})) == expected
 
 
+# Written after the code that it tests (session 05, second review): it was never seen failing.
+def test_search_text_that_is_only_a_diacritical_mark_returns_the_initial_list(
+    searchable: TestClient,
+) -> None:
+    """SPEC-01/E-25: U+0301 alone has an empty search form, inside every name (5.9, CA-13)."""
+    assert found_ids(searchable.get("/customers?q=%CC%81")) == EVERY_CUSTOMER
+    assert found_ids(searchable.get("/customers", params={"q": chr(0x0301)})) == EVERY_CUSTOMER
+
+
 def test_search_without_text_returns_the_first_customers_by_name(searchable: TestClient) -> None:
     """SPEC-01/E-29: `q` absent is the initial list; `Ñandú` sorts as `nandu` (5.9, CA-13)."""
     assert found_ids(searchable.get("/customers")) == EVERY_CUSTOMER
