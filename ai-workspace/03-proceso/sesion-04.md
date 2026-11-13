@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-13 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | A2 a A5 decididos por el Tech Lead sin confirmación externa y bloque backend aprobado (SPEC-01, SPEC-02 y SPEC-03); SPEC-04 sigue en `borrador`. Esqueleto del backend con uv, revisado y aprobado: `httpx2` en lugar de `httpx`, avisos como errores y margen de una semana en las versiones (ADR-007). El oráculo usa `uv run --locked` y mide el 90 % sobre las ramas. **Paso 1 del backend completo**: errores genéricos, CORS, `GET /health` y esquema, con 64 tests. Oráculo en verde con 20 comprobaciones activas y 4 inactivas. Sesión parada a la espera de la revisión del paso 1, antes de SPEC-02 |
+| **Resultado** | A2 a A5 decididos por el Tech Lead sin confirmación externa y bloque backend aprobado (SPEC-01, SPEC-02 y SPEC-03); SPEC-04 sigue en `borrador`. Esqueleto del backend con uv, revisado y aprobado: `httpx2` en lugar de `httpx`, avisos como errores y margen de una semana en las versiones (ADR-007). El oráculo usa `uv run --locked` y mide el 90 % sobre las ramas. **Paso 1 del backend completo**: errores genéricos, CORS, `GET /health` y esquema, con 64 tests. Oráculo en verde con 20 comprobaciones activas y 4 inactivas. Sesión parada a la espera de la revisión del paso 1, antes de SPEC-02. **Añadido a las 12:34**: llegó la respuesta a la consulta de A2 a A5 (registrada sin cambiar ninguna regla; ADR-008 propuesto); el paso 1 se aprobó con cinco correcciones, hechas una por commit (p1 a p5); y **SPEC-02 está implementada** en tres piezas: dominio, traducción de los errores de validación y `POST /pricing/quote`. 160 tests del backend, `domain/` al 100 %, oráculo en verde con 20 comprobaciones activas y 4 inactivas. Quedan 34 precisiones de la IA sin aprobar (P-01 a P-08 y W-01 a W-26; la más importante, W-14). Sesión parada a la espera de la revisión de SPEC-02, antes de SPEC-01 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -71,6 +71,7 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 11:42 | *(este commit)* | El commit de la pieza 3 es `33033eb` (11:37:49 según `git log`). Pieza 4, esquema: rojo y verde a las 11:39, mutaciones a las 11:40, oráculo en verde a las 11:41 (apartado 3). **La IA para aquí**: paso 1 terminado, a la espera de la revisión antes de SPEC-02 |
 | 12:02 | — | El commit de la pieza 4 es `fadd0cf` (11:42:28 según `git log`). El Tech Lead comunica la respuesta a la consulta de A2 a A5, con seis decisiones, y la revisión del paso 1: aprobado, con cinco correcciones y dos normas de proceso (apartado 3) |
 | 12:10 | `72684a9` y *(este commit)* | ADR-008 en `72684a9` (12:09:30 según `git log`). Este commit: `supuestos.md`, índice de specs, las cuatro specs, `ai-workspace/README.md`, `CLAUDE.md` y esta bitácora. Oráculo en verde antes de los dos |
+| 12:34 | `604a058` a `7900e5f` y *(este commit)* | Fila escrita a las 12:34; el detalle y las horas de cada paso están en las tablas «Correcciones del paso 1» y «SPEC-02» del apartado 3. El commit anterior a todos es `bb0871e` (12:10:42 según `git log`). Correcciones: p1 `604a058` (12:12:07), p2 `8de1f72` (12:12:55), p3 `b600624` (12:13:46), p4 `9ec6866` (12:18:35), p5 `1f8f80c` (12:20:30). SPEC-02: (a) `c002077` (12:24:02), (b) `49e3d65` (12:30:23), (c) `7900e5f` (12:34:28). Oráculo en verde antes de cada uno. Este commit solo cierra la bitácora. **La IA para aquí**: SPEC-02 terminada, a la espera de la revisión antes de SPEC-01 |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -724,6 +725,21 @@ Precisiones de la IA sobre SPEC-02, **sin aprobar**:
   los casos por debajo del umbral solo se han probado con informes
   simulados.
 - Nada fuera de Windows.
+- `POST /pricing/quote` con un servidor real (`uvicorn`) y con un cliente
+  dado de alta por la API: solo se ha probado con el cliente de test y con
+  clientes insertados directamente (W-20).
+- Las tablas `STRICT` con un SQLite anterior a 3.37.0 o distinto del 3.42.0
+  del entorno (P-04).
+- La conversión sin pérdida de `STRICT` (`15.0` y `'15'`): vista a mano, sin
+  test (P-02).
+- Un parámetro de consulta no documentado junto a un cuerpo no válido, y una
+  petición válida con la base de datos apartada: vistos a mano, sin test
+  (W-15, W-21).
+- SPEC-02/E-08 y CA-08 (misma función para la proyección y para la
+  simulación guardada): no puede comprobarse hasta que exista
+  `POST /simulations`.
+- Que `calculate_quote` no cambie nada guardado se comprueba contando filas,
+  no comparando su contenido (W-22).
 
 ## 6. Tareas pendientes
 
@@ -742,7 +758,13 @@ Precisiones de la IA sobre SPEC-02, **sin aprobar**:
 | **Base de datos creada antes de `9ec6866`**: sigue sin `STRICT`; hay que borrar el fichero (P-03) | Quien ya haya arrancado el backend |
 | **El cuerpo de la petición no tiene límite de tamaño**: limitación conocida | A documentar en el README (decisión del Tech Lead, 12:02) |
 | Reproducir las filas de SPEC-03 5.6 y 5.7 con los endpoints reales (CA-15 y CA-17); hoy están probadas con rutas de prueba | Con SPEC-02, SPEC-01 y SPEC-03, según exista cada endpoint |
-| Traducir los errores de validación del cuerpo y de la ruta a códigos por campo (`missing`, `not_an_integer`, `out_of_range`…) | Con el primer endpoint con cuerpo (SPEC-02) |
+| ~~Traducir los errores de validación del cuerpo~~ y de la ruta a códigos por campo (`missing`, `not_an_integer`, `out_of_range`…) | Cuerpo: hecho en `49e3d65`. Ruta: con la primera ruta con parámetro (SPEC-01), ver W-18 |
+| **Revisar SPEC-02** y aprobar o cambiar W-01 a W-26 | Ahora, por el Tech Lead, antes de SPEC-01 |
+| **Decidir W-14**: el OpenAPI publica los límites como decimales (`9.223372036854776e+18` como máximo de un identificador); afecta a CA-10 | A decidir por el Tech Lead |
+| Decidir W-10 (cuerpo ausente igual que `{}`), W-11 (validación sin código, `500`) y W-12 (campos desconocidos al final) | A decidir por el Tech Lead: son reglas que la spec no dice |
+| La nota «Sobre CA-09» de SPEC-02 dice que el criterio no puede darse por cumplido hasta que exista el cálculo: ya existe y `domain/` está al 100 % | Cambio de una spec aprobada: lo decide el Tech Lead |
+| SPEC-02/E-08 y CA-08 | Con SPEC-03 |
+| Mover el máximo de identificador a un módulo común de `api/` (W-23) | Con SPEC-01 o SPEC-03 |
 | ~~Prueba de arranque real con `uvicorn` tras el paso 1 (la orden fue denegada)~~ | Hecha por el Tech Lead (lo afirma él; la IA no la ha visto) |
 | ~~Decidir si se corrige~~ **Corregir la cabecera `Allow` del `405`**, que solo nombra un método cuando la ruta admite dos | Con la primera ruta que tenga dos métodos, en SPEC-01 (decisión del Tech Lead, 12:02) |
 | Documentar la estructura del backend en `02-arquitectura/README.md` | Tras la revisión de la estructura |
