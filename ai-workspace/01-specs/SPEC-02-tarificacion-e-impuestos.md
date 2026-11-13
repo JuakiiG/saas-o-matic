@@ -4,8 +4,8 @@
 |---|---|
 | **Estado** | `aprobada` (2026-11-13) |
 | **Requisitos** | R-06, R-07 y la parte de cálculo de R-12 |
-| **Supuestos** | A6, A7, A9, A13 y A14 (`decidido`) · A2, A3, A4 y A5 (`decidido (sin confirmación externa)`, 2026-11-13) |
-| **Bloqueos para aprobarla** | Ninguno desde el 2026-11-13: A2, A3, A4 y A5 decididos sin confirmación externa (apartado 8) y aprobación a la vez que SPEC-01 y SPEC-03, las tres del bloque backend (índice de specs) |
+| **Supuestos** | A2, A3, A4, A5, A6, A7, A9, A13 y A14 (`decidido`). A2, A3 y A5, confirmados por la respuesta del 2026-11-13; A4, solo en parte: la lista de países es decisión propia |
+| **Bloqueos para aprobarla** | Ninguno desde el 2026-11-13: A2, A3, A4 y A5 decididos (apartado 8) y aprobación a la vez que SPEC-01 y SPEC-03, las tres del bloque backend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -62,8 +62,9 @@ total    = base + impuesto
 | `GB` | Reino Unido | 2000 |
 
   Es la **única** lista de países del sistema: cada entrada lleva el
-  código, el nombre y el tipo. Los valores son los de A4, decidido sin
-  confirmación externa el 2026-11-13. Esta spec es la dueña de los tipos;
+  código, el nombre y el tipo. Los valores son los de A4: que se use el tipo
+  general lo confirma la respuesta del 2026-11-13; la lista de países es
+  decisión propia. Esta spec es la dueña de los tipos;
   SPEC-01 usa la misma constante para validar el país del alta y para
   `GET /meta`, y no mantiene una lista aparte.
 - El impuesto se calcula **una vez, sobre el coste base total**, no tramo a
@@ -197,8 +198,8 @@ Importes en céntimos. Cada fila es un caso de test.
 | IT | 2200 | 3080 | 17080 |
 | PT, IE | 2300 | 3220 | 17220 |
 
-Los tipos son los de A4, decidido sin confirmación externa el 2026-11-13.
-Si la tabla cambia, cambian estas filas.
+Los tipos son los tipos generales de A4. Si la tabla cambia, cambian estas
+filas.
 
 ### 5.3 Redondeo (casos sintéticos sobre la función del impuesto)
 
@@ -286,25 +287,22 @@ Aprobadas por el Tech Lead el 2026-11-12.
 5. **Si la petición es inválida y además el cliente no existe, gana el
    `422`.**
 6. **Almacenamiento y llamadas a la API no entran en la petición** porque no
-   tienen precio (A3). Si la respuesta a la consulta, que sigue abierta,
-   dijera que sí lo tienen, esta spec se amplía con un cambio anotado en su
-   historial.
+   tienen precio (A3). La respuesta del 2026-11-13 lo confirma: no se
+   tarifican.
 
 ## 8. Pendiente antes de aprobar
 
-**Nada pendiente desde el 2026-11-13.** La fecha límite (viernes 13 de
-noviembre de 2026, 10:00) se cumplió sin respuesta y el Tech Lead decidió
-A2, A3, A4 y A5 con la hipótesis ya documentada: están en
-`decidido (sin confirmación externa)`. La consulta sigue abierta: si la
-respuesta llega, se aplica como cambio de esta spec, con fecha y motivo en
-su historial.
+**Nada pendiente desde el 2026-11-13.** El Tech Lead decidió A2, A3, A4 y
+A5 al cumplirse la fecha límite, y la respuesta a la consulta llegó ese
+mismo día, más tarde, sin cambiar ninguna regla de esta spec. La consulta
+está cerrada (`supuestos.md`).
 
-| Supuesto | Qué cambiaría en esta spec si la respuesta lo contradijera |
-|---|---|
-| A2 · plan | Si el plan afectara al precio, habría una segunda dimensión en la tarifa |
-| A3 · almacenamiento y API | Si tuvieran precio, entrarían en la petición y en el coste base |
-| A4 · países y tipos | La constante de países de 2.2 y la tabla de 5.2 |
-| A5 · IVA entre empresas | Si hubiera que modelarlo, el tipo dejaría de depender solo del país. Hoy se aplica siempre el tipo del país del cliente; la inversión del sujeto pasivo no se modela y es una simplificación conocida |
+| Supuesto | Qué dice la respuesta | Efecto en esta spec |
+|---|---|---|
+| A2 · plan | El plan no modifica el precio; el coste se calcula solo con los tramos de usuarios | Ninguno: la tarifa de 2.1 tiene una sola dimensión |
+| A3 · almacenamiento y API | No se tarifican | Ninguno: no entran en la petición ni en el coste base |
+| A4 · países y tipos | Basta con el tipo general de IVA del país del cliente. No menciona qué países se admiten | Ninguno. La constante de países de 2.2 sigue siendo decisión propia |
+| A5 · IVA entre empresas | No hace falta contemplar la inversión del sujeto pasivo ni otros casos especiales; se valorará que quede documentado cómo se abordaría | Ninguno: se aplica siempre el tipo del país del cliente. Cómo se abordarían esos casos está en [ADR-008](../02-arquitectura/ADR-008-casos-fiscales-no-modelados.md), en estado `propuesto` y sin implementar |
 
 ## Historial
 
@@ -317,3 +315,4 @@ su historial.
 | 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A2, A3, A4 y A5 pasan a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera, 2.2, 5.2, decisión 6 del apartado 7 y apartado 8 actualizados. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
 | 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-01 y SPEC-03 (bloque backend) |
 | 2026-11-13 | Corrección ordenada por el Tech Lead: la nota «Sobre CA-09» decía que `scripts/check.py` aún no existía. Existe desde el 2026-11-12; la nota dice ahora qué comprueba y que el criterio no se da por cumplido mientras `domain/` no tenga código. Motivo: la nota había quedado desfasada. Sin cambios en requisitos, criterios ni casos |
+| 2026-11-13 | Llega la respuesta a la consulta: confirma A2, A3 y A5 y, de A4, solo el uso del tipo general; la lista de países sigue siendo decisión propia. El Tech Lead mantiene su visto bueno a esta spec. Cabecera, 2.2, 5.2, decisión 6 del apartado 7 y apartado 8 actualizados, con el enlace a ADR-008; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |

@@ -2,8 +2,9 @@
 
 - **Fecha**: 2026-11-12, actualizado el 2026-11-13
 - **Estado**: revisado por el Tech Lead el 2026-11-12. A2 a A5, decididos por
-  él el 2026-11-13 al vencer la fecha límite sin respuesta externa; la
-  consulta sigue abierta
+  él el 2026-11-13 al vencer la fecha límite; la respuesta a la consulta
+  llegó ese mismo día, más tarde, y no cambia ninguna regla. La consulta
+  está cerrada
 - **Qué es**: cada punto que el encargo deja abierto, la opción elegida y por
   qué. Ninguna spec se aprueba mientras dependa de un supuesto sin cerrar.
 
@@ -11,10 +12,10 @@
 
 | Estado | Significado |
 |---|---|
-| `pendiente de confirmar` | Consultado a quien propone el reto; sin respuesta todavía. La propuesta es provisional |
+| `pendiente de confirmar` | Consultado a quien propone el reto; sin respuesta todavía. La propuesta es provisional. Ningún supuesto está hoy en este estado |
 | `propuesto` | Propuesta de la IA a la espera de la decisión del Tech Lead |
 | `decidido` | Decisión tomada por el Tech Lead, con su fecha |
-| `decidido (sin confirmación externa)` | Decidido por el Tech Lead al vencer la fecha límite sin respuesta. Se revisa si la respuesta llega después |
+| `decidido (sin confirmación externa)` | Decidido por el Tech Lead al vencer la fecha límite sin respuesta. Fue el estado de A2 a A5 durante unas horas del 2026-11-13; ningún supuesto está hoy en él |
 | `logística` | Asunto de la entrega, ajeno al producto |
 
 ## Resumen
@@ -22,10 +23,10 @@
 | Id | Ambigüedad | Estado | Afecta a |
 |---|---|---|---|
 | A1 | Plazo de entrega | `logística` | R-19 |
-| A2 | Qué es el plan y si afecta al precio | `decidido (sin confirmación externa)` (2026-11-13) | SPEC-01, SPEC-02 |
-| A3 | Almacenamiento y llamadas a la API sin tarifa | `decidido (sin confirmación externa)` (2026-11-13) | SPEC-02, SPEC-03, SPEC-04 |
-| A4 | Países admitidos y tipo de impuesto de cada uno | `decidido (sin confirmación externa)` (2026-11-13) | SPEC-01, SPEC-02, SPEC-03 |
-| A5 | Tratamiento del IVA entre empresas de distintos países | `decidido (sin confirmación externa)` (2026-11-13) | SPEC-02 |
+| A2 | Qué es el plan y si afecta al precio | `decidido` (2026-11-13), confirmado por la respuesta | SPEC-01, SPEC-02 |
+| A3 | Almacenamiento y llamadas a la API sin tarifa | `decidido` (2026-11-13), confirmado por la respuesta | SPEC-02, SPEC-03, SPEC-04 |
+| A4 | Países admitidos y tipo de impuesto de cada uno | `decidido` (2026-11-13), confirmado solo en parte: el tipo general, sí; la lista de países es decisión propia | SPEC-01, SPEC-02, SPEC-03 |
+| A5 | Tratamiento del IVA entre empresas de distintos países | `decidido` (2026-11-13), confirmado por la respuesta | SPEC-02, ADR-008 |
 | A6 | Representación del dinero y redondeo | `decidido` (2026-11-12) | SPEC-02, SPEC-03, SPEC-04 |
 | A7 | Límites del número de usuarios | `decidido` (2026-11-12) | SPEC-02, SPEC-03, SPEC-04 |
 | A8 | Divisas: moneda de cálculo, origen de los tipos y fallo de la API | `decidido` (2026-11-12) | SPEC-04 |
@@ -50,19 +51,48 @@ redactar los requisitos.
 - **A15 · Formato de entrega del repositorio.** Logística de entrega acordada
   con quien propone el reto; no afecta al producto.
 
-## Decididos sin confirmación externa
+## Consultados a quien propone el reto (A2 a A5)
 
-A2 a A5 se consultaron a quien propone el reto. La fecha límite, fijada el
-2026-11-12, era el viernes 13 de noviembre de 2026 a las 10:00, y se cumplió
-sin respuesta. Ese día el Tech Lead decidió los cuatro con la hipótesis que
-ya estaba documentada aquí, sin cambiarla. *Por qué: una consulta sin
-contestar no puede bloquear el desarrollo de forma indefinida, y la
-hipótesis ya estaba razonada.*
+**Qué pasó, en orden**:
 
-**La consulta sigue abierta.** Si la respuesta llega, se aplica como cambio
-de spec: con fecha y motivo en el historial de cada spec afectada, que
-vuelve a pasar por aprobación. Qué cambiaría en cada spec está en su
-apartado «Pendiente antes de aprobar».
+1. A2 a A5 se consultaron a quien propone el reto. La fecha límite, fijada
+   el 2026-11-12, era el viernes 13 de noviembre de 2026 a las 10:00.
+2. La fecha se cumplió sin respuesta. Ese día el Tech Lead decidió los
+   cuatro con la hipótesis que ya estaba documentada aquí, sin cambiarla, y
+   aprobó las specs del backend. *Por qué: una consulta sin contestar no
+   puede bloquear el desarrollo de forma indefinida, y la hipótesis ya
+   estaba razonada.*
+3. **La respuesta llegó el mismo 2026-11-13, más tarde.** No cambia ninguna
+   regla. La consulta está cerrada.
+
+**Qué dice la respuesta.** Resumen fiel hecho por el Tech Lead; no es una
+cita literal:
+
+- **Plan**: es un dato informativo del cliente y no modifica el precio. El
+  coste se calcula solo con los tramos de usuarios. Los valores del plan son
+  de libre elección.
+- **Almacenamiento y llamadas a la API**: no se tarifican. Basta con
+  registrarlos y mostrarlos en la simulación, sin coste.
+- **Impuesto**: basta con el tipo general de IVA del país del cliente. No
+  hace falta contemplar la inversión del sujeto pasivo ni otros casos
+  especiales, pero se valorará que quede documentado cómo se abordaría.
+- **Decisiones propias**: cualquier otra decisión tomada por cuenta propia
+  debe quedar documentada en `ai-workspace` con su motivo; forma parte de lo
+  que se evalúa.
+
+**Qué confirma y qué no**:
+
+| Supuesto | Lo que confirma la respuesta | Lo que sigue siendo decisión propia |
+|---|---|---|
+| A2 | El plan es informativo y no afecta al precio | Los códigos y los nombres de los planes (SPEC-01, D-04): la respuesta los deja a elección del Tech Lead, que mantiene los que había |
+| A3 | No se tarifican; se registran y se muestran | Que se validen y sus máximos (SPEC-03, D-04) |
+| A4 | Que basta con el tipo general de IVA del país del cliente | **La lista de nueve países**: la respuesta no la menciona. También, rechazar en el alta un país fuera de la lista y guardar el tipo con cada simulación |
+| A5 | Que no hace falta modelar la inversión del sujeto pasivo ni otros casos especiales | Cómo se abordarían, que es lo que la respuesta pide documentar: [ADR-008](../02-arquitectura/ADR-008-casos-fiscales-no-modelados.md) |
+
+El cuarto punto de la respuesta no corresponde a ningún supuesto: es la
+razón de ser de este documento, de los ADR de
+[`02-arquitectura/`](../02-arquitectura/README.md) y de las tablas de
+decisiones de cada spec.
 
 ### A2 · Plan
 
@@ -72,14 +102,20 @@ guardada como dato informativo y sin efecto en el cálculo. *Por qué*: la
 única tarifa definida es la de usuarios; dar precio a los planes sería
 inventar una regla de negocio. Los nombres concretos se fijan en SPEC-01.
 
+**Confirmado por la respuesta** (2026-11-13): el plan es informativo y no
+modifica el precio. Los valores son de libre elección, y el Tech Lead
+mantiene los códigos y los nombres de SPEC-01 (D-04).
+
 ### A3 · Almacenamiento y llamadas a la API
 
 La simulación los recoge, pero la tarifa solo habla de usuarios.
 **Decisión** (2026-11-13): guardarlos y mostrarlos en el historial, sin que
-intervengan en el importe. *Por qué*: el mismo que en A2. Si la respuesta
-llegara y fuera que sí tienen precio, cambia SPEC-02.
+intervengan en el importe. *Por qué*: el mismo que en A2.
 
-Con independencia de la respuesta, **los dos valores se validan**: enteros,
+**Confirmado por la respuesta** (2026-11-13): no se tarifican; basta con
+registrarlos y mostrarlos en la simulación, sin coste.
+
+Decisión propia, que la respuesta no menciona: **los dos valores se validan**: enteros,
 no negativos y con un máximo razonable que se fija en SPEC-03. *Por qué*: que
 un dato no tenga precio no justifica guardar basura.
 
@@ -130,8 +166,11 @@ Simplificaciones conocidas:
   sería una simplificación que nadie ha pedido. El comportamiento con un tipo
   del 0 % se cubre con tests unitarios del dominio.
 
-No hay confirmación externa de que esta lista de países y el uso del tipo
-general sean lo que se espera.
+**Confirmado solo en parte por la respuesta** (2026-11-13). Confirma que
+basta con el tipo general de IVA del país del cliente. **No dice nada de
+qué países se admiten**: la lista de nueve, rechazar en el alta un país
+fuera de ella y guardar el tipo con cada simulación siguen siendo decisión
+del Tech Lead, por los motivos de arriba.
 
 ### A5 · IVA entre empresas de distintos países
 
@@ -141,6 +180,12 @@ inversión del sujeto pasivo y la factura va sin IVA. **Decisión**
 como dice el encargo. Se deja constancia de que es una simplificación
 conocida. *Por qué*: la herramienta hace presupuestos orientativos, no
 facturas, y la regla pedida es explícita.
+
+**Confirmado por la respuesta** (2026-11-13): no hace falta contemplar la
+inversión del sujeto pasivo ni otros casos especiales, pero se valorará que
+quede documentado cómo se abordaría. Ese documento es
+[ADR-008](../02-arquitectura/ADR-008-casos-fiscales-no-modelados.md), en
+estado `propuesto`. Nada de lo que describe está implementado.
 
 ## Decididos
 

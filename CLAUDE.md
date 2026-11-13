@@ -21,7 +21,10 @@ al tocar esa parte del repo.
    Si la spec no cubre un caso, se para y se pregunta; no se inventa la regla
    de negocio.
 2. **TDD por tarea**: test en rojo (se ve fallar) → verde → refactor → commit.
-   Una tarea, un commit.
+   Una tarea, un commit. El test se ejecuta y su rojo se ve **antes** de
+   escribir el código, nunca en el mismo lote, y debe fallar por aserción,
+   no por importación. *Por qué: un rojo que el código no esperó a ver no
+   demuestra que el test se escribiera primero.*
 3. **Un test nunca se relaja, se salta ni se borra para que pase.** Si un test
    parece erróneo, se avisa al Tech Lead y decide él.
 4. **Oráculo único**: `uv run scripts/check.py`, desde la raíz, ejecuta tests,
@@ -52,6 +55,9 @@ al tocar esa parte del repo.
    `ai-workspace/`.
 8. **Procesos**: un proceso que la IA arranca se para por su PID, nunca por
    nombre. *Por qué: parar por nombre mata también procesos ajenos.*
+9. **Edición del código**: los ficheros de `backend/` y `frontend/` se editan
+   con las herramientas de edición, no con `sed` ni con scripts. *Por qué:
+   el hook del control de specs solo ve esas herramientas.*
 
 ## Arquitectura
 

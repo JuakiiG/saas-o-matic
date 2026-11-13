@@ -17,6 +17,19 @@ Las carpetas siguen el orden en que se hizo el trabajo:
 | [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts clave y cada propuesta de la IA corregida o rechazada, con su motivo | ¿Cómo se dirigió a la IA? |
 | [`04-calidad/`](04-calidad/) | Matriz de trazabilidad requisito → test, evaluaciones independientes y hallazgos | ¿Cómo se sabe que funciona? |
 
+## Dónde están las decisiones propias
+
+El encargo deja puntos abiertos. Cada decisión tomada por cuenta propia está
+escrita con su motivo y con la alternativa descartada, en uno de estos
+sitios:
+
+| Qué se decidió | Dónde |
+|---|---|
+| Lo que el encargo no define: plan, impuestos, países, redondeo, duplicados, endpoints añadidos… También qué se consultó, qué se respondió y qué sigue siendo decisión propia | [`00-analisis/supuestos.md`](00-analisis/supuestos.md) (`A-xx`) |
+| Arquitectura y lo que afecta a más de una spec: stack, dónde se calcula, persistencia, dependencias, convenciones de la API, casos fiscales no modelados | [`02-arquitectura/`](02-arquitectura/README.md) (`ADR-xxx`) |
+| Lo que solo afecta a una spec: límites, códigos de error, comportamiento ante entradas dudosas | Apartado «Decisiones de diseño» de cada spec de [`01-specs/`](01-specs/README.md) |
+| Lo que la IA precisó al implementar y lo que el Tech Lead aprobó, cambió o rechazó | Bitácora de [`03-proceso/`](03-proceso/) |
+
 ## Convenciones
 
 - **Identificadores estables**: `R-xx` (requisito), `A-xx` (supuesto),

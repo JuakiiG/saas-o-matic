@@ -4,9 +4,9 @@
 |---|---|
 | **Estado** | `aprobada` (2026-11-13) |
 | **Requisitos** | R-03, R-04 y la parte de backend de R-10 y R-11 |
-| **Supuestos** | A10, A11, A12, A13, A14 y A18 (`decidido`) · A2 y A4 (`decidido (sin confirmación externa)`, 2026-11-13) |
+| **Supuestos** | A2, A4, A10, A11, A12, A13, A14 y A18 (`decidido`). A2, confirmado por la respuesta del 2026-11-13; A4, solo en parte: la lista de países es decisión propia |
 | **Depende de** | SPEC-03 (forma del historial dentro de la ficha, errores genéricos, CORS y esquema) y SPEC-02 (constante de países), las dos aprobadas el 2026-11-13 |
-| **Bloqueos para aprobarla** | Ninguno desde el 2026-11-13: A2 y A4 decididos sin confirmación externa (apartado 8) y aprobación a la vez que SPEC-02 y SPEC-03, las tres del bloque backend (índice de specs) |
+| **Bloqueos para aprobarla** | Ninguno desde el 2026-11-13: A2 y A4 decididos (apartado 8) y aprobación a la vez que SPEC-02 y SPEC-03, las tres del bloque backend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -756,17 +756,15 @@ El criterio de qué decisiones llevan además un ADR está en
 
 ## 8. Pendiente antes de aprobar
 
-**Nada pendiente desde el 2026-11-13.** La fecha límite (viernes 13 de
-noviembre de 2026, 10:00) se cumplió sin respuesta y el Tech Lead decidió
-A2 y A4 con la hipótesis ya documentada: están en
-`decidido (sin confirmación externa)`. La consulta sigue abierta: si la
-respuesta llega, se aplica como cambio de esta spec, con fecha y motivo en
-su historial.
+**Nada pendiente desde el 2026-11-13.** El Tech Lead decidió A2 y A4 al
+cumplirse la fecha límite, y la respuesta a la consulta llegó ese mismo
+día, más tarde, sin cambiar ninguna regla de esta spec. La consulta está
+cerrada (`supuestos.md`).
 
-| Asunto | Qué cambiaría en esta spec si la respuesta lo contradijera |
-|---|---|
-| A2 · plan | Si el plan tuviera significado propio, la lista de 2.1 y `/meta` |
-| A4 · países y tipos | La lista de países de 2.1 y el ejemplo de 4.4 |
+| Supuesto | Qué dice la respuesta | Efecto en esta spec |
+|---|---|---|
+| A2 · plan | El plan es informativo y no modifica el precio; sus valores son de libre elección | Ninguno. Se mantienen los códigos y los nombres de D-04, por decisión del Tech Lead |
+| A4 · países y tipos | Basta con el tipo general de IVA del país del cliente. No menciona qué países se admiten | Ninguno. La lista de países de 2.1 sigue siendo decisión propia |
 
 SPEC-02 y SPEC-03 forman con esta el bloque backend. Si cambian la
 constante de países o la forma del historial, cambian 2.1, 4.2 y 4.4.
@@ -786,3 +784,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A2 y A4 pasan a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera y apartado 8 actualizados. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
 | 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-02 y SPEC-03 (bloque backend) |
 | 2026-11-13 | Confirmación del Tech Lead sobre el apartado 8: aprobó esta spec sabiendo que la lectura directa de la página del Ministerio del Interior sigue sin verificar. Motivo: el algoritmo queda cubierto por los vectores de prueba y por la prueba diferencial de CA-19. Sin cambios en requisitos, criterios ni casos |
+| 2026-11-13 | Llega la respuesta a la consulta: confirma A2 (plan informativo, valores de libre elección) y, de A4, solo el uso del tipo general; la lista de países sigue siendo decisión propia. El Tech Lead mantiene los planes de D-04 y su visto bueno a esta spec. Cabecera y apartado 8 actualizados; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |

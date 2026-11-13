@@ -15,13 +15,14 @@ código. No se programa una parte hasta que su spec está `aprobada`.
 Una spec no puede pasar a `aprobada` mientras dependa de un supuesto que no
 esté `decidido` (ver [`supuestos.md`](../00-analisis/supuestos.md)).
 
-**Supuestos decididos sin confirmación externa (A2 a A5)**: la fecha límite,
-el viernes 13 de noviembre de 2026 a las 10:00, se cumplió sin respuesta, y
-ese día el Tech Lead los decidió con la hipótesis ya documentada. Están en
-`decidido (sin confirmación externa)`. *Por qué: una consulta sin contestar
-no puede bloquear el desarrollo de forma indefinida.* **La consulta sigue
-abierta**: si la respuesta llega, se aplica como cambio de spec, con fecha y
-motivo en el historial de cada spec afectada.
+**Supuestos consultados (A2 a A5)**: la fecha límite, el viernes 13 de
+noviembre de 2026 a las 10:00, se cumplió sin respuesta, y ese día el Tech
+Lead los decidió con la hipótesis ya documentada. *Por qué: una consulta sin
+contestar no puede bloquear el desarrollo de forma indefinida.* La respuesta
+llegó ese mismo día, más tarde: confirma A2, A3 y A5 y, de A4, solo el uso
+del tipo general (la lista de países es decisión propia). **No cambia
+ninguna regla y la consulta está cerrada.** El detalle está en
+[`supuestos.md`](../00-analisis/supuestos.md).
 
 ## Bloques de aprobación y orden de implementación
 

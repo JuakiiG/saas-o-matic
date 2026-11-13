@@ -69,6 +69,8 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 11:34 | *(este commit)* | El commit de la pieza 1 es `fd8da13` (11:32:30 según `git log`). Pieza 2, CORS: rojo a las 11:33, verde y oráculo en verde a las 11:34 (apartado 3) |
 | 11:37 | *(este commit)* | El commit de la pieza 2 es `54de302` (11:35:04 según `git log`). Pieza 3, `GET /health`: rojo a las 11:36, verde y oráculo en verde a las 11:37 (apartado 3) |
 | 11:42 | *(este commit)* | El commit de la pieza 3 es `33033eb` (11:37:49 según `git log`). Pieza 4, esquema: rojo y verde a las 11:39, mutaciones a las 11:40, oráculo en verde a las 11:41 (apartado 3). **La IA para aquí**: paso 1 terminado, a la espera de la revisión antes de SPEC-02 |
+| 12:02 | — | El commit de la pieza 4 es `fadd0cf` (11:42:28 según `git log`). El Tech Lead comunica la respuesta a la consulta de A2 a A5, con seis decisiones, y la revisión del paso 1: aprobado, con cinco correcciones y dos normas de proceso (apartado 3) |
+| 12:10 | `72684a9` y *(este commit)* | ADR-008 en `72684a9` (12:09:30 según `git log`). Este commit: `supuestos.md`, índice de specs, las cuatro specs, `ai-workspace/README.md`, `CLAUDE.md` y esta bitácora. Oráculo en verde antes de los dos |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -492,6 +494,108 @@ Lo que queda al parar:
   nada que medir.
 - Sin aprobar: T-01 a T-08, G-01 a G-09, C-01 a C-04, H-01 a H-06 y Q-01 a
   Q-05.
+
+### Llega la respuesta a la consulta de A2 a A5 (12:02)
+
+El Tech Lead comunica que la respuesta ha llegado hoy, 2026-11-13, después
+de haber decidido los cuatro supuestos sin ella (apartado «Decisión de A2 a
+A5», 10:26). **Resumen fiel dado por el Tech Lead; no es cita literal.** La
+IA no ha visto la respuesta original.
+
+- **Plan**: dato informativo del cliente; no modifica el precio. El coste se
+  calcula solo con los tramos de usuarios. Los valores del plan son de libre
+  elección.
+- **Almacenamiento y llamadas a la API**: no se tarifican; basta con
+  registrarlos y mostrarlos en la simulación, sin coste.
+- **Impuesto**: basta con el tipo general de IVA del país del cliente. No
+  hace falta contemplar la inversión del sujeto pasivo ni otros casos
+  especiales, pero se valorará que quede documentado cómo se abordaría.
+- **Decisiones propias**: cualquier otra decisión tomada por cuenta propia
+  debe quedar documentada en `ai-workspace` con su motivo; forma parte de lo
+  que se evalúa.
+
+Decisiones del Tech Lead:
+
+| # | Decisión | Motivo |
+|---|---|---|
+| R1 | A2, A3 y A5 quedan confirmados **sin cambio en ninguna regla**: pasan a `decidido` (2026-11-13), con la respuesta como fuente | La respuesta coincide con lo decidido |
+| R2 | A4 queda confirmado **solo en parte**: el uso del tipo general, sí; la lista de nueve países no figura en la respuesta y sigue siendo decisión del Tech Lead. `supuestos.md` debe decirlo así | No atribuir a la respuesta más de lo que dice |
+| R3 | Planes: se mantienen los códigos y los nombres de SPEC-01 (D-04) | La respuesta deja los valores a su elección |
+| R4 | Ninguna regla cambia: se mantiene la aprobación de SPEC-01, SPEC-02 y SPEC-03. Actualizar la fila «Supuestos», el apartado «Pendiente antes de aprobar» y el historial de cada spec afectada, también SPEC-04. Quitar «la consulta sigue abierta»: está cerrada | — |
+| R5 | Documento nuevo, como **propuesto**: cómo se abordaría la inversión del sujeto pasivo y los demás casos especiales. ADR o apartado según el criterio de los ADR; enlazado desde A5, SPEC-02 y el índice de arquitectura. Una página como mucho; cada afirmación fiscal, con fuente oficial y fecha; lo no verificado, dicho. Sin implementar nada | Se va a valorar |
+| R6 | Comprobar que `ai-workspace/README.md` lleva de forma visible a `supuestos.md` y a los ADR como el sitio de las decisiones propias con su motivo | Cuarto punto de la respuesta |
+
+Pidió dos commits (supuestos y specs; documento nuevo), con el oráculo en
+verde tras cada uno.
+
+### Revisión del paso 1 (12:02, en el mismo mensaje)
+
+**Aprobado, con cinco correcciones antes de SPEC-02.** La prueba de
+arranque real que se denegó a la IA la ha hecho el Tech Lead: con `uvicorn`
+y una base de datos temporal arranca, crea la carpeta y las tres tablas, y
+los errores genéricos y CORS responden como dice la spec.
+
+Aprobados: T-01 a T-08, G-01 a G-09, C-01 a C-04, H-01 a H-04, H-06, Q-01 a
+Q-03 y Q-05. **Cambian H-05 y Q-04.**
+
+| # | Corrección ordenada por el Tech Lead | Motivo |
+|---|---|---|
+| p1 | **`/health` da `200` sin base de datos.** Con el servidor en marcha, si el fichero desaparece, responde `200` y deja creado un fichero vacío, sin tablas, porque `sqlite3.connect` crea el fichero que no existe. Solo `create_schema` puede crear el fichero; cualquier otra conexión falla si no existe, y `/health` responde `503` sin crear nada | No cumple el propósito de E-28 ni el «no lee ni escribe» de 2.7. Defecto de la IA en la pieza 3 |
+| p2 | **`GET /health/` responde `307`** con redirección a `/health`. Una ruta con barra final es una ruta que no existe: `404` `not_found`. Desactivar la redirección del framework | — |
+| p3 | **El guarda del cuerpo acepta `{"a": NaN}` e `Infinity`**, que no son JSON válido (RFC 8259): `400` `malformed_request` | La IA lo vio al diseñar la pieza 1 y lo dejó sin hacer |
+| p4 | **Q-04 cambia: tablas `STRICT`.** Hoy la base de datos acepta `10.5` en `base_cents` y `'abc'` en `active_users`, porque en SQLite el tipo declarado es solo una afinidad. Cambio de SPEC-03 2.6, con historial, y nota en ADR-004 con la versión mínima de SQLite | Un importe con decimales nunca puede ser cierto (E-19, A6): entra en lo que la base de datos debe impedir |
+| p5 | **H-05 cambia**: el OpenAPI declara los errores bajo `application/problem+json`, con una ayuda en `problems.py` que sirva a todos los endpoints | Es lo que se responde, y `backend.md` dice que el OpenAPI es el contrato |
+
+Cada corrección, con su test en rojo por aserción antes del código, y un
+commit por corrección.
+
+**Pendientes que no se hacen ahora**: la cabecera `Allow` del `405` se
+corrige con la primera ruta que tenga dos métodos (SPEC-01); el cuerpo de la
+petición no tiene límite de tamaño, limitación conocida que se documentará
+en el README.
+
+**Dos normas de proceso**:
+
+| # | La IA | El Tech Lead | Motivo |
+|---|---|---|---|
+| n1 | En las piezas 1 y 2 lanzó el test en rojo **en el mismo lote** que la escritura del código | Desde ahora: test, ejecución, resultado en rojo a la vista, y solo entonces el código | El rojo fue real, pero el código no esperó a verlo |
+| n2 | Editó ficheros de `backend/` con `sed` y scripts de un solo uso | Los ficheros de `backend/` y `frontend/` se editan con las herramientas de edición | Para que el hook los vea |
+
+Después: SPEC-02 completa, en tres piezas y tres commits (dominio,
+traducción de los errores de validación y `POST /pricing/quote`), y parar.
+
+### Cómo se aplicó la respuesta a la consulta (12:02–12:10)
+
+**R1 a R4 y R6**: `supuestos.md`, el índice de specs, las cuatro specs
+(fila «Supuestos», fila «Bloqueos», apartado «Pendiente antes de aprobar»,
+tres frases de SPEC-02 e historial) y `ai-workspace/README.md`. Todas las
+ediciones de `01-specs/`, con la herramienta de edición. Ninguna regla,
+requisito, criterio ni caso cambia. «La consulta sigue abierta» ya no
+aparece en ningún documento vivo; queda en las filas de historial de esta
+mañana, que no se retocan.
+
+**R5 · ADR-008**, en estado `propuesto`. Fuentes: la IA descargó seis
+páginas oficiales a una carpeta temporal y leyó en ellas las frases que cita
+el documento (Comisión Europea: «Cross-border VAT», VIES, tipos y ventanilla
+única; Gobierno del Reino Unido: Notice 741A y servicios digitales a
+consumidores). Las páginas de la Agencia Tributaria y del Gobierno de
+Canarias que intentó leer devolvieron `404`, y no leyó el texto de la
+Directiva: el documento lo dice en su apartado de no verificado.
+
+**Precisiones de la IA, sin aprobar**:
+
+| # | Precisión |
+|---|---|
+| U-01 | El documento de R5 es **un ADR nuevo** (ADR-008) y no un apartado: afecta a más de una spec y es un diseño con alternativas |
+| U-02 | Estado de A4: `decidido` (2026-11-13), con el texto «confirmado solo en parte» en la misma celda del resumen. El oráculo solo exige que el estado empiece por `decidido` |
+| U-03 | En `supuestos.md`, el apartado pasa a llamarse «Consultados a quien propone el reto (A2 a A5)», con la secuencia de lo ocurrido, el resumen de la respuesta y una tabla de qué confirma y qué sigue siendo decisión propia. Los dos estados que ya no usa ningún supuesto se conservan en la tabla de estados, con una nota |
+| U-04 | R6: `ai-workspace/README.md` nombraba las carpetas, pero no decía en ningún sitio que ahí estén las decisiones propias. La IA añadió el apartado «Dónde están las decisiones propias», que lleva a `supuestos.md`, a los ADR, a las tablas de decisiones de las specs y a la bitácora |
+| U-05 | Las dos normas de proceso n1 y n2 van también a `CLAUDE.md`, como se hizo con las anteriores |
+| U-06 | **ADR-008 no cabe estrictamente en una página**: tiene 88 líneas y 817 palabras. La primera versión tenía 103 líneas; la IA la recortó y rehízo el commit (`bbe0c25` pasó a ser `72684a9`) antes de hacer ningún otro. Si debe caber en una página impresa, hay que quitar algo; la IA no ha decidido qué |
+
+**Orden de los commits**: primero el de ADR-008 y después el de supuestos y
+specs, para que ningún enlace apunte a un documento que aún no existe (el
+error de `9344eed`).
 
 ## 4. Comprobaciones hechas en la sesión
 
