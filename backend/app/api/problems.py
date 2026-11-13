@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 PROBLEM_MEDIA_TYPE = "application/problem+json"
 # Written out because the phrase of 422 depends on the Python version; the contract says this one.
@@ -20,6 +21,7 @@ TITLES = {
     415: "Unsupported Media Type",
     422: "Unprocessable Content",
     500: "Internal Server Error",
+    503: "Service Unavailable",
 }
 
 
@@ -30,6 +32,7 @@ class ErrorCode(StrEnum):
     METHOD_NOT_ALLOWED = "method_not_allowed"
     VALIDATION_ERROR = "validation_error"
     INTERNAL_ERROR = "internal_error"
+    SERVICE_UNAVAILABLE = "service_unavailable"
 
 
 class FieldCode(StrEnum):
@@ -74,6 +77,9 @@ UNSUPPORTED_MEDIA_TYPE = Problem(
 NOT_FOUND = Problem(404, ErrorCode.NOT_FOUND, "La ruta no existe.")
 METHOD_NOT_ALLOWED = Problem(405, ErrorCode.METHOD_NOT_ALLOWED, "La ruta no admite ese método.")
 INTERNAL_ERROR = Problem(500, ErrorCode.INTERNAL_ERROR, "Error interno del servidor.")
+SERVICE_UNAVAILABLE = Problem(
+    503, ErrorCode.SERVICE_UNAVAILABLE, "El servicio no está disponible en este momento."
+)
 
 
 def validation_problem(errors: tuple[FieldError, ...]) -> Problem:
@@ -99,3 +105,22 @@ def problem_response(problem: Problem, headers: Mapping[str, str] | None = None)
     return JSONResponse(
         body, status_code=problem.status, headers=headers, media_type=PROBLEM_MEDIA_TYPE
     )
+
+
+class FieldErrorDocument(BaseModel):
+    """Shape of one entry of `errors`, for the OpenAPI contract."""
+
+    field: str
+    code: str
+    message: str
+
+
+class ProblemDocument(BaseModel):
+    """Shape of an error response, for the OpenAPI contract. Responses are built from `Problem`."""
+
+    type: str
+    title: str
+    status: int
+    code: str
+    detail: str
+    errors: list[FieldErrorDocument] | None = None

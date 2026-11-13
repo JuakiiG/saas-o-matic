@@ -14,9 +14,11 @@ from app.api.problems import (
     INTERNAL_ERROR,
     METHOD_NOT_ALLOWED,
     NOT_FOUND,
+    SERVICE_UNAVAILABLE,
     ProblemError,
     problem_response,
 )
+from app.services.health import ServiceUnavailableError
 
 logger = logging.getLogger(__name__)
 
@@ -54,5 +56,10 @@ def install_error_handling(app: FastAPI) -> None:
             logger.error("HTTP error outside the contract: %s", error.status_code)
             return problem_response(INTERNAL_ERROR)
         return problem_response(problem, error.headers)
+
+    @app.exception_handler(ServiceUnavailableError)
+    async def handle_unavailable(request: Request, error: ServiceUnavailableError) -> Response:
+        logger.error("Service unavailable: %s", error, exc_info=error)
+        return problem_response(SERVICE_UNAVAILABLE)
 
     app.add_middleware(UnexpectedErrorGuard)

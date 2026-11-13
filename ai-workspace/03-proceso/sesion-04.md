@@ -67,6 +67,7 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 11:25 | `9344eed`, `203d602` | Fila escrita a las 11:25; las horas de dentro salen de `date` en cada comando y de `git log`. 11:11, rojo de `httpx` con los avisos como errores. 11:12, `httpx2` y fecha de corte: verde sin avisos; oráculo en verde. 11:13, commit `9344eed` (dependencias). 11:14, tests del oráculo en rojo y en verde. 11:15, oráculo real en verde, 19 correctas y 5 inactivas. 11:16, commit `203d602` (oráculo). 11:17–11:24, documentación: ADR-005, ADR-007, historiales de SPEC-01 y SPEC-02, `ai-workspace/README.md` y `CLAUDE.md` |
 | 11:32 | *(este commit)* | El commit de documentación es `c6e13f2` (11:26:01 según `git log`). Pieza 1 del paso 1, errores genéricos: rojo a las 11:30, verde a las 11:31 y oráculo en verde a las 11:31 (apartado 3) |
 | 11:34 | *(este commit)* | El commit de la pieza 1 es `fd8da13` (11:32:30 según `git log`). Pieza 2, CORS: rojo a las 11:33, verde y oráculo en verde a las 11:34 (apartado 3) |
+| 11:37 | *(este commit)* | El commit de la pieza 2 es `54de302` (11:35:04 según `git log`). Pieza 3, `GET /health`: rojo a las 11:36, verde y oráculo en verde a las 11:37 (apartado 3) |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -409,6 +410,31 @@ correctas, 0 con fallo y 4 inactivas.
 `Allow` del framework dice solo `POST`, aunque la ruta admite también
 `GET`. Las dos operaciones se declaran por separado y el framework informa
 de la primera que coincide.
+
+### Paso 1 · Pieza 3: `GET /health` (11:35–11:38)
+
+Requisitos: SPEC-03/E-27 y E-28. Primera pieza que atraviesa las cuatro
+capas menos el dominio: `api/health.py` (ruta fina y esquema de salida),
+`services/health.py` (caso de uso), `repositories/database.py` (la única que
+importa `sqlite3`) y la composición en `main.py`. Cada capa lanza su propio
+error (`DatabaseUnavailableError`, `ServiceUnavailableError`) y `api/` lo
+traduce a `503` en el único sitio donde se traducen los errores.
+
+**Rojo (11:36)**: `3 failed`, los tres **por aserción**: `404 == 200`,
+`404 == 503` y `[] == ['200', '503']` (el OpenAPI aún no declara la
+operación). **Verde (11:37)**: `38 passed`, todo cubierto. Oráculo en verde:
+20 correctas, 0 con fallo y 4 inactivas; 14 de 14 ramas.
+
+**Precisiones de la IA, sin aprobar**:
+
+| # | Precisión |
+|---|---|
+| H-01 | **La base de datos inaccesible del test es real**, no simulada: `DATABASE_PATH` apunta a una carpeta y `sqlite3` no puede abrirla. CA-16 dice «se simula con una conexión que falla»; una conexión que falla de verdad cumple lo mismo y además ejercita la captura del error de `sqlite3` |
+| H-02 | El `503` se registra en el log con su causa; la respuesta solo lleva el código y un texto genérico |
+| H-03 | `DATABASE_PATH` entra ya en la configuración, con su valor por defecto, porque `/health` necesita una ruta. **Su test (E-32, CA-12) va en la pieza siguiente**, así que el valor por defecto queda hoy sin un test propio. La conexión todavía no ejecuta `PRAGMA foreign_keys = ON`: lo exige E-20 y se añade con su test en la pieza del esquema |
+| H-04 | El servicio se construye en `main.py`, se guarda en el estado de esa aplicación y llega a la ruta con `Depends`. `api/` no puede importar de `repositories/` |
+| H-05 | En el OpenAPI, el cuerpo del `503` figura bajo `application/json` y no bajo `application/problem+json`, que es lo que de verdad se responde. Es como FastAPI documenta una respuesta adicional con modelo; no se ha escrito código para cambiarlo |
+| H-06 | Texto del `503`: «El servicio no está disponible en este momento.» |
 
 ## 4. Comprobaciones hechas en la sesión
 
