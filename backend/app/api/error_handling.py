@@ -13,16 +13,20 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 
 from app.api.contract import body_schema_of
 from app.api.problems import (
+    CUSTOMER_NOT_FOUND,
     INTERNAL_ERROR,
     METHOD_NOT_ALLOWED,
     NOT_FOUND,
     SERVICE_UNAVAILABLE,
+    TAX_RATE_NOT_DEFINED,
     ProblemError,
     problem_response,
     validation_problem,
 )
 from app.api.validation import field_errors
+from app.domain.countries import TaxRateNotDefinedError
 from app.services.health import ServiceUnavailableError
+from app.services.pricing import CustomerNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +70,16 @@ def install_error_handling(app: FastAPI) -> None:
             logger.error("HTTP error outside the contract: %s", error.status_code)
             return problem_response(INTERNAL_ERROR)
         return problem_response(problem, error.headers)
+
+    @app.exception_handler(CustomerNotFoundError)
+    async def handle_unknown_customer(request: Request, error: CustomerNotFoundError) -> Response:
+        return problem_response(CUSTOMER_NOT_FOUND)
+
+    @app.exception_handler(TaxRateNotDefinedError)
+    async def handle_missing_rate(request: Request, error: TaxRateNotDefinedError) -> Response:
+        # Stored data is inconsistent: a failure of ours, logged, and never a rate of 0 %.
+        logger.error("Country without tax rate: %s", error)
+        return problem_response(TAX_RATE_NOT_DEFINED)
 
     @app.exception_handler(ServiceUnavailableError)
     async def handle_unavailable(request: Request, error: ServiceUnavailableError) -> Response:

@@ -33,6 +33,8 @@ class ErrorCode(StrEnum):
     VALIDATION_ERROR = "validation_error"
     INTERNAL_ERROR = "internal_error"
     SERVICE_UNAVAILABLE = "service_unavailable"
+    CUSTOMER_NOT_FOUND = "customer_not_found"
+    TAX_RATE_NOT_DEFINED = "tax_rate_not_defined"
 
 
 class FieldCode(StrEnum):
@@ -82,6 +84,12 @@ METHOD_NOT_ALLOWED = Problem(405, ErrorCode.METHOD_NOT_ALLOWED, "La ruta no admi
 INTERNAL_ERROR = Problem(500, ErrorCode.INTERNAL_ERROR, "Error interno del servidor.")
 SERVICE_UNAVAILABLE = Problem(
     503, ErrorCode.SERVICE_UNAVAILABLE, "El servicio no está disponible en este momento."
+)
+CUSTOMER_NOT_FOUND = Problem(404, ErrorCode.CUSTOMER_NOT_FOUND, "No existe un cliente con ese id.")
+TAX_RATE_NOT_DEFINED = Problem(
+    500,
+    ErrorCode.TAX_RATE_NOT_DEFINED,
+    "El país del cliente no tiene un tipo impositivo definido.",
 )
 
 

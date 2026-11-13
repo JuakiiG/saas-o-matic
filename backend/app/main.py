@@ -9,12 +9,14 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health
+from app.api import health, pricing
 from app.api.error_handling import install_error_handling
 from app.api.request_guard import RequestBodyGuard, reject_undocumented_query_parameters
 from app.config import load_settings
+from app.repositories.customers import CustomerRepository
 from app.repositories.database import Database
 from app.services.health import HealthService
+from app.services.pricing import PricingService
 
 API_TITLE = "SaaS-O-Matic API"
 # What the frontend needs and nothing else (SPEC-03, 2.7).
@@ -46,7 +48,9 @@ def create_app() -> FastAPI:
     )
     # Built here and handed to the endpoints through `Depends`: no global state.
     app.state.health_service = HealthService(database)
+    app.state.pricing_service = PricingService(CustomerRepository(database))
     app.include_router(health.router)
+    app.include_router(pricing.router)
     # The middleware added last is the outermost. CORS goes outside the guards so that
     # every response, error or not, leaves with its headers (SPEC-03/E-24).
     app.add_middleware(RequestBodyGuard)
