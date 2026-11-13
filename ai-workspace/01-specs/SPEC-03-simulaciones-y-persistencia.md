@@ -172,7 +172,11 @@ comas cuyo valor por defecto es `http://localhost:4200`, el origen del
 frontend en local. A una petición con un `Origin` de la lista se le responde
 con `access-control-allow-origin` igual a ese origen; a cualquier otra, sin
 esa cabecera. Nunca se responde con `*`. Los métodos admitidos son `GET` y
-`POST`, y la cabecera admitida, `content-type`.
+`POST`, y la cabecera admitida, `content-type`, además de las que la norma
+CORS admite siempre (`accept`, `accept-language` y `content-language`), que
+el middleware estándar anuncia junto a ella: `access-control-allow-headers`
+vale `Accept, Accept-Language, Content-Language, Content-Type`. Ese valor
+exacto lo fija un test con la versión fijada del framework.
 
 La cabecera acompaña a **cualquier respuesta** a un origen admitido,
 también a las de error y, en particular, al `500`. *Por qué*: sin ella el
@@ -475,7 +479,7 @@ inserta con esa fecha de forma directa.
 | `GET /meta` con `Origin: http://otro.example` | `CORS_ORIGINS` sin definir | Respuesta sin `access-control-allow-origin` |
 | `GET /meta` con `Origin: http://localhost:4200` | `CORS_ORIGINS=http://a.example,http://b.example` | Respuesta sin `access-control-allow-origin` |
 | `GET /meta` con `Origin: http://b.example` | `CORS_ORIGINS=http://a.example,http://b.example` | `access-control-allow-origin: http://b.example` |
-| `OPTIONS /customers` de comprobación previa, con `Origin: http://localhost:4200`, `Access-Control-Request-Method: POST` y `Access-Control-Request-Headers: content-type` | `CORS_ORIGINS` sin definir | `200`, no `405`, con `access-control-allow-origin: http://localhost:4200`, `POST` en `access-control-allow-methods` y `content-type` en `access-control-allow-headers` |
+| `OPTIONS /customers` de comprobación previa, con `Origin: http://localhost:4200`, `Access-Control-Request-Method: POST` y `Access-Control-Request-Headers: content-type` | `CORS_ORIGINS` sin definir | `200`, no `405`, con `access-control-allow-origin: http://localhost:4200`, `POST` en `access-control-allow-methods` y `access-control-allow-headers: Accept, Accept-Language, Content-Language, Content-Type` (`content-type` y las que la norma CORS admite siempre) |
 | La misma comprobación previa, con `Origin: http://otro.example` | `CORS_ORIGINS` sin definir | Rechazo estándar del middleware, sin `access-control-allow-origin`; el test compara el estado y todas las cabeceras con los valores fijados al implementar. No se exige `application/problem+json` |
 | La misma comprobación previa, con `Origin: http://localhost:4200` y `Access-Control-Request-Method: DELETE` | `CORS_ORIGINS` sin definir | Rechazo estándar del middleware; el test compara el estado y todas las cabeceras con los valores fijados al implementar |
 | Una petición con `Origin: http://localhost:4200` que provoca un fallo inesperado (como el de 5.7) | `CORS_ORIGINS` sin definir | `500` `internal_error` con `access-control-allow-origin: http://localhost:4200` |
@@ -584,3 +588,4 @@ del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos.
 | 2026-11-13 | Cambio pedido por el Tech Lead en la revisión del paso 1: las tres tablas pasan a ser `STRICT` (2.6), E-21 incluye el valor que no es del tipo de su columna y 5.5 gana cuatro filas. Motivo: sin `STRICT` la base de datos guardaba `10.5` en `base_cents` y `'abc'` en `active_users`, y un importe con decimales nunca puede ser cierto (E-19, A6). Versión mínima de SQLite, 3.37.0, anotada en ADR-004 |
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-01, ya implementada: fila nueva en 5.7 para el `503` `service_unavailable` de un endpoint que no es `GET /health`, y fila `503` en la tabla de errores de 4.1. Motivo: todo endpoint que lee la base de datos declara el `503` (regla de las convenciones comunes); la tabla 5.7 no tenía ese caso. E-29 y CA-17 no cambian de texto y lo cubren |
 | 2026-11-13 | Decisión del Tech Lead al revisar el backend, ya implementado: índice `idx_simulations_customer_id` sobre `simulations(customer_id)`, creado con `CREATE INDEX IF NOT EXISTS` (2.6). Motivo: la ficha cuenta y lee las simulaciones de un cliente en cada petición, y una clave foránea sin índice obliga a recorrer la tabla entera. Sin cambios en requisitos ni criterios; un test comprueba que el plan de las consultas del historial usa el índice. Nota en ADR-004 |
+| 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-10), decidida por el Tech Lead: 2.7 y la fila de la comprobación previa admitida de 5.6 dicen el valor exacto de `access-control-allow-headers` (`Accept, Accept-Language, Content-Language, Content-Type`). Sin cambio de comportamiento; E-30 y CA-15 no cambian de texto. Motivo: la spec decía «la cabecera admitida, `content-type`» y el middleware estándar anuncia además las tres que la norma CORS admite siempre; el test solo comprobaba que `content-type` estuviera |

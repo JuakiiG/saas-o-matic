@@ -20,6 +20,7 @@ from app.repositories.customers import CustomerRepository
 from app.repositories.database import Database
 from tests.integration.test_cors import (
     ALLOW_ORIGIN,
+    ALLOWED_HEADERS,
     OTHER,
     PREFLIGHT,
     REJECTED_PREFLIGHT_HEADERS,
@@ -188,7 +189,8 @@ def test_preflight_of_the_customers_from_the_frontend_returns_200_with_cors_head
     assert response.status_code == 200
     assert response.headers.get(ALLOW_ORIGIN) == FRONTEND
     assert "POST" in response.headers["access-control-allow-methods"]
-    assert "content-type" in response.headers["access-control-allow-headers"].lower()
+    # The exact value, written after the code (session 05, H-10): it was never seen failing.
+    assert response.headers["access-control-allow-headers"] == ALLOWED_HEADERS
     assert stored_rows(database) == before
 
 

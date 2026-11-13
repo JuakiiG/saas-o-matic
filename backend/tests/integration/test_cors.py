@@ -18,6 +18,9 @@ PREFLIGHT = {
     "Access-Control-Request-Method": "POST",
     "Access-Control-Request-Headers": "content-type",
 }
+# What the middleware announces as admitted: `content-type` and the three headers that
+# the CORS standard always admits. The exact value, pinned like the rejection below.
+ALLOWED_HEADERS = "Accept, Accept-Language, Content-Language, Content-Type"
 # Standard rejection of Starlette 1.10.0 (through FastAPI 0.162.0), pinned so that a
 # change of version does not go unnoticed (SPEC-03, 2.7).
 REJECTED_PREFLIGHT_HEADERS = {
@@ -27,7 +30,7 @@ REJECTED_PREFLIGHT_HEADERS = {
     ),
     "access-control-allow-methods": "GET, POST",
     "access-control-max-age": "600",
-    "access-control-allow-headers": "Accept, Accept-Language, Content-Language, Content-Type",
+    "access-control-allow-headers": ALLOWED_HEADERS,
     "content-length": "22",
     "content-type": "text/plain; charset=utf-8",
 }
@@ -82,7 +85,8 @@ def test_preflight_from_allowed_origin_returns_200_with_cors_headers(client: Tes
     assert response.status_code == 200
     assert response.headers.get(ALLOW_ORIGIN) == FRONTEND
     assert "POST" in response.headers["access-control-allow-methods"]
-    assert "content-type" in response.headers["access-control-allow-headers"].lower()
+    # The exact value, written after the code (session 05, H-10): it was never seen failing.
+    assert response.headers["access-control-allow-headers"] == ALLOWED_HEADERS
 
 
 def test_preflight_from_unlisted_origin_gets_the_standard_rejection(client: TestClient) -> None:
