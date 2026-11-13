@@ -90,6 +90,24 @@ cambiar ninguna de las tres decisiones:
 - El `schema.sql` del punto 3 vive en el backend y es la única copia del
   DDL; `02-arquitectura/README.md` muestra el modelo y enlaza a él.
 
+**Añadido el 2026-11-13**, tras la revisión del paso 1 por el Tech Lead.
+Amplía la opción A del punto 2, sin cambiar la decisión:
+
+- Las tres tablas se crean como **`STRICT`**. *Por qué*: en SQLite el tipo
+  declarado es solo una afinidad; una columna `INTEGER` aceptaba `10.5`
+  (guardado como real) y `'abc'` (guardado como texto). Un importe con
+  decimales nunca puede ser cierto (A6), así que es un invariante más de
+  los que comprueba la base de datos.
+- **Versión mínima: SQLite 3.37.0** (noviembre de 2021), la primera con
+  tablas `STRICT`. La que acompaña al Python 3.12 del entorno de desarrollo
+  es la 3.42.0. Con una versión anterior, el arranque falla al crear el
+  esquema con un error de sintaxis; no arranca con tablas sin comprobar.
+- `STRICT` convierte lo que se puede convertir sin pérdida (`15.0` y `'15'`
+  se guardan como `15`) y rechaza el resto.
+- `CREATE TABLE IF NOT EXISTS` no modifica una tabla que ya existe: una
+  base de datos creada antes de este cambio sigue sin `STRICT` hasta que se
+  borra el fichero. Es el coste ya aceptado en el punto 3 (sin migraciones).
+
 ## Consecuencias
 
 A favor:

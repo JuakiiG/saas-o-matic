@@ -1,8 +1,11 @@
 -- Schema of SaaS-O-Matic (SPEC-03, 2.6; ADR-004).
 -- Applied on every start: it only creates what is missing, so existing data is kept.
 -- Money is INTEGER cents and tax rates are INTEGER basis points; no column is REAL.
--- The database only rejects what can never be true (negative values, sums that do not
--- add up, broken references). Business maximums live in the API, because they may change.
+-- The tables are STRICT (SQLite 3.37.0 or later): without it a declared type is only an
+-- affinity, and an INTEGER column would store 10.5 as a real and 'abc' as a text.
+-- The database only rejects what can never be true (a value of another type, negative
+-- values, sums that do not add up, broken references). Business maximums live in the
+-- API, because they may change.
 
 CREATE TABLE IF NOT EXISTS customers (
     id INTEGER PRIMARY KEY,
@@ -17,7 +20,7 @@ CREATE TABLE IF NOT EXISTS customers (
     -- UTC, ISO 8601, precision of seconds.
     created_at TEXT NOT NULL,
     UNIQUE (country, tax_id)
-);
+) STRICT;
 
 CREATE TABLE IF NOT EXISTS simulations (
     id INTEGER PRIMARY KEY,
@@ -33,7 +36,7 @@ CREATE TABLE IF NOT EXISTS simulations (
     tax_cents INTEGER NOT NULL CHECK (tax_cents >= 0),
     total_cents INTEGER NOT NULL CHECK (total_cents = base_cents + tax_cents),
     created_at TEXT NOT NULL
-);
+) STRICT;
 
 -- The breakdown of the calculation: three rows per simulation.
 CREATE TABLE IF NOT EXISTS simulation_tiers (
@@ -46,4 +49,4 @@ CREATE TABLE IF NOT EXISTS simulation_tiers (
     users INTEGER NOT NULL CHECK (users >= 0),
     subtotal_cents INTEGER NOT NULL CHECK (subtotal_cents = unit_price_cents * users),
     PRIMARY KEY (simulation_id, position)
-);
+) STRICT;

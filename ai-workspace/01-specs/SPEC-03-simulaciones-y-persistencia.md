@@ -130,12 +130,19 @@ ese fichero; no guarda una segunda copia del DDL.
 
 - **Todo importe es `INTEGER` en céntimos**; ningún `REAL` en el esquema
   (A6).
+- **Las tres tablas son `STRICT`**: la base de datos rechaza un valor que no
+  es del tipo de su columna, como `10.5` en `base_cents` o `'abc'` en
+  `active_users`. Un valor que SQLite convierte sin pérdida (el real `15.0`
+  o el texto `'15'`) se guarda como el entero `15`. *Por qué: en SQLite el
+  tipo declarado es solo una afinidad; sin `STRICT`, una columna `INTEGER`
+  guarda `10.5` como real, y un importe con decimales nunca puede ser
+  cierto (E-19, A6).* Exige SQLite 3.37.0 o posterior (ADR-004).
 - Cada conexión ejecuta `PRAGMA foreign_keys = ON` (ADR-001).
 - La simulación y sus tres tramos se guardan en **una sola transacción**: o
   se guardan las cuatro filas o ninguna.
 - Los límites superiores (100.000 usuarios, etc.) los valida la API; la base
-  de datos solo impide lo que nunca puede ser cierto (negativos, sumas que
-  no cuadran, referencias rotas). *Por qué: un máximo de negocio puede
+  de datos solo impide lo que nunca puede ser cierto (valores de otro tipo,
+  negativos, sumas que no cuadran, referencias rotas). *Por qué: un máximo de negocio puede
   cambiar sin migrar datos; una suma que no cuadra es siempre un error.*
 - Las reglas de negocio no viven en SQL: la base de datos guarda lo que el
   dominio calculó y no calcula nada.
@@ -234,7 +241,7 @@ casos de prueba, para que no queden sin demostrar.
 | E-18 | El sistema no deberá ofrecer ninguna operación que modifique o elimine una simulación o un cliente. | A18 |
 | E-19 | El sistema deberá guardar todos los importes como enteros en céntimos y los tipos como enteros en puntos básicos. | A6 |
 | E-20 | Si se intenta guardar una simulación de un cliente inexistente, o borrar un cliente con simulaciones, entonces la base de datos deberá rechazarlo. | ADR-001 |
-| E-21 | Si se intenta guardar una fila con un valor negativo, una simulación cuyo total no es la suma de base e impuesto, un tramo cuyo subtotal no es el precio por los usuarios, un tramo con una posición distinta de 1, 2 o 3, un tramo repetido, un tramo cuyo límite inferior es menor que 1 o un tramo cuyo límite superior es menor que el inferior, entonces la base de datos deberá rechazarlo. | A6 |
+| E-21 | Si se intenta guardar una fila con un valor que no es del tipo de su columna (un importe con decimales, un texto en una columna entera), una fila con un valor negativo, una simulación cuyo total no es la suma de base e impuesto, un tramo cuyo subtotal no es el precio por los usuarios, un tramo con una posición distinta de 1, 2 o 3, un tramo repetido, un tramo cuyo límite inferior es menor que 1 o un tramo cuyo límite superior es menor que el inferior, entonces la base de datos deberá rechazarlo. | A6 |
 | E-22 | Cuando el backend arranca y la base de datos no existe, el sistema deberá crearla con todas sus tablas; cuando ya existe, deberá conservar sus datos. | R-05 |
 | E-32 | Mientras `DATABASE_PATH` no está definida, el sistema deberá usar la ruta `backend/data/saas-o-matic.db`. | R-18 |
 | E-23 | El sistema deberá pasar a la base de datos todos los valores como parámetros de la sentencia. | — |
@@ -447,6 +454,10 @@ inserta con esa fecha de forma directa.
 | Tramo con `from_users` = 0 o `from_users` = −1 | Rechazado |
 | Tramo con `to_users` menor que `from_users` (11 y 10) | Rechazado |
 | Tramo con `to_users` igual a `from_users`, o con `to_users` nulo | Aceptado |
+| Simulación con `base_cents` = 14000.5 y un total que cuadra (16940.5) | Rechazada por el tipo |
+| Simulación con `active_users` = `'abc'` | Rechazada por el tipo |
+| Tramo con `unit_price_cents` = 10.5 y un subtotal que cuadra (105) | Rechazado por el tipo |
+| Tramo con `users` = `'many'`, precio 0 y subtotal 0 | Rechazado por el tipo |
 
 ### 5.6 Operación del backend
 
@@ -561,3 +572,4 @@ del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos.
 | 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A3 y A4 pasan a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera y apartado 9 actualizados. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
 | 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-01 y SPEC-02 (bloque backend) |
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A3 y, de A4, solo el uso del tipo general. El Tech Lead mantiene su visto bueno a esta spec. Cabecera y apartado 9 actualizados; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |
+| 2026-11-13 | Cambio pedido por el Tech Lead en la revisión del paso 1: las tres tablas pasan a ser `STRICT` (2.6), E-21 incluye el valor que no es del tipo de su columna y 5.5 gana cuatro filas. Motivo: sin `STRICT` la base de datos guardaba `10.5` en `base_cents` y `'abc'` en `active_users`, y un importe con decimales nunca puede ser cierto (E-19, A6). Versión mínima de SQLite, 3.37.0, anotada en ADR-004 |

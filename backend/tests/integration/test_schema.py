@@ -172,6 +172,29 @@ def test_database_rejects_an_impossible_tier(
         connection.execute(INSERT_TIER, {**TIER, **changes})
 
 
+@pytest.mark.parametrize(
+    ("statement", "valid", "changes"),
+    [
+        # 14000.5 + 2940 = 16940.5: only the type is wrong, the total adds up.
+        (INSERT_SIMULATION, SIMULATION, {"base_cents": 14000.5, "total_cents": 16940.5}),
+        (INSERT_SIMULATION, SIMULATION, {"active_users": "abc"}),
+        (INSERT_TIER, TIER, {"unit_price_cents": 10.5, "subtotal_cents": 105.0}),
+        # Price and subtotal at 0 so that no CHECK rejects the row before its type does.
+        (INSERT_TIER, TIER, {"users": "many", "unit_price_cents": 0, "subtotal_cents": 0}),
+    ],
+    ids=["decimal-amount", "text-in-users", "decimal-price", "text-in-tier-users"],
+)
+def test_database_rejects_a_value_that_is_not_an_integer(
+    connection: sqlite3.Connection,
+    statement: str,
+    valid: dict[str, int],
+    changes: dict[str, object],
+) -> None:
+    """SPEC-03/E-19, SPEC-03/E-21: an amount with decimals or a text can never be true."""
+    with closing(connection), pytest.raises(sqlite3.IntegrityError):
+        connection.execute(statement, {**valid, **changes})
+
+
 def test_database_rejects_a_repeated_tier(connection: sqlite3.Connection) -> None:
     """SPEC-03/E-21: a simulation cannot have the same tier twice."""
     with closing(connection):

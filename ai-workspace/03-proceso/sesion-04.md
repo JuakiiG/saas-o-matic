@@ -609,6 +609,16 @@ edición (norma n2).
 | 12:11 | p1 | `assert 200 == 503`: con el fichero apartado, `/health` respondía `200` | `Database.connect()` abre el fichero en modo `rw` (URI de SQLite) y falla si no existe; solo `create_schema()` lo abre en modo `rwc`. **Cambio en un test que ya existía**: el del `200` arrancaba la aplicación sin su fase de arranque y dependía de que la conexión creara el fichero, que era el defecto; ahora la arranca como un servidor real. Su aserción no cambia | `65 passed`; oráculo en verde, 20 correctas y 4 inactivas |
 | 12:12 | p2 | `assert 307 == 404` en `/health/` y en `/probe/` | `redirect_slashes=False` al construir la aplicación. El commit de p1 es `604a058` (12:12:07 según `git log`) | `67 passed`; oráculo en verde |
 | 12:13 | p3 | `assert 200 == 400` en las tres filas nuevas (`NaN`, `Infinity`, `-Infinity`): el cuerpo se aceptaba | El guarda analiza el JSON con `parse_constant`, que rechaza esas tres constantes. El commit de p2 es `8de1f72` (12:12:55) | `70 passed`; oráculo en verde |
+| 12:18 | p4 | `Failed: DID NOT RAISE IntegrityError` en las cuatro filas nuevas. **Primera ejecución (12:14): solo tres en rojo.** La fila del texto en `users` de un tramo ya pasaba, pero por otro motivo: la rechazaba el `CHECK` del subtotal (`1000 * 'many'` vale 0), no el tipo. Se cambió esa fila (precio 0 y subtotal 0) para que solo el tipo pudiera rechazarla y se repitió: cuatro en rojo (12:16) | `STRICT` en las tres tablas de `schema.sql`. SPEC-03: regla nueva en 2.6, fila de historial y, **sin que el encargo lo nombrara**, E-21 ampliado y cuatro filas en 5.5 (precisión P-01, abajo). ADR-004: añadido con la versión mínima (SQLite 3.37.0; el entorno tiene la 3.42.0). El commit de p3 es `b600624` (12:13:46) | `74 passed`; oráculo en verde (20 correctas, 0 con fallo, 4 inactivas) |
+
+Precisiones de la IA sobre p4, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| P-01 | El encargo decía «cambio de SPEC-03 2.6». Además de 2.6 se ampliaron **E-21** (el valor que no es del tipo de su columna) y la tabla **5.5** (cuatro filas) | El test cita E-21 y, sin ampliarlo, citaría un requisito que no dice eso; los casos de prueba de la base de datos están en 5.5. Si el Tech Lead prefiere otro requisito o ninguno, se cambia |
+| P-02 | `STRICT` no rechaza todo lo que no es entero: convierte lo que se puede convertir sin pérdida (`15.0` y `'15'` se guardan como `15`). Comprobado a mano con SQLite 3.42.0; **no hay test** de esa conversión | Es el comportamiento documentado de SQLite; queda escrito en SPEC-03 2.6 y en ADR-004 para que no se lea «rechaza cualquier real» |
+| P-03 | Una base de datos creada **antes** de este commit sigue sin `STRICT`: `CREATE TABLE IF NOT EXISTS` no toca una tabla que ya existe. Hay que borrar el fichero | Afecta a quien ya arrancó el backend (la prueba de arranque real del Tech Lead). Anotado en ADR-004 |
+| P-04 | Con un SQLite anterior a 3.37.0 el arranque falla con un error de sintaxis de SQLite, no con un mensaje propio. No se añadió una comprobación de versión | No estaba pedida. Falla al arrancar, que es lo seguro; el mensaje es mejorable |
 
 ## 4. Comprobaciones hechas en la sesión
 
