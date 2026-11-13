@@ -745,6 +745,37 @@ Precisiones de la IA, **sin aprobar**:
 | X-04 | La norma n3 se escribió en el punto 7 de `CLAUDE.md` sin que el encargo dijera dónde | Las normas de proceso anteriores están ahí |
 | X-05 | **Dos descuidos de la IA.** Se ejecutó `ruff format` sobre `tests/integration/test_schema.py`, que es modificar un fichero de `backend/` sin las herramientas de edición (norma n2); solo partió una línea. Y la fila de historial de SPEC-02 se añadió con una orden de la consola (`printf >>`) y no con la herramienta de edición, de modo que el hook de las specs no la vio; el texto no cambia el estado de la spec | Desde aquí, el formato se corrige a mano con la herramienta de edición y las specs solo se tocan con ella |
 
+### SPEC-01 (desde las 13:23)
+
+Una fila por pieza, escrita al terminarla, con las normas n1 a n3.
+
+| Hora | Pieza | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
+|---|---|---|---|---|
+| 13:29 | (a) identificador fiscal | 13:26: **93 en rojo, todos por aserción**, y 41 en verde: los que esperan «válido», que un esqueleto que lo acepta todo cumple sin querer (Y-01). Segundo rojo a las 13:27, de tres casos añadidos tras el primer verde (Y-03) | `app/domain/tax_id.py`: `normalize_tax_id` y `tax_id_problem` (formato o carácter de control), con DNI, NIE, CIF y la regla de fuera de España. Tests unitarios: cada fila de 5.1 a 5.6, las 23 letras del DNI (CA-03), las 17 letras de entidad por los 10 valores de control (CA-04) y la **prueba diferencial con `python-stdnum` 2.2** (CA-19). El commit de ADR-008 es `6fdb617` (13:22:02) | `302 passed`; `domain/` al 100 % (48 de 48 ramas en todo el backend). **Oráculo en rojo a las 13:28** por el formato del motivo de un `noqa` (Y-06); en verde a las 13:29 (20 correctas, 0 con fallo, 4 inactivas) |
+
+**Resultado de la prueba diferencial (CA-19)**, que la spec daba como
+hipótesis: se cumple. De los 340 CIF con el valor de control correcto en
+las dos formas, el dominio no acepta ninguno que `python-stdnum` rechace, y
+`python-stdnum` acepta 100 que el dominio rechaza, todos por la forma del
+control (las 6 letras que exigen letra y las 4 que exigen dígito, por 10
+valores). De los 60.000 identificadores aleatorios (semilla `20261112`), los
+dos validadores coinciden en todos: 30.000 aceptados y 30.000 rechazados.
+
+Precisiones de la IA sobre SPEC-01, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| Y-01 | Como en SPEC-02, antes del rojo se escribió un esqueleto sin lógica: la normalización devolvía la entrada y la validación lo aceptaba todo | Para que el rojo fuera de aserción y no de importación (W-01, ya admitido) |
+| Y-02 | El dominio ofrece dos funciones, `normalize_tax_id(texto)` y `tax_id_problem(país, normalizado)`, y la segunda devuelve el problema (`FORMAT` o `CHECK_CHARACTER`) o `None`; no lanza excepciones | La API tiene que juntar un error por campo y guardar la forma normalizada; un valor de retorno le sirve mejor que una excepción |
+| Y-03 | **Defecto propio corregido tras el primer verde**: un DNI o un NIE acabado en dígito (`123456789`, `X12345678`) salía como error de carácter de control. Según 2.3 su patrón acaba en letra, así que es error de formato. Ninguna fila de las tablas lo cubre; se añadieron tres casos, vistos en rojo a las 13:27 | Lo vio la IA al repasar el código contra 2.3, no un test de la spec. `python-stdnum` también los rechaza |
+| Y-04 | **Lectura de «exhaustivo del CIF» en CA-19**: 17 letras × 10 numeraciones (cada una con un valor de control correcto distinto, del 0 al 9) × las dos formas = 340, todos con el valor correcto. Los valores incorrectos vienen del conjunto aleatorio | La otra lectura (una sola numeración y los 20 caracteres finales posibles) probaría un solo valor correcto. Si el Tech Lead quiere esa, se cambia |
+| Y-05 | La comparación usa `stdnum.es.nif.is_valid`, que reparte entre DNI, NIE y CIF. Leído su código: acepta las dos formas en las 17 letras de entidad | Es la función de `python-stdnum` para el NIF completo |
+| Y-06 | El test diferencial lleva un `# noqa: S311` en la línea del generador aleatorio, con su motivo (semilla fija para un test repetible, no un secreto). El oráculo falló a las 13:28 porque el motivo iba tras un guion y exige `--` o `#` | `ruff` avisa de todo generador no criptográfico. Es la única regla silenciada del backend |
+| Y-07 | Los caracteres que parecen otros (`８` de ancho completo, espacio de no separación, `ſ`, `ﬁ`) se escriben en el test por su punto de código, con `chr()`. La primera fila de 5.4 son dos casos (cadena vacía y `" - - "`); las cadenas de 20 y 21 caracteres de 5.6 son inventadas | `ruff` (RUF001) rechaza esos caracteres escritos tal cual, y con razón: no se distinguen a la vista |
+| Y-08 | `tax_id_problem` aplica la regla de «fuera de España» a cualquier país que no sea `ES`, también a uno que no esté en la lista | Que el país sea válido lo comprueba antes la API (E-18): con un país no válido no se llega a validar el formato |
+| Y-09 | **Notas de SPEC-01 que ya no son ciertas y no se han tocado**: 2.7 («no se ha instalado ni ejecutado»), «Sobre CA-17» («`scripts/check.py` aún no existe») y «Sobre CA-19» («hoy no se puede decir»). El oráculo existe, la biblioteca está instalada y el resultado esperado se cumple | Es cambiar una spec con el visto bueno dado: lo decide el Tech Lead, como hizo con la nota de CA-09 de SPEC-02 |
+| Y-10 | **Contradicción entre dos textos, detectada al leer SPEC-01 entera**: 2.12 dice que los `unknown_field` van «por orden alfabético de su nombre»; la convención escrita hoy en el índice (s2, a partir de W-12) dice «en el orden en que llegan en la petición». La IA propuso W-12 sin haber leído 2.12 y afirmó que ninguna spec lo decía: era falso para `POST /customers` | Hay que decidirlo antes de la pieza (b). El código actual sigue el orden de la petición |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
