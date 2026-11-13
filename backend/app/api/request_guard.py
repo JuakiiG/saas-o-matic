@@ -6,6 +6,7 @@ may only carry parameters documented for that operation (422).
 """
 
 import json
+from typing import cast
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -50,11 +51,20 @@ def _is_unicode_text(parsed: object) -> bool:
     return True
 
 
+def _parsed(body: bytes) -> object:
+    """The JSON value of a body, read as strict UTF-8 (RFC 8259, 8.1).
+
+    Decoded here and not by the parser: given bytes, it would guess UTF-16 or UTF-32
+    and skip a byte order mark. Given text, a mark at the start is not JSON.
+    """
+    return json.loads(body.decode("utf-8"), parse_constant=_reject_constant)
+
+
 def _is_json_object(body: bytes) -> bool:
     try:
-        parsed = json.loads(body, parse_constant=_reject_constant)
+        parsed = _parsed(body)
     except (ValueError, RecursionError):
-        # Not UTF-8, not JSON, or nested beyond what the parser accepts.
+        # Not UTF-8 (a decoding error is a ValueError), not JSON, or nested too deep.
         return False
     return isinstance(parsed, dict) and _is_unicode_text(parsed)
 
@@ -90,8 +100,10 @@ async def received_json_object(request: Request) -> dict[str, object]:
     absent body is an empty object (index of specs, "Errores de validación").
     """
     body = await request.body()
-    received: dict[str, object] = json.loads(body) if body else {}
-    return received
+    if not body:
+        return {}
+    # Read exactly as the guard read it, which already saw that it is a JSON object.
+    return cast("dict[str, object]", _parsed(body))
 
 
 def reject_undocumented_query_parameters(request: Request) -> None:

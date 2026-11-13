@@ -42,6 +42,23 @@ LONE_SURROGATE_ROWS: list[tuple[str, dict[str, object]]] = [
     ("/simulations", {**VALID_SIMULATION, "extra": [{"deep": [LONE_SURROGATE]}]}),
     ("/simulations", {**VALID_SIMULATION, "extra": [{LONE_SURROGATE: 1}]}),
 ]
+# A valid body of each POST, which answers 201, 200 and 201 when it is sent as UTF-8.
+VALID_BODIES: list[tuple[str, dict[str, object]]] = [
+    ("/customers", NEW_CUSTOMER),
+    ("/pricing/quote", VALID_QUOTE),
+    ("/simulations", VALID_SIMULATION),
+]
+# Python codecs for what is not strict UTF-8: `utf-16` and `utf-32` write a byte order
+# mark, the ones with `-le` or `-be` do not, and `utf-8-sig` is UTF-8 with the mark.
+OTHER_ENCODINGS = [
+    "utf-16",
+    "utf-16-le",
+    "utf-16-be",
+    "utf-32",
+    "utf-32-le",
+    "utf-32-be",
+    "utf-8-sig",
+]
 
 
 @pytest.fixture
@@ -82,6 +99,30 @@ def test_body_with_a_lone_surrogate_returns_400_and_stores_nothing(
     response = client.post(path, content=content, headers=JSON)
     assert_problem(response, 400, "malformed_request")
     assert stored_counts(database) == [3, 0, 0]
+
+
+@pytest.mark.parametrize("encoding", OTHER_ENCODINGS)
+@pytest.mark.parametrize(("path", "body"), VALID_BODIES, ids=[path for path, _ in VALID_BODIES])
+def test_body_that_is_not_strict_utf8_returns_400_and_stores_nothing(
+    client: TestClient, database: Database, path: str, body: dict[str, object], encoding: str
+) -> None:
+    """SPEC-03/E-29: UTF-16 and UTF-32, with a byte order mark or without, and UTF-8 with it."""
+    content = json.dumps(body).encode(encoding)
+    assert content != json.dumps(body).encode()
+    response = client.post(path, content=content, headers=JSON)
+    assert_problem(response, 400, "malformed_request")
+    assert stored_counts(database) == [3, 0, 0]
+
+
+def test_charset_of_the_content_type_does_not_change_how_the_body_is_read(
+    client: TestClient,
+) -> None:
+    """SPEC-03/E-29: a body in UTF-16 is malformed even if its Content-Type declares it."""
+    headers = {"content-type": "application/json; charset=utf-16"}
+    content = json.dumps(VALID_QUOTE).encode("utf-16")
+    assert_problem(
+        client.post("/pricing/quote", content=content, headers=headers), 400, "malformed_request"
+    )
 
 
 @pytest.mark.parametrize(
