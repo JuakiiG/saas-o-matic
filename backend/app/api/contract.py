@@ -11,13 +11,14 @@ from fastapi import Request
 JSON_MEDIA_TYPE = "application/json"
 # A path of an OpenAPI document also has keys that are not methods, such as `parameters`.
 HTTP_METHODS = ("get", "post", "put", "patch", "delete", "head", "options")
+# An object of an OpenAPI document: the whole of it, its paths, an operation or a schema.
+OpenApiObject = dict[str, Any]  # `Any`: JSON without a fixed shape, and FastAPI types it so
 
 
-# `Any` in the values: an OpenAPI document is JSON, and FastAPI types it so.
-def operation_of(request: Request) -> dict[str, Any]:
+def operation_of(request: Request) -> OpenApiObject:
     """The operation of the contract for the route and method of the request."""
-    paths: dict[str, Any] = request.app.openapi()["paths"]
-    operation: dict[str, Any] = paths.get(request.scope["route"].path, {}).get(
+    paths: OpenApiObject = request.app.openapi()["paths"]
+    operation: OpenApiObject = paths.get(request.scope["route"].path, {}).get(
         request.method.lower(), {}
     )
     return operation
@@ -32,7 +33,7 @@ def methods_of(request: Request) -> list[str]:
     route = request.scope.get("route")
     if route is None:
         return []
-    paths: dict[str, Any] = request.app.openapi()["paths"]
+    paths: OpenApiObject = request.app.openapi()["paths"]
     declared = paths.get(route.path, {})
     return sorted(method.upper() for method in declared if method in HTTP_METHODS)
 
@@ -46,11 +47,10 @@ def query_parameters_of(request: Request) -> set[str]:
     }
 
 
-# `Any` in the values, as above.
-def body_schema_of(request: Request) -> dict[str, Any]:
+def body_schema_of(request: Request) -> OpenApiObject:
     """Schema of the JSON body of the operation; empty when it takes no body."""
     content = operation_of(request).get("requestBody", {}).get("content", {})
     reference: str = content.get(JSON_MEDIA_TYPE, {}).get("schema", {}).get("$ref", "")
-    schemas: dict[str, Any] = request.app.openapi().get("components", {}).get("schemas", {})
-    schema: dict[str, Any] = schemas.get(reference.rsplit("/", maxsplit=1)[-1], {})
+    schemas: OpenApiObject = request.app.openapi().get("components", {}).get("schemas", {})
+    schema: OpenApiObject = schemas.get(reference.rsplit("/", maxsplit=1)[-1], {})
     return schema

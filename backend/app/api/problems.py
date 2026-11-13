@@ -158,8 +158,11 @@ PROBLEM_SCHEMA = {
 }
 
 
-# `Any` in the values because that is the type of the `responses` parameter of FastAPI.
-def problem_responses(descriptions: Mapping[int, str]) -> dict[int | str, dict[str, Any]]:
+# What an endpoint hands to FastAPI as its `responses`: a description for each status.
+Responses = dict[int | str, dict[str, Any]]  # `Any`: the type of that parameter of FastAPI
+
+
+def problem_responses(descriptions: Mapping[int, str]) -> Responses:
     """The `responses` of an endpoint: each error status, declared as it is answered."""
     content = {PROBLEM_MEDIA_TYPE: {"schema": PROBLEM_SCHEMA}}
     return {

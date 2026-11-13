@@ -5,9 +5,11 @@ fails, in the order of the fields of the contract; then the unknown fields,
 in alphabetical order of their name.
 """
 
-from collections.abc import Iterable, Iterator, Mapping, Sequence
-from typing import Any
+from collections.abc import Iterable, Iterator, Sequence
 
+from pydantic_core import ErrorDetails
+
+from app.api.contract import OpenApiObject
 from app.api.problems import FieldCode, FieldError
 
 # Error types of Pydantic that have a code in the contract, with the message to show.
@@ -34,11 +36,14 @@ class UntranslatedValidationError(Exception):
     """A validation failed with an error that the contract has no code for: a bug of ours."""
 
 
-# `Any` in the values of both parameters: they are what Pydantic and the OpenAPI document give.
 def field_errors(
-    raw_errors: Sequence[Mapping[str, Any]], body_schema: Mapping[str, Any]
+    raw_errors: Sequence[ErrorDetails], body_schema: OpenApiObject
 ) -> tuple[FieldError, ...]:
-    """The errors of the contract for the raw errors of one request."""
+    """The errors of the contract for the raw errors of one request.
+
+    The raw errors are the ones of Pydantic, with its own type; the schema of the body
+    is the one that the OpenAPI document publishes.
+    """
     first: dict[str, FieldError] = {}
     for field, raw in _failed_fields(raw_errors, body_schema):
         if field not in first:
@@ -59,8 +64,8 @@ def in_contract_order(
 
 
 def _failed_fields(
-    raw_errors: Sequence[Mapping[str, Any]], body_schema: Mapping[str, Any]
-) -> Iterator[tuple[str, Mapping[str, Any]]]:
+    raw_errors: Sequence[ErrorDetails], body_schema: OpenApiObject
+) -> Iterator[tuple[str, ErrorDetails]]:
     """Each failure with the field it belongs to."""
     for raw in raw_errors:
         if tuple(raw["loc"]) == WHOLE_BODY:
@@ -72,7 +77,7 @@ def _failed_fields(
             yield str(raw["loc"][1]), raw
 
 
-def _field_error(field: str, raw: Mapping[str, Any]) -> FieldError:
+def _field_error(field: str, raw: ErrorDetails) -> FieldError:
     translation = TRANSLATIONS.get(raw["type"])
     if translation is None:
         raise UntranslatedValidationError(f"{field}: {raw['type']}")
