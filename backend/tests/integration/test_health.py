@@ -76,3 +76,21 @@ def test_openapi_declares_the_contract_of_health(
     schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
     name = schema["$ref"].rsplit("/", maxsplit=1)[-1]
     assert list(document["components"]["schemas"][name]["properties"]) == ["status"]
+
+
+def test_openapi_declares_the_503_of_health_as_it_is_answered(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """SPEC-03/E-28: the 503 is declared under `application/problem+json`, with its fields.
+
+    The declared error is compared with a real one: the path is a folder, not a file.
+    """
+    client = client_for(tmp_path, monkeypatch)
+    declared = client.get("/openapi.json").json()["paths"]["/health"]["get"]["responses"]["503"]
+    assert list(declared["content"]) == [PROBLEM_JSON]
+    schema = declared["content"][PROBLEM_JSON]["schema"]
+    with caplog.at_level(logging.ERROR):
+        answered = client.get("/health").json()
+    assert set(schema["required"]) == set(answered)
+    assert set(answered) < set(schema["properties"])
+    assert sorted(set(schema["properties"]) - set(answered)) == ["errors"]

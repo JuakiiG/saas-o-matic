@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
-from app.api.problems import ProblemDocument
+from app.api.problems import problem_responses
 from app.services.health import HealthService
 
 router = APIRouter()
@@ -24,7 +24,7 @@ def get_health_service(request: Request) -> HealthService:
 @router.get(
     "/health",
     response_model=HealthStatus,
-    responses={503: {"model": ProblemDocument, "description": "La base de datos no responde"}},
+    responses=problem_responses({503: "La base de datos no responde"}),
 )
 def read_health(service: Annotated[HealthService, Depends(get_health_service)]) -> HealthStatus:
     service.check()

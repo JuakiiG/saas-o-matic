@@ -610,6 +610,16 @@ edición (norma n2).
 | 12:12 | p2 | `assert 307 == 404` en `/health/` y en `/probe/` | `redirect_slashes=False` al construir la aplicación. El commit de p1 es `604a058` (12:12:07 según `git log`) | `67 passed`; oráculo en verde |
 | 12:13 | p3 | `assert 200 == 400` en las tres filas nuevas (`NaN`, `Infinity`, `-Infinity`): el cuerpo se aceptaba | El guarda analiza el JSON con `parse_constant`, que rechaza esas tres constantes. El commit de p2 es `8de1f72` (12:12:55) | `70 passed`; oráculo en verde |
 | 12:18 | p4 | `Failed: DID NOT RAISE IntegrityError` en las cuatro filas nuevas. **Primera ejecución (12:14): solo tres en rojo.** La fila del texto en `users` de un tramo ya pasaba, pero por otro motivo: la rechazaba el `CHECK` del subtotal (`1000 * 'many'` vale 0), no el tipo. Se cambió esa fila (precio 0 y subtotal 0) para que solo el tipo pudiera rechazarla y se repitió: cuatro en rojo (12:16) | `STRICT` en las tres tablas de `schema.sql`. SPEC-03: regla nueva en 2.6, fila de historial y, **sin que el encargo lo nombrara**, E-21 ampliado y cuatro filas en 5.5 (precisión P-01, abajo). ADR-004: añadido con la versión mínima (SQLite 3.37.0; el entorno tiene la 3.42.0). El commit de p3 es `b600624` (12:13:46) | `74 passed`; oráculo en verde (20 correctas, 0 con fallo, 4 inactivas) |
+| 12:20 | p5 | `assert ['application/json'] == ['application/problem+json']` en el test nuevo de `/health` (12:19) | `problem_responses({estado: descripción})` en `app/api/problems.py`: devuelve el `responses` de un endpoint con cada error bajo `application/problem+json` y el esquema del problema. `/health` lo usa. Los modelos `ProblemDocument` y `FieldErrorDocument` desaparecen: solo servían para el OpenAPI. El test compara lo declarado con un `503` real: los campos obligatorios son los que se responden y el único opcional es `errors`. El commit de p4 es `9ec6866` (12:18:35) | `75 passed`; oráculo en verde (20 correctas, 0 con fallo, 4 inactivas) |
+
+Precisiones de la IA sobre p5, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| P-05 | El esquema del problema se escribe **en línea** en cada respuesta de error, como un diccionario constante (`PROBLEM_SCHEMA`), y no como un componente con nombre del OpenAPI | FastAPI solo registra como componente un modelo Pydantic, y un modelo lo documenta bajo `application/json`, que es justo lo que había que quitar. Coste: el documento repite el esquema en cada error de cada endpoint |
+| P-06 | La forma del error queda en dos sitios de `problems.py`: `problem_response` (lo que se responde) y `PROBLEM_SCHEMA` (lo que se declara). El test de `/health` compara los dos con un `503` real; **la entrada `errors` del esquema no se compara todavía con una respuesta real** | Se podrá comparar con el primer `422` de un endpoint real (SPEC-02) |
+| P-07 | `problem_responses` usa `Any` en su tipo de retorno, con un comentario en esa línea | Es el tipo del parámetro `responses` de FastAPI; `mypy --strict` no acepta otro más estrecho por la invarianza de `dict` |
+| P-08 | Solo se declaran los errores propios de cada endpoint (en `/health`, el `503`). Los genéricos (`400`, `404`, `405`, `415`, `422` por parámetro no documentado, `500`) no se declaran en cada operación | SPEC-03 4.4 solo lista el `200` y el `503`, y el test que ya existía exige exactamente esos dos. Si el Tech Lead los quiere en el OpenAPI, la ayuda ya sirve |
 
 Precisiones de la IA sobre p4, **sin aprobar**:
 
@@ -679,11 +689,14 @@ Precisiones de la IA sobre p4, **sin aprobar**:
 | Aprobar o cambiar T-01 a T-08 | A decidir por el Tech Lead |
 | Fijar en npm el margen de una semana de ADR-007 y comprobar la fecha de Angular CLI 21.2.29 | Al crear el frontend |
 | ~~Resto del paso 1: errores genéricos, CORS, `GET /health` y `schema.sql` con su enlace desde el índice de arquitectura~~ | Hecho entre las 11:27 y las 11:42 |
-| **Revisar el paso 1** y aprobar o cambiar G-01 a G-09, C-01 a C-04, H-01 a H-06 y Q-01 a Q-05 | Ahora, por el Tech Lead, antes de SPEC-02 |
+| ~~**Revisar el paso 1** y aprobar o cambiar G-01 a G-09, C-01 a C-04, H-01 a H-06 y Q-01 a Q-05~~ | Hecho a las 12:05: aprobado con cinco correcciones (p1 a p5), hechas entre las 12:11 y las 12:20 |
+| Aprobar o cambiar P-01 a P-08 (precisiones de p4 y p5) | A decidir por el Tech Lead |
+| **Base de datos creada antes de `9ec6866`**: sigue sin `STRICT`; hay que borrar el fichero (P-03) | Quien ya haya arrancado el backend |
+| **El cuerpo de la petición no tiene límite de tamaño**: limitación conocida | A documentar en el README (decisión del Tech Lead, 12:05) |
 | Reproducir las filas de SPEC-03 5.6 y 5.7 con los endpoints reales (CA-15 y CA-17); hoy están probadas con rutas de prueba | Con SPEC-02, SPEC-01 y SPEC-03, según exista cada endpoint |
 | Traducir los errores de validación del cuerpo y de la ruta a códigos por campo (`missing`, `not_an_integer`, `out_of_range`…) | Con el primer endpoint con cuerpo (SPEC-02) |
-| Prueba de arranque real con `uvicorn` tras el paso 1 (la orden fue denegada) | Cuando el Tech Lead lo autorice o lo haga él |
-| Decidir si se corrige la cabecera `Allow` del `405`, que solo nombra un método cuando la ruta admite dos | A decidir por el Tech Lead |
+| ~~Prueba de arranque real con `uvicorn` tras el paso 1 (la orden fue denegada)~~ | Hecha por el Tech Lead (lo afirma él; la IA no la ha visto) |
+| ~~Decidir si se corrige~~ **Corregir la cabecera `Allow` del `405`**, que solo nombra un método cuando la ruta admite dos | Con la primera ruta que tenga dos métodos, en SPEC-01 (decisión del Tech Lead, 12:05) |
 | Documentar la estructura del backend en `02-arquitectura/README.md` | Tras la revisión de la estructura |
 | Comprobar el comportamiento real de `python-stdnum` (CA-19) | Con SPEC-01, o antes si el Tech Lead lo pide |
 | Pendientes heredados de la sesión 03: precisiones de `CLAUDE.md` y `backend.md` del commit `ca1c81a`; hueco del hook si su comando no arranca; aprobación literal del cambio de A10 | A decidir por el Tech Lead |

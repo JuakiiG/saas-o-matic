@@ -8,9 +8,9 @@ never renamed; `detail` and `message` are Spanish text for people and may change
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 
 PROBLEM_MEDIA_TYPE = "application/problem+json"
 # Written out because the phrase of 422 depends on the Python version; the contract says this one.
@@ -107,20 +107,34 @@ def problem_response(problem: Problem, headers: Mapping[str, str] | None = None)
     )
 
 
-class FieldErrorDocument(BaseModel):
-    """Shape of one entry of `errors`, for the OpenAPI contract."""
+_TEXT = {"type": "string"}
+_FIELD_ERROR_SCHEMA = {
+    "type": "object",
+    "properties": {"field": _TEXT, "code": _TEXT, "message": _TEXT},
+    "required": ["field", "code", "message"],
+}
+# Shape of an error response, for the OpenAPI contract. Written inline and not as a
+# Pydantic model because FastAPI documents a model under `application/json`, which is
+# not the media type the errors are answered with.
+PROBLEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "type": _TEXT,
+        "title": _TEXT,
+        "status": {"type": "integer"},
+        "code": _TEXT,
+        "detail": _TEXT,
+        "errors": {"type": "array", "items": _FIELD_ERROR_SCHEMA},
+    },
+    "required": ["type", "title", "status", "code", "detail"],
+}
 
-    field: str
-    code: str
-    message: str
 
-
-class ProblemDocument(BaseModel):
-    """Shape of an error response, for the OpenAPI contract. Responses are built from `Problem`."""
-
-    type: str
-    title: str
-    status: int
-    code: str
-    detail: str
-    errors: list[FieldErrorDocument] | None = None
+# `Any` in the values because that is the type of the `responses` parameter of FastAPI.
+def problem_responses(descriptions: Mapping[int, str]) -> dict[int | str, dict[str, Any]]:
+    """The `responses` of an endpoint: each error status, declared as it is answered."""
+    content = {PROBLEM_MEDIA_TYPE: {"schema": PROBLEM_SCHEMA}}
+    return {
+        status: {"description": description, "content": content}
+        for status, description in descriptions.items()
+    }
