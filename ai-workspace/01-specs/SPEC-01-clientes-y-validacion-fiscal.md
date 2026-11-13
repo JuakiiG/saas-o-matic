@@ -162,9 +162,9 @@ no admite (D-01). Cualquier otra discrepancia la decide el Tech Lead; no se
 resuelve cambiando el test ni el validador por cuenta propia.
 
 El 2026-11-12 la última versión publicada era la 2.2 (consultado en PyPI).
-**No se ha instalado ni ejecutado: ese resultado es una expectativa, no un
-hecho comprobado.** El comportamiento real de la biblioteca se comprueba
-cuando se instale.
+**Comprobado el 2026-11-13** con `python-stdnum` 2.2, instalada como
+dependencia de test y con la versión fijada: el resultado esperado se
+cumple. Las cifras están en la nota «Sobre CA-19» (apartado 6).
 
 ### 2.8 Fuera de España
 
@@ -730,15 +730,30 @@ después se aplica el rango.
 | CA-18 | Un test unitario del dominio comprueba la forma de búsqueda de cada nombre de 5.9 (`José Pruebas SL` → `jose pruebas sl`, `Ñandú Pruebas SL` → `nandu pruebas sl`), y un test de integración comprueba que la columna guardada tras el alta coincide con ella. | E-33 |
 | CA-19 | Un test diferencial compara el validador del dominio con `python-stdnum` (dependencia solo de test, con la versión fijada; ADR-005) sobre dos conjuntos. **Exhaustivo del CIF**: las 17 letras de entidad × los 10 valores de control × las dos formas (dígito y letra), 340 identificadores. **Aleatorio**: 10.000 números generados con la semilla fija `20261112`, escrita como constante en el test; con cada uno se forman un DNI, un NIE y un CIF, cada uno con su carácter de control correcto y con uno incorrecto. **Resultado esperado**: todo lo que acepta el dominio lo acepta `python-stdnum`, y lo único que `python-stdnum` acepta y el dominio rechaza son CIF con el valor de control correcto en una forma que el grupo de su letra no admite (D-01). Cualquier otra discrepancia hace fallar el test y la decide el Tech Lead. | E-11, E-12, E-13 |
 
-**Sobre CA-17**: depende de `scripts/check.py`, que aún no existe; hasta
-entonces está **pendiente de implementar**, igual que CA-09 de SPEC-02.
+**Sobre CA-17**: la comprobación la hace `scripts/check.py`, que existe
+desde el 2026-11-12, igual que la de CA-09 de SPEC-02. Recorre el árbol
+sintáctico de los módulos de `domain/` y exige el 100 % de sentencias y
+ramas de `domain/`. Desde el 2026-11-13 la validación fiscal existe
+(`app/domain/tax_id.py` y `app/domain/customers.py`) y el criterio se
+comprueba en cada ejecución del oráculo.
 
-**Sobre CA-19**: es lo que permitirá decir que R-04 se apoya, para el CIF,
-en una convención contrastada con una implementación independiente y no
-solo en casos generados con el propio algoritmo. **Hoy no se puede decir**:
-el test no existe y la biblioteca no se ha instalado. El resultado esperado
-es una hipótesis sobre `python-stdnum`; si su comportamiento real resulta
-ser otro, lo decide el Tech Lead.
+**Sobre CA-19**: es lo que permite decir que R-04 se apoya, para el CIF, en
+una convención contrastada con una implementación independiente y no solo
+en casos generados con el propio algoritmo. **Comprobado el 2026-11-13**
+con `python-stdnum` 2.2 (`stdnum.es.nif.is_valid`); el resultado esperado
+de 2.7 se cumple:
+
+- **Exhaustivo del CIF** (340 identificadores con el valor de control
+  correcto, en las dos formas): el dominio no acepta ninguno que
+  `python-stdnum` rechace, y `python-stdnum` acepta 100 que el dominio
+  rechaza, todos por la forma del control: las 6 letras de entidad que
+  exigen letra y las 4 que exigen dígito, por 10 valores (D-01).
+- **Aleatorio** (semilla `20261112`, 10.000 números y 60.000
+  identificadores): los dos validadores coinciden en todos, 30.000
+  aceptados y 30.000 rechazados.
+
+El test se repite en cada ejecución del oráculo. Si una versión nueva de la
+biblioteca cambia el resultado, lo decide el Tech Lead.
 
 ## 7. Decisiones de diseño
 
@@ -800,3 +815,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A2 (plan informativo, valores de libre elección) y, de A4, solo el uso del tipo general; la lista de países sigue siendo decisión propia. El Tech Lead mantiene los planes de D-04 y su visto bueno a esta spec. Cabecera y apartado 8 actualizados; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |
 | 2026-11-13 | Decisión del Tech Lead al revisar la implementación: el `id` de la ruta tiene una sola forma, escrita en las convenciones del índice («Identificadores»). Seis filas nuevas en 5.10 (`1.0`, `+1`, `01`, `1_0` y un espacio delante o detrás), todas `not_an_integer`; E-24 y CA-12 no cambian de texto y las cubren. Motivo: un cliente, una dirección; antes esas formas devolvían un cliente (`1_0`, el 10) |
 | 2026-11-13 | Decisión del Tech Lead al revisar la implementación: fila `503` `service_unavailable` en las tablas de errores de 4.1, 4.2 y 4.3. Motivo: todo endpoint que lee la base de datos declara el `503` que ya responde (regla de las convenciones comunes); `GET /meta` no la lee y no lo declara. El OpenAPI de las tres operaciones lo declara (CA-16) |
+| 2026-11-13 | Corrección ordenada por el Tech Lead: tres notas que habían quedado desfasadas dicen ahora lo que ya es un hecho. 2.7: `python-stdnum` 2.2 está instalada y la prueba diferencial se ha ejecutado. «Sobre CA-17»: `scripts/check.py` existe y comprueba el criterio en cada ejecución. «Sobre CA-19»: el resultado esperado se cumple, con sus cifras. Sin cambios en reglas, requisitos, criterios ni casos |

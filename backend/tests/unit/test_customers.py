@@ -5,8 +5,10 @@ import pytest
 from app.domain.customers import (
     CUSTOMER_FIELDS,
     PLANS,
+    CustomerSearch,
     InvalidCustomerError,
     NewCustomer,
+    customer_search,
     search_form,
     validate_new_customer,
 )
@@ -98,6 +100,31 @@ def test_fields_of_the_contract_are_the_five_of_the_spec_in_its_order() -> None:
 def test_search_form_ignores_case_and_accents(name: str, expected: str) -> None:
     """SPEC-01/E-33: NFD, no diacritical marks and `casefold`, for every name of 5.9 (CA-18)."""
     assert search_form(name) == expected
+
+
+# Written after the code that it tests (session 04, r4): it was never seen failing.
+@pytest.mark.parametrize(
+    ("text", "name", "tax_id"),
+    [
+        ("JOSÉ", "jose", "JOSÉ"),
+        ("  ñandú ", "nandu", "ñANDú"),
+        ("b-12345", "b-12345", "B12345"),
+        ("b.1234", "b.1234", "B1234"),
+        ("Alfa Uno", "alfa uno", "ALFAUNO"),
+        ("100%_\\", "100%_\\", "100%_\\"),
+        ("- .", "- .", ""),
+        ("\t", "\t", "\t"),
+        ("", "", ""),
+        ("   ", "", ""),
+        (None, "", ""),
+    ],
+    ids=ascii,
+)
+def test_customer_search_gives_the_two_forms_of_the_trimmed_text(
+    text: str | None, name: str, tax_id: str
+) -> None:
+    """SPEC-01/E-25, SPEC-01/E-29: search form of the name and normalized identifier (2.10)."""
+    assert customer_search(text) == CustomerSearch(name, tax_id)
 
 
 def test_plans_are_the_three_of_the_spec_with_their_names() -> None:
