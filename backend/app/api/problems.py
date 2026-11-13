@@ -36,6 +36,9 @@ class ErrorCode(StrEnum):
 
 
 class FieldCode(StrEnum):
+    MISSING = "missing"
+    NOT_AN_INTEGER = "not_an_integer"
+    OUT_OF_RANGE = "out_of_range"
     UNKNOWN_FIELD = "unknown_field"
 
 

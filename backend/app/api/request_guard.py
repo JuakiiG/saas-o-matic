@@ -10,6 +10,7 @@ import json
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
+from app.api.contract import JSON_MEDIA_TYPE, query_parameters_of
 from app.api.problems import (
     MALFORMED_REQUEST,
     UNSUPPORTED_MEDIA_TYPE,
@@ -21,7 +22,6 @@ from app.api.problems import (
     validation_problem,
 )
 
-JSON_MEDIA_TYPE = "application/json"
 UNKNOWN_PARAMETER_MESSAGE = "Parámetro no documentado."
 
 
@@ -68,20 +68,9 @@ class RequestBodyGuard(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-def _documented_query_parameters(request: Request) -> set[str]:
-    """Query parameters that the OpenAPI contract declares for the matched operation."""
-    paths = request.app.openapi()["paths"]
-    operation = paths.get(request.scope["route"].path, {}).get(request.method.lower(), {})
-    return {
-        parameter["name"]
-        for parameter in operation.get("parameters", [])
-        if parameter["in"] == "query"
-    }
-
-
 def reject_undocumented_query_parameters(request: Request) -> None:
     """Dependency of every endpoint: an undocumented query parameter is a 422, not ignored."""
-    documented = _documented_query_parameters(request)
+    documented = query_parameters_of(request)
     unknown = [name for name in dict.fromkeys(request.query_params) if name not in documented]
     if unknown:
         errors = (

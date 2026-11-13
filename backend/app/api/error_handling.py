@@ -7,9 +7,11 @@ client only gets `internal_error`.
 import logging
 
 from fastapi import FastAPI, Request, Response
+from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
+from app.api.contract import body_schema_of
 from app.api.problems import (
     INTERNAL_ERROR,
     METHOD_NOT_ALLOWED,
@@ -17,7 +19,9 @@ from app.api.problems import (
     SERVICE_UNAVAILABLE,
     ProblemError,
     problem_response,
+    validation_problem,
 )
+from app.api.validation import field_errors
 from app.services.health import ServiceUnavailableError
 
 logger = logging.getLogger(__name__)
@@ -47,6 +51,12 @@ def install_error_handling(app: FastAPI) -> None:
     @app.exception_handler(ProblemError)
     async def handle_problem(request: Request, error: ProblemError) -> Response:
         return problem_response(error.problem)
+
+    @app.exception_handler(RequestValidationError)
+    async def handle_invalid_request(request: Request, error: RequestValidationError) -> Response:
+        # Replaces the handler of the framework: its format never leaves the server.
+        errors = field_errors(error.errors(), body_schema_of(request))
+        return problem_response(validation_problem(errors))
 
     @app.exception_handler(HTTPException)
     async def handle_http_error(request: Request, error: HTTPException) -> Response:
