@@ -1,8 +1,8 @@
 """The stored simulations: a row with the calculation and three rows with its breakdown."""
 
+import sqlite3
 from itertools import groupby
-from operator import itemgetter
-from typing import Any
+from typing import NamedTuple
 
 from app.domain.pricing import Quote, TierCharge
 from app.domain.simulations import NewSimulation, Simulation, SimulationHistory
@@ -34,27 +34,63 @@ SELECT_HISTORY = (
 TIER_POSITION = 11
 
 
-def _stored_simulation(rows: list[tuple[Any, ...]]) -> Simulation:
+class SimulationColumns(NamedTuple):
+    """The columns of a simulation in a row of `SELECT_HISTORY`, in the order it selects them.
+
+    The types are the ones that the STRICT tables guarantee for each column.
+    """
+
+    id: int
+    customer_id: int
+    active_users: int
+    storage_gb: int
+    estimated_api_calls: int
+    country: str
+    base_cents: int
+    tax_rate_bp: int
+    tax_cents: int
+    total_cents: int
+    created_at: str
+
+
+class HistoryRow(NamedTuple):
+    """A row of `SELECT_HISTORY`: a simulation and one of its tiers, or none (LEFT JOIN)."""
+
+    simulation: SimulationColumns
+    tier: TierCharge | None
+
+
+def _history_rows(cursor: sqlite3.Cursor) -> list[HistoryRow]:
+    """Every row of `SELECT_HISTORY`, typed here, where it leaves the database untyped."""
+    return [
+        HistoryRow(
+            SimulationColumns(*row[:TIER_POSITION]),
+            None if row[TIER_POSITION] is None else TierCharge(*row[TIER_POSITION + 1 :]),
+        )
+        for row in cursor.fetchall()
+    ]
+
+
+def _stored_simulation(rows: list[HistoryRow]) -> Simulation:
     """A simulation from its rows of `SELECT_HISTORY`, with the amounts exactly as stored."""
-    (
-        simulation_id,
-        customer_id,
-        active_users,
-        storage_gb,
-        estimated_api_calls,
-        country,
-        base_cents,
-        tax_rate_bp,
-        tax_cents,
-        total_cents,
-        created_at,
-    ) = rows[0][:TIER_POSITION]
-    tiers = tuple(
-        TierCharge(*row[TIER_POSITION + 1 :]) for row in rows if row[TIER_POSITION] is not None
+    stored = rows[0].simulation
+    tiers = tuple(row.tier for row in rows if row.tier is not None)
+    quote = Quote(
+        stored.active_users,
+        tiers,
+        stored.base_cents,
+        stored.country,
+        stored.tax_rate_bp,
+        stored.tax_cents,
+        stored.total_cents,
     )
-    quote = Quote(active_users, tiers, base_cents, country, tax_rate_bp, tax_cents, total_cents)
     return Simulation(
-        simulation_id, customer_id, storage_gb, estimated_api_calls, quote, created_at
+        stored.id,
+        stored.customer_id,
+        stored.storage_gb,
+        stored.estimated_api_calls,
+        quote,
+        stored.created_at,
     )
 
 
@@ -123,7 +159,7 @@ class SimulationRepository:
             # One read transaction: the total and the list are of the same moment.
             connection.execute(BEGIN)
             count: int = connection.execute(COUNT_SIMULATIONS, (customer_id,)).fetchone()[0]
-            rows = connection.execute(SELECT_HISTORY, (customer_id, limit)).fetchall()
-        by_simulation = groupby(rows, key=itemgetter(0))
+            rows = _history_rows(connection.execute(SELECT_HISTORY, (customer_id, limit)))
+        by_simulation = groupby(rows, key=lambda row: row.simulation.id)
         simulations = tuple(_stored_simulation(list(group)) for _, group in by_simulation)
         return SimulationHistory(count, simulations)

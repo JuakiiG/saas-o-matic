@@ -118,7 +118,11 @@ dificulta revisarlo.*
   explícita: nada de `except` vacío ni de `catch` que traga el error.
 - Sin dependencias nuevas sin aprobación. Versiones siempre fijadas.
 - Sin `# noqa`, `# type: ignore`, `eslint-disable` ni `any` salvo con un
-  comentario que justifique esa línea concreta.
+  comentario que justifique esa línea concreta. El oráculo comprueba los
+  tres primeros; **el uso de `Any` (Python) o `any` (TypeScript) sin su
+  comentario no lo comprueba**: lo mira quien revisa. *Por qué se dice
+  aquí: un `Any` sin comentario pasó el oráculo y lo encontró el evaluador
+  (H-12 de la evaluación del backend).*
 
 ## Lo que nunca entra en el repo
 
