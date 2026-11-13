@@ -141,6 +141,14 @@ def test_customer_with_an_invalid_id_returns_422_in_the_field_id(
     assert field_codes(client.get(f"/customers/{customer_id}")) == [("id", code)]
 
 
+# Written after the code that it tests (session 05, H-03): it was never seen failing.
+def test_undocumented_parameter_is_reported_alone_when_the_id_is_also_invalid(
+    client: TestClient,
+) -> None:
+    """SPEC-03/E-29, SPEC-01/E-24: the query string is checked before the route is validated."""
+    assert field_codes(client.get("/customers/abc?x=1")) == [("x", "unknown_field")]
+
+
 @pytest.mark.parametrize(("text", "expected"), SEARCH_ROWS, ids=ascii)
 def test_search_returns_the_customers_of_the_table_in_its_order(
     searchable: TestClient, text: str, expected: list[int]

@@ -132,6 +132,16 @@ alternativas y el motivo de cada una están en
     (SPEC-01, 2.12), comparando por punto de código: las mayúsculas van
     antes que las minúsculas. Los parámetros de consulta no documentados
     van en el orden en que llegan en la petición.
+  - **Los parámetros de consulta se comprueban antes que la ruta y el
+    cuerpo.** Si la petición trae alguno no documentado, se responde solo
+    con ellos: un `unknown_field` por cada uno, sin los errores del `id` de
+    la ruta ni los de los campos del cuerpo, que no llegan a validarse.
+    Así, `POST /simulations?debug=1` con un cuerpo no válido responde solo
+    `debug: unknown_field`, y `GET /customers/abc?x=1`, solo
+    `x: unknown_field`. *Por qué: es lo que el backend hace desde SPEC-02,
+    y juntar los dos grupos de errores en una respuesta obligaría a fijar
+    el orden entre ambos; el Tech Lead mantuvo el comportamiento y mandó
+    escribirlo.*
   - Un **cuerpo ausente equivale a `{}`**: un `missing` por cada campo
     obligatorio.
   - Una validación que falla **sin tener un código en el contrato** es un
@@ -208,3 +218,4 @@ de cada spec.
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-01: en la ruta, un `id` tiene una sola forma (`0`, o un signo menos opcional y dígitos ASCII sin ceros a la izquierda); todo lo demás es `not_an_integer`, y el rango se aplica después. Regla nueva en «Identificadores». Motivo: un cliente, una dirección; hasta ahora `1.0`, `+1` y `01` devolvían el cliente 1 y `1_0` se leía como 10, porque lo decidía la biblioteca de validación |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-02, y el caso A-01 de su respuesta), decidida por el Tech Lead: un cuerpo con un *surrogate* suelto, en un valor o en un nombre de campo, responde `400` `malformed_request`. Fila del `400` de la tabla de errores genéricos y párrafo «El texto del cuerpo». Motivo: respondía `500` `internal_error` en el nombre y el email del alta (al guardar) y en un nombre de campo desconocido de cualquier `POST` (al escribir el `422`). Una sola regla en el guarda y no una por campo, porque el fallo saltaba en puntos distintos de los tres `POST`; RFC 8259 (8.2) dice que ese texto no representa caracteres Unicode |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-07), decidida por el Tech Lead: el cuerpo se lee como UTF-8 estricto; UTF-16 y UTF-32, con BOM o sin él, y UTF-8 con BOM responden `400` `malformed_request`. Fila del `400` («JSON válido en UTF-8») y primera frase de «El texto del cuerpo». Motivo: esos cuerpos se aceptaban, porque el lector de JSON adivinaba la codificación; RFC 8259 (8.1) fija UTF-8 y sin BOM |
+| 2026-11-13 | Corrección de la evaluación independiente del backend (H-03), decidida por el Tech Lead: pasa a estar escrita en «Errores de validación» la regla de que los parámetros de consulta se comprueban antes que la ruta y el cuerpo y, si alguno no está documentado, se responde solo con ellos. Sin cambio de comportamiento. Motivo: la regla solo estaba en el código y en un test (precisión W-15 de la sesión 04), y una regla que no está escrita no es parte del contrato |
