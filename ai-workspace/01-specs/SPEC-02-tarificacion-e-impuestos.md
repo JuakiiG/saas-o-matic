@@ -267,9 +267,18 @@ Con `active_users` válido salvo que se indique.
 **Sobre CA-09**: la comprobación la hace `scripts/check.py`, que existe
 desde el 2026-11-12. Recorre el árbol sintáctico (AST) de los módulos de
 `domain/` y exige el 100 % de sentencias y ramas de `domain/` con
-`coverage report --include=app/domain/* --fail-under=100`. Mientras
-`domain/` no tenga código, pasa sin nada que medir: el criterio **no puede
-darse por cumplido** hasta que exista el cálculo.
+`coverage report --include=app/domain/* --fail-under=100`. Desde el
+2026-11-13 el cálculo existe (`app/domain/pricing.py` y
+`app/domain/countries.py`) y el oráculo mide sobre él el 100 % de
+sentencias y ramas: el criterio se comprueba en cada ejecución del oráculo.
+
+**Sobre CA-10** (limitación conocida): el OpenAPI que genera FastAPI
+publica los límites `minimum` y `maximum` como decimales (`0.0`,
+`100000.0`), y el máximo de `customer_id` sale como
+`9.223372036854776e+18`, que no es exacto. El documento generado no se
+retoca (decisión del Tech Lead, 2026-11-13). La validación sí usa el entero
+exacto: `9223372036854775807` se admite y `9223372036854775808` se rechaza
+con `out_of_range` (tabla 5.5).
 
 ## 7. Decisiones de diseño
 
@@ -318,3 +327,4 @@ está cerrada (`supuestos.md`).
 | 2026-11-13 | Corrección ordenada por el Tech Lead: la nota «Sobre CA-09» decía que `scripts/check.py` aún no existía. Existe desde el 2026-11-12; la nota dice ahora qué comprueba y que el criterio no se da por cumplido mientras `domain/` no tenga código. Motivo: la nota había quedado desfasada. Sin cambios en requisitos, criterios ni casos |
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A2, A3 y A5 y, de A4, solo el uso del tipo general; la lista de países sigue siendo decisión propia. El Tech Lead mantiene su visto bueno a esta spec. Cabecera, 2.2, 5.2, decisión 6 del apartado 7 y apartado 8 actualizados, con el enlace a ADR-008; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |
 | 2026-11-13 | Decisión del Tech Lead al revisar esta spec, ya implementada: fila `503` `service_unavailable` en la tabla de errores del apartado 4. Motivo: una petición válida con la base de datos inaccesible respondía `500` `internal_error`; ahora responde como `GET /health`, por la regla nueva de las convenciones comunes (índice de specs, ADR-006). Sin cambios en el cálculo ni en la validación |
+| 2026-11-13 | Decisión del Tech Lead al revisar esta spec: la nota «Sobre CA-09» deja de decir que el criterio no puede darse por cumplido, porque el cálculo ya existe y `domain/` está al 100 %; nota nueva «Sobre CA-10» con la limitación de los límites publicados como decimales en el OpenAPI, que no se corrige. Sin cambios en reglas, requisitos ni casos |

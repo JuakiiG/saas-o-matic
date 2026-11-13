@@ -233,6 +233,25 @@ def test_quote_without_fields_returns_422_with_both_missing(
     assert field_codes(response) == [("customer_id", "missing"), ("active_users", "missing")]
 
 
+def test_undocumented_parameter_is_reported_alone_when_the_body_is_also_invalid(
+    client: TestClient,
+) -> None:
+    """SPEC-03/E-29, SPEC-02/E-14: the query string is checked before the body is validated."""
+    response = client.post("/pricing/quote?debug=1", json={"customer_id": 0})
+    assert field_codes(response) == [("debug", "unknown_field")]
+
+
+def test_openapi_declares_the_errors_of_a_422_as_they_are_answered(client: TestClient) -> None:
+    """SPEC-02/E-14: the declared 422, `errors` included, has the fields of a real one (CA-10)."""
+    operation = client.get("/openapi.json").json()["paths"]["/pricing/quote"]["post"]
+    schema = operation["responses"]["422"]["content"][PROBLEM_JSON]["schema"]
+    answered = quote(client, active_users=-1).json()
+    assert set(answered) == set(schema["properties"])
+    declared_error = schema["properties"]["errors"]["items"]
+    assert [set(error) for error in answered["errors"]] == [set(declared_error["properties"])]
+    assert set(declared_error["required"]) == set(declared_error["properties"])
+
+
 def test_quote_for_a_country_without_tax_rate_returns_500_tax_rate_not_defined(
     client: TestClient, caplog: pytest.LogCaptureFixture
 ) -> None:
