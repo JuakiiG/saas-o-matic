@@ -3,6 +3,9 @@
 Run it from this folder with `uv run uvicorn --factory app.main:create_app`.
 """
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,9 +29,21 @@ def create_app() -> FastAPI:
     and every test gets an application of its own.
     """
     settings = load_settings()
-    app = FastAPI(title=API_TITLE, dependencies=[Depends(reject_undocumented_query_parameters)])
+    database = Database(settings.database_path)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # On startup, not when the application is built: building it touches no disk.
+        database.create_schema()
+        yield
+
+    app = FastAPI(
+        title=API_TITLE,
+        lifespan=lifespan,
+        dependencies=[Depends(reject_undocumented_query_parameters)],
+    )
     # Built here and handed to the endpoints through `Depends`: no global state.
-    app.state.health_service = HealthService(Database(settings.database_path))
+    app.state.health_service = HealthService(database)
     app.include_router(health.router)
     # The middleware added last is the outermost. CORS goes outside the guards so that
     # every response, error or not, leaves with its headers (SPEC-03/E-24).

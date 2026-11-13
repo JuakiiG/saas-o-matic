@@ -33,10 +33,10 @@ Tres tablas de SQLite. Las columnas y sus restricciones están en SPEC-03
 | `simulations` | Datos de entrada de la simulación y la foto de su cálculo: país, base, tipo, impuesto y total | Muchas por cliente (`customer_id`), sin borrado en cascada |
 | `simulation_tiers` | El desglose del cálculo, una fila por tramo | Tres por simulación (`simulation_id`, `position`) |
 
-**El DDL vive en el backend**, en un `schema.sql` versionado que se aplica
-al arrancar. Esta carpeta no guarda una copia: muestra el modelo y enlaza a
-ese fichero. El fichero se escribe con el esqueleto del backend; el enlace
-se añade aquí cuando exista.
+**El DDL vive en el backend**, en
+[`backend/app/repositories/schema.sql`](../../backend/app/repositories/schema.sql),
+versionado, que se aplica al arrancar. Esta carpeta no guarda una copia:
+muestra el modelo y enlaza a ese fichero.
 
 ## Directrices dadas a la IA
 
@@ -52,7 +52,5 @@ Viven en la raíz del repo, que es donde la herramienta las carga:
 
 ## Pendiente
 
-- El `schema.sql` del backend y su enlace desde «Modelo de datos»: con el
-  esqueleto del backend.
 - Estructura de carpetas definitiva de cada proyecto: se documenta al
   crearlos.

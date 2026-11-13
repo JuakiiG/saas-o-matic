@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-13 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | A2 a A5 decididos por el Tech Lead sin confirmación externa y bloque backend aprobado (SPEC-01, SPEC-02 y SPEC-03); SPEC-04 sigue en `borrador`. Esqueleto del backend con uv: 9 dependencias directas con versión exacta, 33 en `uv.lock`, cuatro capas vacías y un test de humo. Oráculo en verde con 19 comprobaciones activas y 4 inactivas. Sesión parada a la espera de la revisión de versiones y estructura, con cuatro hallazgos sin resolver (V-01 a V-04) |
+| **Resultado** | A2 a A5 decididos por el Tech Lead sin confirmación externa y bloque backend aprobado (SPEC-01, SPEC-02 y SPEC-03); SPEC-04 sigue en `borrador`. Esqueleto del backend con uv, revisado y aprobado: `httpx2` en lugar de `httpx`, avisos como errores y margen de una semana en las versiones (ADR-007). El oráculo usa `uv run --locked` y mide el 90 % sobre las ramas. **Paso 1 del backend completo**: errores genéricos, CORS, `GET /health` y esquema, con 64 tests. Oráculo en verde con 20 comprobaciones activas y 4 inactivas. Sesión parada a la espera de la revisión del paso 1, antes de SPEC-02 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -68,6 +68,7 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 11:32 | *(este commit)* | El commit de documentación es `c6e13f2` (11:26:01 según `git log`). Pieza 1 del paso 1, errores genéricos: rojo a las 11:30, verde a las 11:31 y oráculo en verde a las 11:31 (apartado 3) |
 | 11:34 | *(este commit)* | El commit de la pieza 1 es `fd8da13` (11:32:30 según `git log`). Pieza 2, CORS: rojo a las 11:33, verde y oráculo en verde a las 11:34 (apartado 3) |
 | 11:37 | *(este commit)* | El commit de la pieza 2 es `54de302` (11:35:04 según `git log`). Pieza 3, `GET /health`: rojo a las 11:36, verde y oráculo en verde a las 11:37 (apartado 3) |
+| 11:42 | *(este commit)* | El commit de la pieza 3 es `33033eb` (11:37:49 según `git log`). Pieza 4, esquema: rojo y verde a las 11:39, mutaciones a las 11:40, oráculo en verde a las 11:41 (apartado 3). **La IA para aquí**: paso 1 terminado, a la espera de la revisión antes de SPEC-02 |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -436,6 +437,62 @@ operación). **Verde (11:37)**: `38 passed`, todo cubierto. Oráculo en verde:
 | H-05 | En el OpenAPI, el cuerpo del `503` figura bajo `application/json` y no bajo `application/problem+json`, que es lo que de verdad se responde. Es como FastAPI documenta una respuesta adicional con modelo; no se ha escrito código para cambiarlo |
 | H-06 | Texto del `503`: «El servicio no está disponible en este momento.» |
 
+### Paso 1 · Pieza 4: esquema de la base de datos (11:38–11:42)
+
+Requisitos: SPEC-03/E-19, E-20, E-21, E-22 y E-32 (2.6 y 5.5; CA-10, CA-11
+y CA-12). El DDL está en `backend/app/repositories/schema.sql`, enlazado
+desde el índice de arquitectura; se aplica al arrancar (`lifespan`) con
+`CREATE TABLE IF NOT EXISTS`, y cada conexión ejecuta
+`PRAGMA foreign_keys = ON`.
+
+**Rojo (11:39)**: `2 failed, 1 passed, 23 errors`. Los 25 que no pasan
+fallan por **la misma aserción**, «the application did not create the
+database on startup»; pytest cuenta 23 como error y no como fallo porque la
+aserción salta al preparar la conexión del test. El que pasaba es el de la
+ruta por defecto (E-32), cuyo código entró en la pieza 3. **Verde (11:39)**:
+`64 passed`, 216 sentencias y 14 ramas cubiertas.
+
+**Como ese rojo no demuestra que cada test de restricción detecte lo suyo**,
+la IA hizo tres mutaciones sobre el código ya en verde, restaurando después
+cada fichero: sin `PRAGMA foreign_keys`, fallan los tres tests de claves
+foráneas; sin el `CHECK` del total, falla solo el caso del total; con
+`tax_cents` como `REAL`, falla el test de tipos. No es una prueba de
+mutación completa.
+
+Oráculo en verde (11:41): 20 correctas, 0 con fallo y 4 inactivas; 14 de 14
+ramas; 68 requisitos del backend sin test.
+
+**Precisiones de la IA, sin aprobar**:
+
+| # | Precisión |
+|---|---|
+| Q-01 | El esquema se crea **al arrancar** (`lifespan`), no al construir la aplicación. Un cliente de test que no arranca la aplicación no toca el disco |
+| Q-02 | Si el esquema no se puede crear, el arranque falla con el error original; no se captura |
+| Q-03 | Además de las filas de 5.5, se prueban los negativos de todas las columnas con `>= 0`, un tramo de una simulación inexistente, que ninguna columna admite nulos salvo `to_users` y la unicidad de `(country, tax_id)` |
+| Q-04 | Sin tablas `STRICT`, sin índices adicionales y sin `AUTOINCREMENT`: la spec no los pide |
+| Q-05 | El test de la unicidad cita SPEC-03/E-22 y **no** SPEC-01/E-19 (el `409`), para que la trazabilidad no dé por cubierto un requisito que solo se probará con su endpoint. La IA lo había citado al principio y lo corrigió antes del commit |
+
+**No hecho**: la prueba de arranque real con `uvicorn` tras el paso 1. La
+IA la lanzó con una base de datos temporal y parando el proceso por su PID,
+pero **la ejecución de esa orden fue denegada** y no la repitió. El arranque
+con `lifespan` solo está comprobado con el cliente de test.
+
+### Cierre del paso 1 (11:42)
+
+Lo que queda al parar:
+
+- **Paso 1 completo**: errores genéricos, CORS, `GET /health` y esquema, en
+  cuatro commits, cada uno con el oráculo en verde. 64 tests del backend y
+  73 de `scripts/`.
+- **Lo común está probado con rutas de prueba**, no con los endpoints de
+  negocio, que no existen: E-24 a E-26, E-29 a E-31 y E-33 figuran como
+  cubiertos en la trazabilidad, pero CA-15 y CA-17 piden esas filas con
+  `/meta`, `/customers`, `/simulations` y `/pricing/quote`.
+- No existe ningún código de `domain/`: sus tres comprobaciones pasan sin
+  nada que medir.
+- Sin aprobar: T-01 a T-08, G-01 a G-09, C-01 a C-04, H-01 a H-06 y Q-01 a
+  Q-05.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -468,8 +525,19 @@ operación). **Verde (11:37)**: `38 passed`, todo cubierto. Oráculo en verde:
   `httpx2` más allá de su ficha en PyPI.
 - El comportamiento real de `python-stdnum` con el CIF (CA-19): está
   instalado, pero no se ha ejecutado nada con él.
-- Que `uv run` no vuelva a resolver por su cuenta: el oráculo llama a
-  `uv run` sin `--locked`.
+- ~~Que `uv run` no vuelva a resolver por su cuenta~~: el oráculo usa
+  `uv run --locked` desde `203d602`, comprobado con un `pyproject.toml`
+  desfasado a propósito.
+- El arranque real con `uvicorn` después del paso 1: solo se comprobó tras
+  el esqueleto. La creación del esquema al arrancar está probada con el
+  cliente de test.
+- Las filas de SPEC-03 5.6 y 5.7 con los endpoints reales: están probadas
+  con rutas de prueba.
+- El comportamiento de CORS en un navegador de verdad.
+- Que la comprobación de ramas del oráculo lea bien un informe real con
+  ramas sin cubrir: con el código actual todas están cubiertas (14 de 14);
+  los casos por debajo del umbral solo se han probado con informes
+  simulados.
 - Nada fuera de Windows.
 
 ## 6. Tareas pendientes
@@ -483,7 +551,12 @@ operación). **Verde (11:37)**: `38 passed`, todo cubierto. Oráculo en verde:
 | **SPEC-03/E-18 no está cubierto**: la trazabilidad lo da por probado porque el test de humo lo cita, pero falta el test de CA-09 (`405` en `PUT`, `PATCH` y `DELETE` y datos sin cambios) | Con SPEC-03 (decisión f4) |
 | Aprobar o cambiar T-01 a T-08 | A decidir por el Tech Lead |
 | Fijar en npm el margen de una semana de ADR-007 y comprobar la fecha de Angular CLI 21.2.29 | Al crear el frontend |
-| Resto del paso 1: errores genéricos, CORS, `GET /health` y `schema.sql` con su enlace desde el índice de arquitectura | Tras la revisión del esqueleto |
+| ~~Resto del paso 1: errores genéricos, CORS, `GET /health` y `schema.sql` con su enlace desde el índice de arquitectura~~ | Hecho entre las 11:27 y las 11:42 |
+| **Revisar el paso 1** y aprobar o cambiar G-01 a G-09, C-01 a C-04, H-01 a H-06 y Q-01 a Q-05 | Ahora, por el Tech Lead, antes de SPEC-02 |
+| Reproducir las filas de SPEC-03 5.6 y 5.7 con los endpoints reales (CA-15 y CA-17); hoy están probadas con rutas de prueba | Con SPEC-02, SPEC-01 y SPEC-03, según exista cada endpoint |
+| Traducir los errores de validación del cuerpo y de la ruta a códigos por campo (`missing`, `not_an_integer`, `out_of_range`…) | Con el primer endpoint con cuerpo (SPEC-02) |
+| Prueba de arranque real con `uvicorn` tras el paso 1 (la orden fue denegada) | Cuando el Tech Lead lo autorice o lo haga él |
+| Decidir si se corrige la cabecera `Allow` del `405`, que solo nombra un método cuando la ruta admite dos | A decidir por el Tech Lead |
 | Documentar la estructura del backend en `02-arquitectura/README.md` | Tras la revisión de la estructura |
 | Comprobar el comportamiento real de `python-stdnum` (CA-19) | Con SPEC-01, o antes si el Tech Lead lo pide |
 | Pendientes heredados de la sesión 03: precisiones de `CLAUDE.md` y `backend.md` del commit `ca1c81a`; hueco del hook si su comando no arranca; aprobación literal del cambio de A10 | A decidir por el Tech Lead |
