@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-13 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | A2 a A5 decididos por el Tech Lead sin confirmación externa y bloque backend aprobado (SPEC-01, SPEC-02 y SPEC-03); SPEC-04 sigue en `borrador`. Esqueleto del backend con uv, revisado y aprobado: `httpx2` en lugar de `httpx`, avisos como errores y margen de una semana en las versiones (ADR-007). El oráculo usa `uv run --locked` y mide el 90 % sobre las ramas. **Paso 1 del backend completo**: errores genéricos, CORS, `GET /health` y esquema, con 64 tests. Oráculo en verde con 20 comprobaciones activas y 4 inactivas. Sesión parada a la espera de la revisión del paso 1, antes de SPEC-02. **Añadido a las 12:34**: llegó la respuesta a la consulta de A2 a A5 (registrada sin cambiar ninguna regla; ADR-008 propuesto); el paso 1 se aprobó con cinco correcciones, hechas una por commit (p1 a p5); y **SPEC-02 está implementada** en tres piezas: dominio, traducción de los errores de validación y `POST /pricing/quote`. 160 tests del backend, `domain/` al 100 %, oráculo en verde con 20 comprobaciones activas y 4 inactivas. Quedan 34 precisiones de la IA sin aprobar (P-01 a P-08 y W-01 a W-26; la más importante, W-14). Sesión parada a la espera de la revisión de SPEC-02, antes de SPEC-01. **Añadido a las 14:11**: SPEC-02 se aprobó a las 13:07 con siete cambios, hechos en tres commits (regla del `503` para cualquier endpoint, reglas de validación escritas en el índice y ADR-008 `aceptado`). **SPEC-01 está implementada** en tres piezas: identificador fiscal en el dominio, con la prueba diferencial contra `python-stdnum`; `POST /customers` y `GET /meta`, con la validación del alta en el dominio (ADR-009, decidido por el Tech Lead); y `GET /customers/{id}` y el buscador, con la cabecera `Allow` del `405` corregida. 507 tests del backend, `domain/` al 100 %, oráculo en verde con 20 comprobaciones activas y 4 inactivas. Quedan sin aprobar las precisiones X-01 a X-13 y Y-01 a Y-33 (salvo Y-10, ya decidida); las que piden una decisión son **Y-22** (la ficha no trae todavía el historial de simulaciones), **Y-23** (qué texto cuenta como entero en la ruta), Y-15 con Y-31 (el `503` en el OpenAPI), Y-09 (notas de SPEC-01 que ya no son ciertas) e Y-30 (`customer_search` sin test unitario). Sesión parada a la espera de la revisión de SPEC-01, antes de SPEC-03 |
+| **Resultado** | A2 a A5 decididos por el Tech Lead sin confirmación externa y bloque backend aprobado (SPEC-01, SPEC-02 y SPEC-03); SPEC-04 sigue en `borrador`. Esqueleto del backend con uv, revisado y aprobado: `httpx2` en lugar de `httpx`, avisos como errores y margen de una semana en las versiones (ADR-007). El oráculo usa `uv run --locked` y mide el 90 % sobre las ramas. **Paso 1 del backend completo**: errores genéricos, CORS, `GET /health` y esquema, con 64 tests. Oráculo en verde con 20 comprobaciones activas y 4 inactivas. Sesión parada a la espera de la revisión del paso 1, antes de SPEC-02. **Añadido a las 12:34**: llegó la respuesta a la consulta de A2 a A5 (registrada sin cambiar ninguna regla; ADR-008 propuesto); el paso 1 se aprobó con cinco correcciones, hechas una por commit (p1 a p5); y **SPEC-02 está implementada** en tres piezas: dominio, traducción de los errores de validación y `POST /pricing/quote`. 160 tests del backend, `domain/` al 100 %, oráculo en verde con 20 comprobaciones activas y 4 inactivas. Quedan 34 precisiones de la IA sin aprobar (P-01 a P-08 y W-01 a W-26; la más importante, W-14). Sesión parada a la espera de la revisión de SPEC-02, antes de SPEC-01. **Añadido a las 14:11**: SPEC-02 se aprobó a las 13:07 con siete cambios, hechos en tres commits (regla del `503` para cualquier endpoint, reglas de validación escritas en el índice y ADR-008 `aceptado`). **SPEC-01 está implementada** en tres piezas: identificador fiscal en el dominio, con la prueba diferencial contra `python-stdnum`; `POST /customers` y `GET /meta`, con la validación del alta en el dominio (ADR-009, decidido por el Tech Lead); y `GET /customers/{id}` y el buscador, con la cabecera `Allow` del `405` corregida. 507 tests del backend, `domain/` al 100 %, oráculo en verde con 20 comprobaciones activas y 4 inactivas. Quedan sin aprobar las precisiones X-01 a X-13 y Y-01 a Y-33 (salvo Y-10, ya decidida); las que piden una decisión son **Y-22** (la ficha no trae todavía el historial de simulaciones), **Y-23** (qué texto cuenta como entero en la ruta), Y-15 con Y-31 (el `503` en el OpenAPI), Y-09 (notas de SPEC-01 que ya no son ciertas) e Y-30 (`customer_search` sin test unitario). Sesión parada a la espera de la revisión de SPEC-01, antes de SPEC-03. **Añadido a las 14:56**: SPEC-01 se revisó a las 14:32 y se admitió con cuatro cambios, hechos en tres commits (una sola forma del `id` de la ruta, el `503` declarado en todo endpoint que lee la base de datos, y notas, test y limitación L-04). **SPEC-03 está implementada** en dos piezas: `POST /simulations`, con el mismo cálculo que la proyección y escritura atómica, y el historial dentro de `GET /customers/{id}`. **El bloque backend está completo**: 629 tests, `domain/` al 100 %, 86 de 86 ramas, ningún requisito EARS del backend sin test y oráculo en verde con 20 comprobaciones activas y 4 inactivas (las del frontend). Quedan sin aprobar las precisiones Z-01 a Z-07 y M-01 a M-19; las que piden una decisión son Z-01, Z-03, M-13 y M-19. Sesión parada a la espera de la revisión del backend entero, antes del frontend |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -73,6 +73,7 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 12:10 | `72684a9` y *(este commit)* | ADR-008 en `72684a9` (12:09:30 según `git log`). Este commit: `supuestos.md`, índice de specs, las cuatro specs, `ai-workspace/README.md`, `CLAUDE.md` y esta bitácora. Oráculo en verde antes de los dos |
 | 12:34 | `604a058` a `7900e5f` y *(este commit)* | Fila escrita a las 12:34; el detalle y las horas de cada paso están en las tablas «Correcciones del paso 1» y «SPEC-02» del apartado 3. El commit anterior a todos es `bb0871e` (12:10:42 según `git log`). Correcciones: p1 `604a058` (12:12:07), p2 `8de1f72` (12:12:55), p3 `b600624` (12:13:46), p4 `9ec6866` (12:18:35), p5 `1f8f80c` (12:20:30). SPEC-02: (a) `c002077` (12:24:02), (b) `49e3d65` (12:30:23), (c) `7900e5f` (12:34:28). Oráculo en verde antes de cada uno. Este commit solo cierra la bitácora. **La IA para aquí**: SPEC-02 terminada, a la espera de la revisión antes de SPEC-01 |
 | 14:11 | `71f3422` a `46a1540` y *(este commit)* | Fila escrita a las 14:11; el detalle y las horas de cada paso están en las tablas «Cambios tras la revisión de SPEC-02», «SPEC-01» y «Dos decisiones del Tech Lead» del apartado 3. El cierre anterior es `70c2759` (12:35:49 según `git log`; sustituye por enmienda a `ae82407`, ver n3). 13:07, revisión de SPEC-02 por el Tech Lead: aprobada, con siete cambios, dos añadidos a ADR-008 y la norma de las enmiendas. Regla del `503`: `71f3422` (13:13:28). Resto de specs y tests de la revisión: `9dc7ce2` (13:16:22). ADR-008 aceptado: `6fdb617` (13:22:02). SPEC-01 (a): `235322a` (13:30:18). 13:43, dos decisiones del Tech Lead (t1 y t2). Orden alfabético: `dc5b0a1` (13:44:51). ADR-009: `0cfbee0` (13:46:52). SPEC-01 (b): `9202a68` (13:57:53). SPEC-01 (c): `46a1540` (14:11:07). Oráculo en verde antes de cada uno. Este commit solo cierra la bitácora. **La IA para aquí**: SPEC-01 terminada, a la espera de la revisión antes de SPEC-03 |
+| 14:56 | `ce04f42` a `ccfb97f` y *(este commit)* | Fila escrita a las 14:56; el detalle y las horas de cada paso están en las tablas «Cambios tras la revisión de SPEC-01» y «SPEC-03» del apartado 3. El cierre anterior es `a4a35b6` (14:12:45 según `git log`). 14:32, revisión de SPEC-01 por el Tech Lead: admitida, con cuatro cambios. Forma única del `id` de la ruta: `ce04f42` (14:35:55). El `503` en el contrato: `82b0b2e` (14:38:31). Notas, test y limitación: `74cc3f2` (14:40:31). SPEC-03 (a): `9ccfceb` (14:50:27). SPEC-03 (b): `ccfb97f` (14:56:33). Oráculo en verde antes de cada uno. Este commit solo cierra la bitácora. **La IA para aquí**: SPEC-03 terminada y, con ella, el bloque backend; a la espera de la revisión del backend entero antes del frontend |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -988,6 +989,22 @@ Precisiones de la IA sobre SPEC-03, **sin aprobar**:
   ni medida de tiempos; el caso mayor probado son 25 clientes.
 - El orden del buscador con nombres cuya forma de búsqueda tiene caracteres
   fuera de ASCII (cirílico, griego): solo están probados los nombres de 5.9.
+- ~~Que `GET /customers/{id}` tenga la forma completa de 4.2~~: hecho en la
+  pieza (b) de SPEC-03.
+- ~~SPEC-02/E-08 y CA-08~~: comprobado en la pieza (a) de SPEC-03.
+- `POST /simulations` y la ficha con historial con un servidor real
+  (`uvicorn`): solo se han probado con el cliente de test.
+- Dos peticiones a la vez: ni la escritura de una simulación ni la lectura
+  del historial se han probado con concurrencia (M-13).
+- El historial con muchas simulaciones: el caso mayor probado son 55, sin
+  medida de tiempos y sin índice por cliente (M-19).
+- Que un fallo que no sea de integridad a mitad de la escritura (el disco
+  lleno, el proceso que muere) tampoco deje filas: solo se ha provocado el
+  rechazo de un `CHECK`.
+- Las filas de CORS de 5.6 de SPEC-03 con `GET /meta` y `OPTIONS /customers`
+  reales: siguen probadas con la ruta de prueba.
+- Lo que ha comprobado el Tech Lead por su cuenta en las tres revisiones
+  (servidor real, cálculos aparte, 300.000 identificadores): lo afirma él.
 
 ## 6. Tareas pendientes
 
@@ -997,32 +1014,36 @@ Precisiones de la IA sobre SPEC-03, **sin aprobar**:
 | ~~Decidir V-01, V-02 y V-03~~ | Decididos a las 11:10 (f1 a f3) |
 | ~~Aprobar o cambiar S-01 a S-06; confirmar S-06~~ | Aprobados y confirmado a las 11:10 (f5) |
 | ~~Corregir la nota «Sobre CA-09» de SPEC-02 y el apartado «Estado» de `ai-workspace/README.md`~~ | Hecho (f7) |
-| **SPEC-03/E-18 no está cubierto**: la trazabilidad lo da por probado porque el test de humo lo cita, pero falta el test de CA-09 (`405` en `PUT`, `PATCH` y `DELETE` y datos sin cambios) | Con SPEC-03 (decisión f4) |
+| ~~**SPEC-03/E-18 no está cubierto**: falta el test de CA-09 (`405` en `PUT`, `PATCH` y `DELETE` y datos sin cambios)~~ | Hecho en `9ccfceb`: `tests/integration/test_real_endpoints.py` |
 | Aprobar o cambiar T-01 a T-08 | A decidir por el Tech Lead |
 | Fijar en npm el margen de una semana de ADR-007 y comprobar la fecha de Angular CLI 21.2.29 | Al crear el frontend |
 | ~~Resto del paso 1: errores genéricos, CORS, `GET /health` y `schema.sql` con su enlace desde el índice de arquitectura~~ | Hecho entre las 11:27 y las 11:42 |
 | ~~**Revisar el paso 1** y aprobar o cambiar G-01 a G-09, C-01 a C-04, H-01 a H-06 y Q-01 a Q-05~~ | Hecho a las 12:02: aprobado con cinco correcciones (p1 a p5), hechas entre las 12:11 y las 12:20 |
-| Aprobar o cambiar P-01 a P-08 (precisiones de p4 y p5) | A decidir por el Tech Lead |
+| ~~Aprobar o cambiar P-01 a P-08 (precisiones de p4 y p5)~~ | Admitidas a las 13:07 |
 | **Base de datos creada antes de `9ec6866`**: sigue sin `STRICT`; hay que borrar el fichero (P-03) | Quien ya haya arrancado el backend |
 | **El cuerpo de la petición no tiene límite de tamaño**: limitación conocida | A documentar en el README (decisión del Tech Lead, 12:02) |
-| Reproducir las filas de SPEC-03 5.6 y 5.7 con los endpoints reales (CA-15 y CA-17); hoy están probadas con rutas de prueba | Con SPEC-02, SPEC-01 y SPEC-03, según exista cada endpoint |
+| Reproducir las filas de SPEC-03 5.6 con los endpoints reales (CA-15): las de `GET /meta` y las tres comprobaciones previas de `OPTIONS /customers` siguen probadas con la ruta de prueba | A decidir por el Tech Lead. Las de 5.7 (CA-17) y el `500` con cabecera CORS están hechas en `9ccfceb` |
 | ~~Traducir los errores de validación del cuerpo y de la ruta a códigos por campo (`missing`, `not_an_integer`, `out_of_range`…)~~ | Cuerpo: hecho en `49e3d65`. Ruta y consulta: hecho en `46a1540` |
 | ~~**Revisar SPEC-02** y aprobar o cambiar W-01 a W-26~~ | Hecho a las 13:07: aprobada con siete cambios (s1 a s7) |
 | ~~**Decidir W-14**: el OpenAPI publica los límites como decimales~~ | Decidido a las 13:07: limitación conocida L-02, el documento no se retoca |
 | ~~Decidir W-10, W-11 y W-12~~ | Decididos a las 13:07 (reglas escritas en el índice) y a las 13:43 (t1: los desconocidos, por orden alfabético) |
 | ~~La nota «Sobre CA-09» de SPEC-02~~ | Actualizada en `9dc7ce2` (s6) |
-| SPEC-02/E-08 y CA-08 | Con SPEC-03 |
+| ~~SPEC-02/E-08 y CA-08~~ | Hecho en `9ccfceb` (M-02) |
 | ~~Mover el máximo de identificador a un módulo común de `api/` (W-23)~~ | Hecho en `46a1540`: `app/api/identifiers.py` |
 | ~~Prueba de arranque real con `uvicorn` tras el paso 1 (la orden fue denegada)~~ | Hecha por el Tech Lead (lo afirma él; la IA no la ha visto) |
 | ~~Corregir la cabecera `Allow` del `405`, que solo nombra un método cuando la ruta admite dos~~ | Hecho en `46a1540` (Y-26) |
 | Documentar la estructura del backend en `02-arquitectura/README.md` | Tras la revisión de la estructura |
 | ~~Comprobar el comportamiento real de `python-stdnum` (CA-19)~~ | Hecho en `235322a`: la hipótesis de la spec se cumple |
-| **Revisar SPEC-01** y aprobar o cambiar X-01 a X-13 y Y-01 a Y-33 | Ahora, por el Tech Lead, antes de SPEC-03 |
-| **Decidir Y-22**: la ficha no trae `simulation_count` ni `simulations`; E-22 y la forma de 4.2 quedan a medias | A decidir por el Tech Lead; si no, con SPEC-03 (E-12 a E-17) |
-| **Decidir Y-23**: qué texto cuenta como entero en la ruta (`1.0`, `+1`, `01`, `1_0` se admiten hoy) | A decidir por el Tech Lead: la spec no lo dice |
-| Decidir Y-15 e Y-31 (el `503` no figura en las tablas de SPEC-01 ni en su OpenAPI, y sí en SPEC-02) y X-02 (tampoco en la tabla 5.7 de SPEC-03) | A decidir por el Tech Lead: cambio de specs con el visto bueno dado |
-| Decidir Y-09: tres notas de SPEC-01 que ya no son ciertas (2.7, «Sobre CA-17» y «Sobre CA-19») | A decidir por el Tech Lead |
-| Decidir Y-30 (test unitario de `customer_search`, que se escribiría después del código), Y-24 (`q` repetido, ¿limitación conocida?) y X-01 | A decidir por el Tech Lead |
+| ~~**Revisar SPEC-01** y aprobar o cambiar X-01 a X-13 y Y-01 a Y-33~~ | Hecho a las 14:32: admitidas, con cuatro cambios (r1 a r4) |
+| ~~**Decidir Y-22**: la ficha no trae `simulation_count` ni `simulations`~~ | Decidido a las 14:32 (r5): con SPEC-03. Hecho en `ccfb97f` |
+| ~~**Decidir Y-23**: qué texto cuenta como entero en la ruta~~ | Decidido a las 14:32 (r1): una sola forma. Hecho en `ce04f42` |
+| ~~Decidir Y-15 e Y-31 y X-02 (el `503` en las tablas y en el OpenAPI)~~ | Decidido a las 14:32 (r2). Hecho en `82b0b2e` |
+| ~~Decidir Y-09: tres notas de SPEC-01 que ya no son ciertas~~ | Decidido a las 14:32 (r3). Hecho en `74cc3f2` |
+| ~~Decidir Y-30, Y-24 y X-01~~ | Decididos a las 14:32 (r4; X-01 admitida). Hecho en `74cc3f2` |
+| **Revisar el backend entero**, y aprobar o cambiar Z-01 a Z-07 y M-01 a M-19 | Ahora, por el Tech Lead, antes del frontend |
+| Decidir Z-01 (`-0`, `00` y `-01` como `not_an_integer`) y Z-03 (importación directa de `pydantic_core`) | A decidir por el Tech Lead |
+| Decidir M-13 (transacción de lectura del historial, sin test de concurrencia) y M-19 (sin índice sobre `simulations(customer_id)`) | A decidir por el Tech Lead |
+| Evaluación independiente del backend contra los requisitos EARS (subagente evaluador) | Al cerrar el bloque backend, si el Tech Lead la pide |
 | Llevar la lista de `04-calidad/limitaciones-conocidas.md` al README | Al escribir el README |
 | Pendientes heredados de la sesión 03: precisiones de `CLAUDE.md` y `backend.md` del commit `ca1c81a`; hueco del hook si su comando no arranca; aprobación literal del cambio de A10 | A decidir por el Tech Lead |
 | Aprobar SPEC-04 | Antes de empezar el frontend |
