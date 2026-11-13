@@ -107,6 +107,13 @@ def test_customer_that_does_not_exist_returns_404(client: TestClient, customer_i
         ("0", "out_of_range"),
         ("-1", "out_of_range"),
         (str(MAX_ID + 1), "out_of_range"),
+        # A well-written integer is one however long it is: the library stops reading it
+        # as a number at 4301 digits, and it is still an integer out of range.
+        ("9" * 4301, "out_of_range"),
+        ("9" * 20000, "out_of_range"),
+        ("-" + "9" * 4301, "out_of_range"),
+        # Not a row of the table: the last size that the library reads as a number.
+        ("9" * 4300, "out_of_range"),
         ("abc", "not_an_integer"),
         ("1.5", "not_an_integer"),
         # The only form of an integer in the route: the customer 1 exists, and only `1` reads it.
@@ -123,6 +130,8 @@ def test_customer_that_does_not_exist_returns_404(client: TestClient, customer_i
         ("1%0A", "not_an_integer"),
         ("%D9%A1", "not_an_integer"),
     ],
+    # A short name for each case: the id of thousands of digits would be the name otherwise.
+    ids=lambda value: value if len(value) < 30 else f"{value[:2]}-{len(value)}-characters",
 )
 def test_customer_with_an_invalid_id_returns_422_in_the_field_id(
     client: TestClient, customer_id: str, code: str

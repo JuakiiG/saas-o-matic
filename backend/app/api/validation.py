@@ -20,6 +20,9 @@ TRANSLATIONS = {
     "int_type": (FieldCode.NOT_AN_INTEGER, "Debe ser un número entero."),
     # In the route everything is text: what cannot be read as an integer is not one.
     "int_parsing": (FieldCode.NOT_AN_INTEGER, "Debe ser un número entero."),
+    # Digits that the library refuses to read as a number because they are too many (more
+    # than 4300): it is written as an integer, so it is one, and out of any range.
+    "int_parsing_size": (FieldCode.OUT_OF_RANGE, "Está fuera del rango admitido."),
     "string_too_long": (FieldCode.TOO_LONG, "Debe tener {max_length} caracteres como máximo."),
     "greater_than_equal": (FieldCode.OUT_OF_RANGE, "Debe ser mayor o igual que {ge}."),
     "less_than_equal": (FieldCode.OUT_OF_RANGE, "Debe ser menor o igual que {le}."),

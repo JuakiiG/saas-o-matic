@@ -693,6 +693,9 @@ Además, con 25 clientes cuyo nombre contiene `Ejemplo`, la búsqueda
 | `0` | `422` | `out_of_range` |
 | `-1` | `422` | `out_of_range` |
 | `9223372036854775808` (2^63) | `422` | `out_of_range` |
+| 4301 nueves | `422` | `out_of_range` |
+| 20000 nueves | `422` | `out_of_range` |
+| un signo menos y 4301 nueves | `422` | `out_of_range` |
 | `abc` | `422` | `not_an_integer` |
 | `1.5` | `422` | `not_an_integer` |
 | `1.0` | `422` | `not_an_integer` |
@@ -705,6 +708,11 @@ Además, con 25 clientes cuyo nombre contiene `Ejemplo`, la búsqueda
 Las seis últimas filas son la forma única del `id` de la ruta (convenciones
 del índice, «Identificadores»): con la forma se decide si es un entero y
 después se aplica el rango.
+
+Las tres filas de miles de nueves fijan que **un entero bien escrito, por
+largo que sea, es un entero fuera del rango**: `out_of_range`, nunca un
+`500`. 4301 dígitos es el primer tamaño que la biblioteca de validación
+deja de leer como número.
 
 ## 6. Criterios de aceptación
 
@@ -816,3 +824,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-13 | Decisión del Tech Lead al revisar la implementación: el `id` de la ruta tiene una sola forma, escrita en las convenciones del índice («Identificadores»). Seis filas nuevas en 5.10 (`1.0`, `+1`, `01`, `1_0` y un espacio delante o detrás), todas `not_an_integer`; E-24 y CA-12 no cambian de texto y las cubren. Motivo: un cliente, una dirección; antes esas formas devolvían un cliente (`1_0`, el 10) |
 | 2026-11-13 | Decisión del Tech Lead al revisar la implementación: fila `503` `service_unavailable` en las tablas de errores de 4.1, 4.2 y 4.3. Motivo: todo endpoint que lee la base de datos declara el `503` que ya responde (regla de las convenciones comunes); `GET /meta` no la lee y no lo declara. El OpenAPI de las tres operaciones lo declara (CA-16) |
 | 2026-11-13 | Corrección ordenada por el Tech Lead: tres notas que habían quedado desfasadas dicen ahora lo que ya es un hecho. 2.7: `python-stdnum` 2.2 está instalada y la prueba diferencial se ha ejecutado. «Sobre CA-17»: `scripts/check.py` existe y comprueba el criterio en cada ejecución. «Sobre CA-19»: el resultado esperado se cumple, con sus cifras. Sin cambios en reglas, requisitos, criterios ni casos |
+| 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-01), decidida por el Tech Lead: un entero bien escrito en la ruta, por largo que sea, responde `422` con `out_of_range`. Tres filas nuevas en 5.10 (4301 nueves, 20000 nueves y un signo menos con 4301 nueves); E-24 y CA-12 no cambian de texto y las cubren. Motivo: un `id` de 4301 dígitos o más respondía `500` `internal_error`, porque la biblioteca de validación deja de leerlo como número y su error no tenía código en el contrato |
