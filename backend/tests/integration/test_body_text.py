@@ -151,3 +151,28 @@ def test_field_name_with_an_emoji_is_an_unknown_field_and_not_a_malformed_body(
     assert [(error["field"], error["code"]) for error in errors] == [
         ("\U0001f600", "unknown_field")
     ]
+
+
+# Written after the code that it tests (session 05, H-04): it was never seen failing.
+@pytest.mark.parametrize(
+    ("digits", "status", "code", "field_errors"),
+    [
+        (4300, 422, "validation_error", [("active_users", "out_of_range")]),
+        (4301, 400, "malformed_request", []),
+    ],
+)
+def test_json_integer_of_more_than_4300_digits_is_a_malformed_body(
+    client: TestClient, digits: int, status: int, code: str, field_errors: list[tuple[str, str]]
+) -> None:
+    """SPEC-03/E-29, SPEC-02/E-14: known limitation L-05, fixed here so that it is not a surprise.
+
+    Up to 4300 digits it is an integer out of range. One more and the parser of Python
+    refuses to read it (its protection against denial of service): not valid JSON for us.
+    """
+    content = b'{"customer_id": 1, "active_users": ' + b"9" * digits + b"}"
+    body = assert_problem(
+        client.post("/pricing/quote", content=content, headers=JSON), status, code
+    )
+    errors = body.get("errors", [])
+    assert isinstance(errors, list)
+    assert [(error["field"], error["code"]) for error in errors] == field_errors
