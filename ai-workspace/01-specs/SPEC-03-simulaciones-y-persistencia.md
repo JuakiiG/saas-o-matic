@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Estado** | `borrador` (2026-11-12) |
+| **Estado** | `aprobada` (2026-11-13) |
 | **Requisitos** | R-05 y la parte de backend de R-11 |
-| **Supuestos** | A6, A7, A9, A13, A14, A16 y A18 (`decidido`) · A3 y A4 (`pendiente de confirmar`) |
-| **Depende de** | SPEC-01 (cliente) y SPEC-02 (cálculo), las dos en `borrador` |
-| **Bloqueos para aprobarla** | A3 y A4 sin respuesta (con fecha límite) · se aprueba a la vez que SPEC-01 y SPEC-02: las tres forman el bloque backend (índice de specs) |
+| **Supuestos** | A6, A7, A9, A13, A14, A16 y A18 (`decidido`) · A3 y A4 (`decidido (sin confirmación externa)`, 2026-11-13) |
+| **Depende de** | SPEC-01 (cliente) y SPEC-02 (cálculo), las dos aprobadas el 2026-11-13 |
+| **Bloqueos para aprobarla** | Ninguno desde el 2026-11-13: A3 y A4 decididos sin confirmación externa (apartado 9) y aprobación a la vez que SPEC-01 y SPEC-02, las tres del bloque backend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -536,14 +536,20 @@ no tiene sentido.
 
 ## 9. Pendiente antes de aprobar
 
-| Asunto | Qué cambiaría en esta spec |
+**Nada pendiente desde el 2026-11-13.** La fecha límite (viernes 13 de
+noviembre de 2026, 10:00) se cumplió sin respuesta y el Tech Lead decidió
+A3 y A4 con la hipótesis ya documentada: están en
+`decidido (sin confirmación externa)`. La consulta sigue abierta: si la
+respuesta llega, se aplica como cambio de esta spec, con fecha y motivo en
+su historial.
+
+| Asunto | Qué cambiaría en esta spec si la respuesta lo contradijera |
 |---|---|
 | A3 · almacenamiento y API | Si tuvieran precio, entrarían en el cálculo (SPEC-02) y habría que guardar su importe |
 | A4 · países y tipos | Los tipos de los ejemplos y de las tablas 5.1 y 5.4 |
-| SPEC-01 y SPEC-02 | Se aprueban a la vez que esta (bloque backend). Si cambian los campos del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos |
 
-La fecha límite de A3 y A4 es la del índice de specs: viernes 13 de noviembre de
-2026 a las 10:00.
+SPEC-01 y SPEC-02 forman con esta el bloque backend. Si cambian los campos
+del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos.
 
 ## Historial
 
@@ -554,3 +560,5 @@ La fecha límite de A3 y A4 es la del índice de specs: viernes 13 de noviembre 
 | 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: aplicados los cambios cruzados del apartado 8 (H-01); A4 y A16 en la cabecera (H-02); `405` para cualquier método no admitido, y el requisito E-29, la tabla 5.7 y CA-17 para los errores genéricos del índice (H-03); `customer_id` de 1 a 9223372036854775807 (H-04); nuevo apartado 2.7 «Operación del backend» con CORS y `GET /health`, E-24 a E-28, 4.4, 5.6, CA-15 y CA-16 (H-05); E-21 cubre el subtotal y la posición de los tramos (H-11); remisión a ADR-004 (H-20); columna `country` en `simulations` y precisión de `created_at` (H-23) |
 | 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: aprobación en bloque con SPEC-01 y SPEC-02 (N-01); `CHECK` de los límites de los tramos, con E-21 y tres filas en 5.5 (N-04); `OPTIONS` fuera de la regla del `405`, con E-30 y E-31, y cabeceras CORS también en el `500`, con E-24 y tres filas en 5.6 (N-05); el DDL vive en el `schema.sql` del backend (N-07); `application/json` con parámetros, precedencia `415` > `400` > `422` y valor por defecto de `DATABASE_PATH`, con E-29, E-32, tres filas en 5.7 y CA-12 (N-13); E-16 cubre el país guardado (N-17) |
 | 2026-11-12 | Decisiones del Tech Lead sobre las cuestiones abiertas de la segunda respuesta: un `OPTIONS` que no es comprobación previa responde `405`, con E-33 y una fila en 5.7 (Q-01); la comprobación previa rechazada se queda con la respuesta estándar del middleware, sin código a medida, y solo se exige que no lleve `access-control-allow-origin`, con E-31, 2.7, 5.6 y CA-15 (Q-02); D-01 se registra en ADR-006 (Q-03) |
+| 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A3 y A4 pasan a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera y apartado 9 actualizados. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
+| 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-01 y SPEC-02 (bloque backend) |

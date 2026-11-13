@@ -1,8 +1,9 @@
 # Supuestos y ambigüedades
 
-- **Fecha**: 2026-11-12
-- **Estado**: revisado por el Tech Lead el 2026-11-12. Quedan abiertos A2 a A5,
-  a la espera de respuesta y con fecha límite
+- **Fecha**: 2026-11-12, actualizado el 2026-11-13
+- **Estado**: revisado por el Tech Lead el 2026-11-12. A2 a A5, decididos por
+  él el 2026-11-13 al vencer la fecha límite sin respuesta externa; la
+  consulta sigue abierta
 - **Qué es**: cada punto que el encargo deja abierto, la opción elegida y por
   qué. Ninguna spec se aprueba mientras dependa de un supuesto sin cerrar.
 
@@ -21,10 +22,10 @@
 | Id | Ambigüedad | Estado | Afecta a |
 |---|---|---|---|
 | A1 | Plazo de entrega | `logística` | R-19 |
-| A2 | Qué es el plan y si afecta al precio | `pendiente de confirmar` | SPEC-01, SPEC-02 |
-| A3 | Almacenamiento y llamadas a la API sin tarifa | `pendiente de confirmar` | SPEC-02, SPEC-03, SPEC-04 |
-| A4 | Países admitidos y tipo de impuesto de cada uno | `pendiente de confirmar` | SPEC-01, SPEC-02, SPEC-03 |
-| A5 | Tratamiento del IVA entre empresas de distintos países | `pendiente de confirmar` | SPEC-02 |
+| A2 | Qué es el plan y si afecta al precio | `decidido (sin confirmación externa)` (2026-11-13) | SPEC-01, SPEC-02 |
+| A3 | Almacenamiento y llamadas a la API sin tarifa | `decidido (sin confirmación externa)` (2026-11-13) | SPEC-02, SPEC-03, SPEC-04 |
+| A4 | Países admitidos y tipo de impuesto de cada uno | `decidido (sin confirmación externa)` (2026-11-13) | SPEC-01, SPEC-02, SPEC-03 |
+| A5 | Tratamiento del IVA entre empresas de distintos países | `decidido (sin confirmación externa)` (2026-11-13) | SPEC-02 |
 | A6 | Representación del dinero y redondeo | `decidido` (2026-11-12) | SPEC-02, SPEC-03, SPEC-04 |
 | A7 | Límites del número de usuarios | `decidido` (2026-11-12) | SPEC-02, SPEC-03, SPEC-04 |
 | A8 | Divisas: moneda de cálculo, origen de los tipos y fallo de la API | `decidido` (2026-11-12) | SPEC-04 |
@@ -49,31 +50,34 @@ redactar los requisitos.
 - **A15 · Formato de entrega del repositorio.** Logística de entrega acordada
   con quien propone el reto; no afecta al producto.
 
-## Pendientes de confirmar
+## Decididos sin confirmación externa
 
-Mientras no haya respuesta se trabaja con la propuesta, y las specs afectadas
-no pasan de `borrador` en la parte que depende de ella.
+A2 a A5 se consultaron a quien propone el reto. La fecha límite, fijada el
+2026-11-12, era el viernes 13 de noviembre de 2026 a las 10:00, y se cumplió
+sin respuesta. Ese día el Tech Lead decidió los cuatro con la hipótesis que
+ya estaba documentada aquí, sin cambiarla. *Por qué: una consulta sin
+contestar no puede bloquear el desarrollo de forma indefinida, y la
+hipótesis ya estaba razonada.*
 
-**Fecha límite**: si el viernes 13 de noviembre de 2026 a las 10:00 no hay
-respuesta, el Tech Lead decide A2 a A5 con la hipótesis documentada aquí.
-Pasan a `decidido (sin confirmación externa)` y se revisan si la respuesta
-llega después. *Por qué: una consulta sin contestar no puede bloquear el
-desarrollo de forma indefinida, y la hipótesis ya está razonada.*
+**La consulta sigue abierta.** Si la respuesta llega, se aplica como cambio
+de spec: con fecha y motivo en el historial de cada spec afectada, que
+vuelve a pasar por aprobación. Qué cambiaría en cada spec está en su
+apartado «Pendiente antes de aprobar».
 
 ### A2 · Plan
 
 El cliente tiene un «plan elegido», pero no se dice qué planes hay ni si
-cambian el precio. **Propuesta**: lista cerrada de planes, guardada como dato
-informativo y sin efecto en el cálculo. *Por qué*: la única tarifa definida es
-la de usuarios; dar precio a los planes sería inventar una regla de negocio.
-Los nombres concretos se fijan en SPEC-01.
+cambian el precio. **Decisión** (2026-11-13): lista cerrada de planes,
+guardada como dato informativo y sin efecto en el cálculo. *Por qué*: la
+única tarifa definida es la de usuarios; dar precio a los planes sería
+inventar una regla de negocio. Los nombres concretos se fijan en SPEC-01.
 
 ### A3 · Almacenamiento y llamadas a la API
 
 La simulación los recoge, pero la tarifa solo habla de usuarios.
-**Propuesta**: guardarlos y mostrarlos en el historial, sin que intervengan en
-el importe. *Por qué*: el mismo que en A2. Si la respuesta fuera que sí tienen
-precio, cambia SPEC-02, y por eso no se cierra todavía.
+**Decisión** (2026-11-13): guardarlos y mostrarlos en el historial, sin que
+intervengan en el importe. *Por qué*: el mismo que en A2. Si la respuesta
+llegara y fuera que sí tienen precio, cambia SPEC-02.
 
 Con independencia de la respuesta, **los dos valores se validan**: enteros,
 no negativos y con un máximo razonable que se fija en SPEC-03. *Por qué*: que
@@ -82,7 +86,7 @@ un dato no tenga precio no justifica guardar basura.
 ### A4 · Impuesto por país
 
 Hay que sumar el impuesto del país del cliente, pero no se da la lista de
-países ni los tipos. **Propuesta**:
+países ni los tipos. **Decisión** (2026-11-13):
 
 - Lista cerrada de países admitidos, cada uno con su tipo general de IVA.
 - El tipo aplicado **se guarda con cada simulación**. *Por qué*: si un tipo
@@ -126,17 +130,17 @@ Simplificaciones conocidas:
   sería una simplificación que nadie ha pedido. El comportamiento con un tipo
   del 0 % se cubre con tests unitarios del dominio.
 
-Sigue pendiente de confirmar si esta lista de países y el uso del tipo
-general son lo que se espera.
+No hay confirmación externa de que esta lista de países y el uso del tipo
+general sean lo que se espera.
 
 ### A5 · IVA entre empresas de distintos países
 
 En una venta real entre empresas de dos países de la UE suele aplicarse la
-inversión del sujeto pasivo y la factura va sin IVA. **Propuesta**: no
-modelarlo y aplicar siempre el tipo del país del cliente, como dice el
-encargo. Se deja constancia de que es una simplificación conocida. *Por qué*:
-la herramienta hace presupuestos orientativos, no facturas, y la regla pedida
-es explícita.
+inversión del sujeto pasivo y la factura va sin IVA. **Decisión**
+(2026-11-13): no modelarlo y aplicar siempre el tipo del país del cliente,
+como dice el encargo. Se deja constancia de que es una simplificación
+conocida. *Por qué*: la herramienta hace presupuestos orientativos, no
+facturas, y la regla pedida es explícita.
 
 ## Decididos
 

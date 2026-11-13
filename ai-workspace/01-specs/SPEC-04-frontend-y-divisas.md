@@ -4,9 +4,9 @@
 |---|---|
 | **Estado** | `borrador` (2026-11-12) |
 | **Requisitos** | R-09, R-10, R-11, R-12 y R-17 |
-| **Supuestos** | A6, A7, A8, A9, A12, A13, A14, A16 y A17 (`decidido`) · A3 (`pendiente de confirmar`) |
-| **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres en `borrador`; ADR-001, ADR-002 y ADR-003 |
-| **Bloqueos para aprobarla** | A3 sin respuesta (con fecha límite) · SPEC-01, SPEC-02 y SPEC-03 (el bloque backend) sin aprobar. Esta spec se aprueba aparte, después de ese bloque y antes de empezar el frontend (índice de specs) |
+| **Supuestos** | A6, A7, A8, A9, A12, A13, A14, A16 y A17 (`decidido`) · A3 (`decidido (sin confirmación externa)`, 2026-11-13) |
+| **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres aprobadas el 2026-11-13; ADR-001, ADR-002 y ADR-003 |
+| **Bloqueos para aprobarla** | Ninguno ajeno desde el 2026-11-13: A3 decidido sin confirmación externa (apartado 9) y el bloque backend, aprobado. Falta la aprobación del Tech Lead: esta spec se aprueba aparte, después de ese bloque y antes de empezar el frontend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -518,13 +518,17 @@ no tiene sentido.
 
 ## 9. Pendiente antes de aprobar
 
+**Queda la aprobación del Tech Lead**, aparte y antes de empezar el
+frontend. A3 ya no la bloquea: la fecha límite (viernes 13 de noviembre de
+2026, 10:00) se cumplió sin respuesta y el Tech Lead lo decidió con la
+hipótesis ya documentada; está en `decidido (sin confirmación externa)`. La
+consulta sigue abierta: si la respuesta llega, se aplica como cambio de
+esta spec, con fecha y motivo en su historial.
+
 | Asunto | Qué cambiaría en esta spec |
 |---|---|
-| A3 · almacenamiento y API | Si tuvieran precio, cambiarlos pediría una proyección nueva (2.5) |
+| A3 · almacenamiento y API | Si la respuesta dijera que tienen precio, cambiarlos pediría una proyección nueva (2.5) |
 | SPEC-01, SPEC-02 y SPEC-03 | Si cambian sus contratos, las tablas de 5.4 y 5.5 |
-
-La fecha límite de A3 es la del índice de specs: viernes 13 de noviembre de
-2026 a las 10:00.
 
 ## Historial
 
@@ -534,3 +538,4 @@ La fecha límite de A3 es la del índice de specs: viernes 13 de noviembre de
 | 2026-11-12 | Revisión del Tech Lead: la API de divisas pasa a la `v2` de Frankfurter, con su respuesta real en 4.2, la validación de 2.6 adaptada a una lista y las tablas 5.1 y 5.2 recalculadas (D-01); CORS verificado (D-02); Playwright para la prueba de principio a fin y los 375 px, con CA-13 reescrito y nuevos CA-14 y CA-15 (D-09); aprobadas las demás decisiones |
 | 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: aplicados los cambios cruzados del apartado 8, incluido A17 (H-01, H-19, H-26); A3, A6, A7 y A12 en la cabecera, con A3 como bloqueo (H-02); CA-08 cita E-29 (H-09); CA-05 y CA-08 dicen de dónde salen las respuestas simuladas (H-14); «Cliente no encontrado» también con `422` y en el simulador, E-37 (H-15); el panel muestra los nombres de `/meta`, E-35 (H-16); la fecha del tipo de cambio se muestra tal cual (H-17); eliminado el escenario inalcanzable del reintento, y un almacenamiento o un número de llamadas no válido ya no retira la proyección, E-36 (H-18); remisión a ADR-003 (H-20); E-06 remite a la regla de frontend y no a ADR-002 (H-25) |
 | 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: esta spec se aprueba aparte, después del bloque backend (N-01); el simulador no pide proyecciones mientras el cliente no se ha cargado, con E-18, E-38 y una fila en 5.5 (N-06); la fila de 20000 usuarios tiene respuesta de origen en SPEC-02 5.1 y CA-08 la cita (N-08); `/meta` se pide una vez al arrancar y, si falla, las cuatro vistas muestran el error con «Reintentar», con E-35, E-39, E-40, D-14 y filas en 5.3 y 5.5 (N-09); la ayuda del navegador mide como el backend, con E-41 y cuatro filas en 5.4 (N-10); remisión a ADR-005 (N-14) |
+| 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A3 pasa a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera y apartado 9 actualizados. El bloque backend (SPEC-01, SPEC-02 y SPEC-03) queda aprobado ese día; esta spec sigue en `borrador`. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |

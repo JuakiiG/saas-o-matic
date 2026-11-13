@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Estado** | `borrador` (2026-11-12) |
+| **Estado** | `aprobada` (2026-11-13) |
 | **Requisitos** | R-06, R-07 y la parte de cálculo de R-12 |
-| **Supuestos** | A6, A7, A9, A13 y A14 (`decidido`) · A2, A3, A4 y A5 (`pendiente de confirmar`) |
-| **Bloqueos para aprobarla** | A2, A3, A4 y A5 sin respuesta (con fecha límite, ver apartado 8) · se aprueba a la vez que SPEC-01 y SPEC-03: las tres forman el bloque backend (índice de specs) |
+| **Supuestos** | A6, A7, A9, A13 y A14 (`decidido`) · A2, A3, A4 y A5 (`decidido (sin confirmación externa)`, 2026-11-13) |
+| **Bloqueos para aprobarla** | Ninguno desde el 2026-11-13: A2, A3, A4 y A5 decididos sin confirmación externa (apartado 8) y aprobación a la vez que SPEC-01 y SPEC-03, las tres del bloque backend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -62,10 +62,10 @@ total    = base + impuesto
 | `GB` | Reino Unido | 2000 |
 
   Es la **única** lista de países del sistema: cada entrada lleva el
-  código, el nombre y el tipo. Los valores son los de A4, que sigue
-  `pendiente de confirmar`. Esta spec es la dueña de los tipos; SPEC-01 usa
-  la misma constante para validar el país del alta y para `GET /meta`, y no
-  mantiene una lista aparte.
+  código, el nombre y el tipo. Los valores son los de A4, decidido sin
+  confirmación externa el 2026-11-13. Esta spec es la dueña de los tipos;
+  SPEC-01 usa la misma constante para validar el país del alta y para
+  `GET /meta`, y no mantiene una lista aparte.
 - El impuesto se calcula **una vez, sobre el coste base total**, no tramo a
   tramo.
 - `redondeo` es al céntimo más próximo, con el medio céntimo hacia arriba. En
@@ -197,8 +197,8 @@ Importes en céntimos. Cada fila es un caso de test.
 | IT | 2200 | 3080 | 17080 |
 | PT, IE | 2300 | 3220 | 17220 |
 
-Los tipos son los de A4, que sigue `pendiente de confirmar`. Si la tabla
-cambia, cambian estas filas.
+Los tipos son los de A4, decidido sin confirmación externa el 2026-11-13.
+Si la tabla cambia, cambian estas filas.
 
 ### 5.3 Redondeo (casos sintéticos sobre la función del impuesto)
 
@@ -285,22 +285,25 @@ Aprobadas por el Tech Lead el 2026-11-12.
 5. **Si la petición es inválida y además el cliente no existe, gana el
    `422`.**
 6. **Almacenamiento y llamadas a la API no entran en la petición** porque no
-   tienen precio (A3). Si la respuesta pendiente dijera que sí lo tienen,
-   esta spec se amplía.
+   tienen precio (A3). Si la respuesta a la consulta, que sigue abierta,
+   dijera que sí lo tienen, esta spec se amplía con un cambio anotado en su
+   historial.
 
 ## 8. Pendiente antes de aprobar
 
-| Supuesto | Qué cambiaría en esta spec |
+**Nada pendiente desde el 2026-11-13.** La fecha límite (viernes 13 de
+noviembre de 2026, 10:00) se cumplió sin respuesta y el Tech Lead decidió
+A2, A3, A4 y A5 con la hipótesis ya documentada: están en
+`decidido (sin confirmación externa)`. La consulta sigue abierta: si la
+respuesta llega, se aplica como cambio de esta spec, con fecha y motivo en
+su historial.
+
+| Supuesto | Qué cambiaría en esta spec si la respuesta lo contradijera |
 |---|---|
 | A2 · plan | Si el plan afectara al precio, habría una segunda dimensión en la tarifa |
 | A3 · almacenamiento y API | Si tuvieran precio, entrarían en la petición y en el coste base |
 | A4 · países y tipos | La constante de países de 2.2 y la tabla de 5.2 |
-| A5 · IVA entre empresas | Si hubiera que modelarlo, el tipo dejaría de depender solo del país |
-
-**Fecha límite**: si el viernes 13 de noviembre de 2026 a las 10:00 no hay
-respuesta, el Tech Lead decide estos cuatro supuestos con la hipótesis ya
-documentada. Pasan a `decidido (sin confirmación externa)` y esta spec puede
-aprobarse. Si la respuesta llega después, se revisan.
+| A5 · IVA entre empresas | Si hubiera que modelarlo, el tipo dejaría de depender solo del país. Hoy se aplica siempre el tipo del país del cliente; la inversión del sujeto pasivo no se modela y es una simplificación conocida |
 
 ## Historial
 
@@ -310,3 +313,5 @@ aprobarse. Si la respuesta llega después, se revisan.
 | 2026-11-12 | Revisión del Tech Lead: aprobadas las decisiones de diseño y A7; E-10 responde `500` con `tax_rate_not_defined` (nueva fila de errores y CA-11); CA-09 pasa a comprobarse de forma automática; añadidos A2 a los supuestos y la fecha límite de los pendientes |
 | 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: A13 y A14 en la cabecera (H-02); `customer_id` de 1 a 9223372036854775807, con E-15 y la tabla 5.5 (H-04); la constante única de países, con su tabla en 2.2 (H-12); CA-08 remite a SPEC-03/CA-03 (H-01) |
 | 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: aprobación en bloque con SPEC-01 y SPEC-03 (N-01); la lista de países deja de figurar como ajena a esta spec en el apartado 1 (N-02, resto de H-12); fila de 20000 usuarios en 5.1 (N-08) |
+| 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A2, A3, A4 y A5 pasan a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera, 2.2, 5.2, decisión 6 del apartado 7 y apartado 8 actualizados. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
+| 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-01 y SPEC-03 (bloque backend) |

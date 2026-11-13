@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Estado** | `borrador` (2026-11-12) |
+| **Estado** | `aprobada` (2026-11-13) |
 | **Requisitos** | R-03, R-04 y la parte de backend de R-10 y R-11 |
-| **Supuestos** | A10, A11, A12, A13, A14 y A18 (`decidido`) · A2 y A4 (`pendiente de confirmar`) |
-| **Depende de** | SPEC-03 (forma del historial dentro de la ficha, errores genéricos, CORS y esquema) y SPEC-02 (constante de países), las dos en `borrador` |
-| **Bloqueos para aprobarla** | A2 y A4 sin respuesta (con fecha límite, ver apartado 8) · se aprueba a la vez que SPEC-02 y SPEC-03: las tres forman el bloque backend (índice de specs) |
+| **Supuestos** | A10, A11, A12, A13, A14 y A18 (`decidido`) · A2 y A4 (`decidido (sin confirmación externa)`, 2026-11-13) |
+| **Depende de** | SPEC-03 (forma del historial dentro de la ficha, errores genéricos, CORS y esquema) y SPEC-02 (constante de países), las dos aprobadas el 2026-11-13 |
+| **Bloqueos para aprobarla** | Ninguno desde el 2026-11-13: A2 y A4 decididos sin confirmación externa (apartado 8) y aprobación a la vez que SPEC-02 y SPEC-03, las tres del bloque backend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -756,20 +756,23 @@ El criterio de qué decisiones llevan además un ADR está en
 
 ## 8. Pendiente antes de aprobar
 
-| Asunto | Qué cambiaría en esta spec |
+**Nada pendiente desde el 2026-11-13.** La fecha límite (viernes 13 de
+noviembre de 2026, 10:00) se cumplió sin respuesta y el Tech Lead decidió
+A2 y A4 con la hipótesis ya documentada: están en
+`decidido (sin confirmación externa)`. La consulta sigue abierta: si la
+respuesta llega, se aplica como cambio de esta spec, con fecha y motivo en
+su historial.
+
+| Asunto | Qué cambiaría en esta spec si la respuesta lo contradijera |
 |---|---|
 | A2 · plan | Si el plan tuviera significado propio, la lista de 2.1 y `/meta` |
 | A4 · países y tipos | La lista de países de 2.1 y el ejemplo de 4.4 |
-| SPEC-02 y SPEC-03 | Se aprueban a la vez que esta (bloque backend). Si cambian la constante de países o la forma del historial, cambian 2.1, 4.2 y 4.4 |
 
-**Fecha límite**: si el viernes 13 de noviembre de 2026 a las 10:00 no hay
-respuesta, el Tech Lead decide estos dos supuestos con la hipótesis ya
-documentada. Pasan a `decidido (sin confirmación externa)` y esta spec puede
-aprobarse. Si la respuesta llega después, se revisan.
+SPEC-02 y SPEC-03 forman con esta el bloque backend. Si cambian la
+constante de países o la forma del historial, cambian 2.1, 4.2 y 4.4.
 
-Queda además **sin verificar** la lectura directa de la página del
-Ministerio del Interior (devolvió `403`) y su fecha. Si eso bloquea la
-aprobación lo decide el Tech Lead.
+Sigue **sin verificar** la lectura directa de la página del Ministerio del
+Interior (devolvió `403`) y su fecha.
 
 ## Historial
 
@@ -780,3 +783,5 @@ aprobación lo decide el Tech Lead.
 | 2026-11-12 | Correcciones de la evaluación independiente (`04-calidad/evaluacion-specs-01.md`), decididas por el Tech Lead: la ficha incluye el historial y CA-06 lo excluye de la comparación (H-01); `id` de 1 a 9223372036854775807 y tabla 5.10 (H-04); prueba diferencial con `python-stdnum`, CA-19 (H-06); caso de parámetro desconocido en 5.9 (H-10); constante única de países, definida en SPEC-02 (H-12); referencias internas (H-13); ejemplos de `409` y de `422` (H-14); nuevo apartado 2.12 con el recorte, la unidad, el orden y la forma de los errores, E-34, E-35 y `too_long` para un identificador de más de 30 caracteres en cualquier país (H-22); precisión de `created_at` (H-23) |
 | 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: fila «Depende de» y aprobación en bloque con SPEC-02 y SPEC-03 (N-01); con un país no válido o ausente solo se comprueba del identificador lo que no depende del país, con E-18, 2.12, D-11 y cinco filas en 5.7 (N-03); normalización con «espacio» solo U+0020 y correspondencia explícita `a`–`z`, con casos de `ﬁ`, `ſ` y U+00A0 en 5.4 y 5.6 (N-11); el carácter de escape es `\` (N-12); D-15 y remisión a ADR-005 (N-14); CA-19 exacto y en futuro, con su resultado esperado (N-15, H-06); CA-19 dentro de la tabla (N-16); referencia de 4.1 (H-13) |
 | 2026-11-12 | Decisión del Tech Lead sobre la cuestión Q-04 de la segunda respuesta: la semilla de CA-19 es `20261112` |
+| 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A2 y A4 pasan a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera y apartado 8 actualizados. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
+| 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-02 y SPEC-03 (bloque backend) |
