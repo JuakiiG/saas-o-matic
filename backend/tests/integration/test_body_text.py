@@ -125,6 +125,8 @@ def test_charset_of_the_content_type_does_not_change_how_the_body_is_read(
     )
 
 
+# Never seen failing before the code (session 05, H-02): it fixes what must keep working.
+# A mutation (a guard that rejects whatever is not ASCII) showed afterwards that it can fail.
 @pytest.mark.parametrize(
     "written", [EMOJI_AS_ESCAPES, json.dumps(EMOJI, ensure_ascii=False)], ids=["escapes", "utf-8"]
 )
@@ -139,6 +141,8 @@ def test_customer_with_an_emoji_in_its_name_is_still_created(
     assert client.get(response.headers["location"]).json()["company_name"] == EMOJI
 
 
+# Never seen failing before the code (session 05, H-02), as the test above, and the same
+# mutation made it fail.
 @pytest.mark.parametrize("path", ["/pricing/quote", "/simulations"])
 def test_field_name_with_an_emoji_is_an_unknown_field_and_not_a_malformed_body(
     client: TestClient, path: str

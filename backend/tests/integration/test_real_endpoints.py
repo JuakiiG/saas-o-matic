@@ -108,6 +108,11 @@ def stored_rows(database: Database) -> list[list[tuple[object, ...]]]:
         return [connection.execute(query).fetchall() for query in EVERY_ROW]
 
 
+# Session 04, M-07: when `POST /simulations` was written, this test and the four that
+# reproduce 5.7 and CA-09 with it (the Content-Type with parameters, the undocumented
+# parameter, the unexpected failure and the forbidden operations) had 27 cases, and 20 of
+# them passed before any code: they were never seen failing. They prove common machinery
+# that already existed, on routes that already existed.
 @pytest.mark.parametrize(
     "row",
     GENERIC_ROWS,
@@ -158,6 +163,7 @@ def test_unexpected_failure_of_a_repository_returns_500_that_the_frontend_can_re
     assert caplog.records
 
 
+# Written after the code that it tests (session 04, b2): it was never seen failing.
 @pytest.mark.parametrize(("configured", "origin", "allowed"), META_ROWS)
 def test_meta_answers_with_the_origin_only_to_an_admitted_one(
     tmp_path: Path,
@@ -180,6 +186,7 @@ def test_meta_answers_with_the_origin_only_to_an_admitted_one(
     assert response.headers.get(ALLOW_ORIGIN) == allowed
 
 
+# Written after the code that it tests (session 04, b2): it was never seen failing.
 def test_preflight_of_the_customers_from_the_frontend_returns_200_with_cors_headers(
     client: TestClient, database: Database
 ) -> None:
@@ -194,6 +201,7 @@ def test_preflight_of_the_customers_from_the_frontend_returns_200_with_cors_head
     assert stored_rows(database) == before
 
 
+# Written after the code that it tests (session 04, b2): it was never seen failing.
 @pytest.mark.parametrize(
     ("changes", "expected"),
     [

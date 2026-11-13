@@ -15,12 +15,14 @@ CONTRACT_CODES = {
 FIELDS_WITH_A_MAXIMUM = ["company_name", "tax_id", "contact_email"]
 
 
+# Written after the code that it tests (session 04, Y-12): it was never seen failing.
 def test_problems_of_the_domain_are_exactly_the_codes_of_the_contract() -> None:
     """SPEC-01/E-07, SPEC-01/E-35: no problem without a code and no code that is never used."""
     assert {problem.value for problem in FieldProblem} == CONTRACT_CODES
     assert {code.value for code in FieldCode} >= CONTRACT_CODES
 
 
+# Written after the code that it tests (session 04, Y-12): it was never seen failing.
 @pytest.mark.parametrize("problem", [p for p in FieldProblem if p is not FieldProblem.TOO_LONG])
 def test_problem_becomes_an_error_with_its_code_and_a_message(problem: FieldProblem) -> None:
     """SPEC-01/E-35: the code of the contract and a text to show, whatever the field."""
@@ -29,6 +31,7 @@ def test_problem_becomes_an_error_with_its_code_and_a_message(problem: FieldProb
     assert error.message.endswith(".")
 
 
+# Written after the code that it tests (session 04, Y-12): it was never seen failing.
 @pytest.mark.parametrize("field", FIELDS_WITH_A_MAXIMUM)
 def test_too_long_tells_the_maximum_of_its_own_field(field: str) -> None:
     """SPEC-01/E-03, SPEC-01/E-04, SPEC-01/E-34: each field has its own maximum length."""

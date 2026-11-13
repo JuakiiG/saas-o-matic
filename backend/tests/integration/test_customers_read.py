@@ -116,7 +116,8 @@ def test_customer_that_does_not_exist_returns_404(client: TestClient, customer_i
         ("9" * 4301, "out_of_range"),
         ("9" * 20000, "out_of_range"),
         ("-" + "9" * 4301, "out_of_range"),
-        # Not a row of the table: the last size that the library reads as a number.
+        # Not a row of the table: the last size that the library reads as a number. It
+        # passed before the code of the three rows above (session 05, H-01).
         ("9" * 4300, "out_of_range"),
         ("abc", "not_an_integer"),
         ("1.5", "not_an_integer"),
@@ -231,6 +232,8 @@ def test_openapi_declares_the_contract_of_reading_customers(client: TestClient) 
     assert [(p["name"], p["in"], p["schema"]["type"]) for p in one["parameters"]] == [
         ("id", "path", "integer")
     ]
+    # The two lines of the limits were written after the code that they test (session 04,
+    # Z-04) and were never seen failing; a mutation showed afterwards that they can fail.
     limits = one["parameters"][0]["schema"]
     assert (limits.get("minimum"), limits.get("maximum")) == (1, MAX_ID)
     answered = one["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]

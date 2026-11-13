@@ -28,6 +28,7 @@ def repository(tmp_path: Path) -> CustomerRepository:
     return CustomerRepository(database)
 
 
+# Written after the code that it tests (session 04, Y-12): it was never seen failing.
 def test_added_customer_comes_back_with_its_id_and_its_date(repository: CustomerRepository) -> None:
     """SPEC-01/E-01: the stored customer, with the id that the database gave it."""
     assert repository.add(NEW, CREATED_AT) == Customer(
@@ -41,6 +42,7 @@ def test_added_customer_comes_back_with_its_id_and_its_date(repository: Customer
     )
 
 
+# Written after the code that it tests (session 04, Y-12): it was never seen failing.
 def test_second_customer_with_the_same_country_and_identifier_is_a_duplicate(
     repository: CustomerRepository,
 ) -> None:
@@ -50,6 +52,7 @@ def test_second_customer_with_the_same_country_and_identifier_is_a_duplicate(
         repository.add(NEW, CREATED_AT)
 
 
+# Written after the code that it tests (session 04, Y-12): it was never seen failing.
 def test_integrity_error_that_is_not_a_duplicate_is_not_reported_as_one(
     repository: CustomerRepository,
 ) -> None:
