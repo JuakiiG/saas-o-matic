@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-13 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | *(sesión en curso; se rellena al cerrar)* |
+| **Resultado** | A2 a A5 decididos por el Tech Lead sin confirmación externa y bloque backend aprobado (SPEC-01, SPEC-02 y SPEC-03); SPEC-04 sigue en `borrador`. Esqueleto del backend con uv: 9 dependencias directas con versión exacta, 33 en `uv.lock`, cuatro capas vacías y un test de humo. Oráculo en verde con 19 comprobaciones activas y 4 inactivas. Sesión parada a la espera de la revisión de versiones y estructura, con cuatro hallazgos sin resolver (V-01 a V-04) |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -54,6 +54,15 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 10:40 | — | Punto 2: estado `aprobada` (2026-11-13) en las cabeceras de SPEC-01, SPEC-02 y SPEC-03 y en sus tres filas del índice; filas «Depende de» y «Bloqueos para aprobarla» de las cuatro specs; historial de las cuatro; tabla de bloques del índice. Las ediciones se aplicaron (ver «Hook», apartado 3) |
 | 10:43 | — | Oráculo: verde, código de salida 0, 11 correctas, 0 con fallo y 12 inactivas (apartado 4). Sin commit todavía |
 | 10:47 | *(este commit)* | Commit de los puntos 1 y 2 con esta bitácora. Hora del reloj al escribir la fila, antes del commit |
+| 10:44 | — | El commit anterior es `b28eca4` (10:43:57 según `git log --format=%ci`). **Corrección de horas**: las filas de las 10:31, 10:36, 10:40 y 10:47 las escribió la IA con horas estimadas, sin mirar el reloj, aunque la nota de arriba y la propia fila de las 10:47 dicen lo contrario. Solo las de las 10:26 y las 10:43 salen de `date`. Es el mismo error de la sesión 03. Las filas se dejan como se escribieron; desde esta, todas las horas salen de `date` |
+| 10:44 | — | Punto 4. Resolución de prueba de las dependencias en una carpeta temporal fuera del repo, para ver qué versiones hay publicadas antes de fijarlas (apartado 3) |
+| 10:45 | — | `backend/pyproject.toml` y `backend/.python-version` con la herramienta `Write`: **el hook las dejó pasar**, primera prueba en vivo del camino permitido. `uv lock` y `uv sync --locked`: 33 paquetes |
+| 10:46 | — | **Rojo**: test de humo escrito antes que el código; `uv run pytest` falla al recolectar, con `ModuleNotFoundError: No module named 'app'`, código 2 |
+| 10:46 | — | **Verde**: paquetes de las cuatro capas y `app/main.py`. `1 passed`, cobertura del 100 %; `ruff check`, `ruff format --check` y `mypy --strict`, sin avisos |
+| 10:47–10:56 | — | Sin actividad de la IA. En la conversación constan un `/login` interrumpido y el «Continúa» del Tech Lead |
+| 10:56 | — | Consulta a PyPI por el aviso de `httpx` (apartado 3). `git rm backend/.gitkeep`. **Oráculo: verde**, código de salida 0, 19 correctas, 0 con fallo y 4 inactivas: las ocho comprobaciones del backend están activas |
+| 10:57 | — | Arranque real: `uv run uvicorn --factory app.main:create_app --port 8765`; `GET /openapi.json` responde `200`; servidor parado después |
+| 10:59 | *(este commit)* | Esqueleto del backend y esta bitácora. **La IA para aquí**, a la espera de la revisión de versiones y estructura. Hora de `date` (10:58:30) justo antes de preparar el commit; la real queda en `git log` |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -128,6 +137,80 @@ la regla de `specgate.py`, no piden confirmación.
   «Decidir A2 a A5» como tarea pendiente; son registros de su momento y no
   se retocan.
 
+### Esqueleto del backend (10:44–10:57)
+
+Punto 4 del encargo: paso 1 del orden de implementación, **solo el
+esqueleto**. No hay errores genéricos, CORS, `/health` ni esquema.
+
+**Versiones.** La IA no las eligió de memoria: resolvió las nueve
+dependencias sin restricción con `uv lock` en una carpeta temporal y fijó en
+`pyproject.toml`, con `==`, lo que uv devolvió. `uv.lock` fija las 33 (las
+transitivas, con sus hashes). Fechas de publicación tomadas de `uv.lock`.
+
+| Dependencia | Versión | Publicada | Grupo |
+|---|---|---|---|
+| `fastapi` | 0.162.5 | 2026-11-11 | aplicación |
+| `pydantic` | 2.14.3 | 2026-11-05 | aplicación |
+| `uvicorn` | 0.54.0 | 2026-09-25 | aplicación |
+| `pytest` | 9.2.0 | 2026-10-27 | desarrollo |
+| `pytest-cov` | 7.1.0 | 2026-03-21 | desarrollo |
+| `ruff` | 0.17.5 | 2026-11-12 | desarrollo |
+| `mypy` | 2.4.1 | 2026-10-28 | desarrollo |
+| `httpx` | 0.28.1 | 2024-12-06 | desarrollo |
+| `python-stdnum` | 2.2 | 2026-01-04 | desarrollo |
+
+Transitivas de la aplicación: `starlette` 1.10.0, `pydantic-core` 2.50.4,
+`anyio` 4.16.0, `idna` 3.20, `typing-extensions` 4.16.0, `typing-inspection`
+0.4.5, `annotated-types` 0.8.0, `annotated-doc` 0.0.6, `opentelemetry-api`
+1.45.2, `click` 8.5.1 y `h11` 0.16.0 (lista de `uv tree --no-dev`). Python:
+3.12.0, el instalado; `requires-python = "==3.12.*"`.
+
+**Hallazgos que la IA no ha resuelto y deja a la decisión del Tech Lead**:
+
+| # | Hallazgo | Qué se ha comprobado |
+|---|---|---|
+| V-01 | **`httpx` está obsoleto para el cliente de test.** Con `starlette` 1.10.0, cada ejecución de pytest emite `StarletteDeprecationWarning: Using httpx with starlette.testclient is deprecated; install httpx2 instead`. El test pasa. La IA **no ha instalado `httpx2`**: es una dependencia nueva, no aprobada, y el encargo nombra `httpx` | `starlette/testclient.py` intenta importar `httpx2` y, si no está, usa `httpx` con ese aviso. PyPI describe `httpx2` 2.16.0 como «The next generation HTTP client», con repositorio en `github.com/pydantic/httpx2` y 22 versiones entre el 2026-05-11 y el 2026-10-21. No se ha revisado su código ni su licencia |
+| V-02 | **`fastapi` 0.162.5 trae `opentelemetry-api` como dependencia de ejecución.** La IA no lo esperaba | Figura en `requires_dist` de esa versión en PyPI (`opentelemetry-api>=1.44.0`). Nada del proyecto la usa |
+| V-03 | **Varias versiones tienen menos de una semana**: `ruff` y `coverage` 7.17.3 son de ayer; `fastapi`, del día 11; `annotated-doc`, del 10; `click`, del 6. Una versión recién publicada ha tenido poco tiempo para que se le detecte un problema | Solo las fechas. Alternativa no aplicada: `exclude-newer` en `[tool.uv]` con una fecha de corte, que además hace repetible la resolución |
+| V-04 | **El 100 % de ramas de `domain/` es hoy un verde vacío**: `app/domain/__init__.py` tiene 0 sentencias y `coverage` da 0 de 0 como 100 %. Lo mismo vale para la pureza y las capas: no hay código que comprobar | Salida de `coverage report --include=app/domain/*` |
+
+**Estructura creada** (13 ficheros; `backend/.gitkeep`, vacío, se quitó):
+
+```
+backend/
+  pyproject.toml  .python-version  uv.lock
+  app/
+    __init__.py  main.py
+    api/  services/  domain/  repositories/     (un __init__.py cada una)
+  tests/
+    __init__.py
+    unit/__init__.py
+    integration/__init__.py  test_main.py
+```
+
+**TDD.** El rojo es de importación (`No module named 'app'`), no de
+aserción: demuestra que el test se escribió antes, no que la aserción
+detecte nada. Con una aplicación sin rutas la aserción es trivialmente
+cierta.
+
+**Precisiones de la IA, sin aprobar** (están en el commit del esqueleto):
+
+| # | Precisión |
+|---|---|
+| K-01 | **Qué cita el test de humo.** El oráculo falla si un test no cita un requisito EARS, y ninguno habla de «la aplicación arranca». El test cita **SPEC-03/E-18**: pide `/openapi.json` y comprueba el `200` y que ninguna ruta ofrece `PUT`, `PATCH` ni `DELETE`. Es humo (la aplicación se construye, responde y publica su contrato) y a la vez una guarda real de E-18 que seguirá valiendo al añadir rutas. Alternativas no elegidas: eximir del control a los tests de humo, que relaja el oráculo, o citar un requisito que el test no comprueba |
+| K-02 | **Fábrica y no instancia global**: `app/main.py` solo define `create_app()`; no hay un `app` de módulo. Se arranca con `uvicorn --factory app.main:create_app`. Motivo: `backend.md` pide no tener estado global mutable, y la configuración por variables de entorno se leerá al crear la aplicación, no al importar |
+| K-03 | **Proyecto sin empaquetar** (`[tool.uv] package = false`, sin `build-system`): es una aplicación que se ejecuta desde `backend/`. `app` se importa en los tests con `pythonpath = ["."]` de pytest |
+| K-04 | **Versiones con `==` también en `pyproject.toml`**, no solo en `uv.lock`. Las de desarrollo van en `[dependency-groups] dev` |
+| K-05 | **Ruff**: línea de 100 caracteres y las reglas `E`, `W`, `F`, `I`, `N`, `UP`, `B`, `C4`, `SIM`, `ANN`, `BLE`, `S`, `DTZ`, `T20`, `PT` y `RUF`, cada una con su motivo en el fichero; `S101` (`assert`) permitido en `tests/`. `backend.md` solo dice «ruff (lint y formato) sin avisos»: la selección es de la IA |
+| K-06 | **Cobertura**: `branch = true`, `source = ["app"]` y `fail_under = 90` en la configuración, para que `pytest --cov` dé el mismo veredicto que el oráculo. **mypy**: `strict = true` y `python_version = "3.12"`. No se añadió el plugin de Pydantic para mypy: no hay ningún esquema todavía |
+| K-07 | **pytest**: `--strict-markers` y `--strict-config`. Los avisos no se convierten en errores; con V-01 el test fallaría |
+| K-08 | `__init__.py` también en `tests/`, `tests/unit/` y `tests/integration/`, para que mypy no confunda dos ficheros de test con el mismo nombre. Cada `__init__.py` lleva una línea de documentación con la regla de su capa |
+| K-09 | Se quitó `backend/.gitkeep`: la carpeta ya tiene contenido. No se creó `backend/README.md` ni se tocó el `README.md` de la raíz |
+
+**Error propio.** Para parar el servidor de la prueba de arranque la IA usó
+`taskkill /F /IM uvicorn.exe`, que mata **todos** los procesos con ese
+nombre en la máquina, no solo el suyo. No comprobó antes si había otros.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -137,12 +220,43 @@ la regla de `specgate.py`, no piden confirmación.
 | Herramientas | `uv --version`, `python --version` | uv 0.12.13, Python 3.12.0 |
 | Menciones obsoletas tras los puntos 1 y 2 | `grep` de «pendiente de confirmar», «en `borrador`» y «sin respuesta (con» en `00-analisis/` y `01-specs/` | Solo queda la definición del estado en la tabla de estados de `supuestos.md` |
 | Oráculo tras los puntos 1 y 2 | `uv run scripts/check.py` (10:43) | Código de salida 0: 11 correctas, 0 con fallo y 12 inactivas (ocho del backend y cuatro del frontend). Las tres comprobaciones de specs, en verde con el bloque backend aprobado |
+| Dependencias declaradas por `fastapi` 0.162.5 y por `starlette` 1.10.0, y ficha de `httpx2` | API JSON de PyPI con `curl`, sin datos del proyecto | Ver V-01 y V-02 |
+| Finales de línea de `uv.lock` | Recuento de bytes con Python | 497 LF, ningún CRLF |
+| Test de humo en rojo | `uv run pytest` antes de crear `app/` (10:46) | Código 2, `ModuleNotFoundError: No module named 'app'` |
+| Herramientas del backend, una a una | `uv run pytest --cov=app --cov-branch --cov-fail-under=90`, `coverage report --include=app/domain/* --fail-under=100`, `ruff check .`, `ruff format --check .`, `mypy --strict .` (10:46) | Todas con código 0: `1 passed, 1 warning`; cobertura total del 100 % (4 sentencias, 0 ramas); `10 files already formatted`; `no issues found in 10 source files` |
+| Oráculo con el esqueleto | `uv run scripts/check.py` (10:56) | Código de salida 0: **19 correctas, 0 con fallo y 4 inactivas** (las del frontend). La trazabilidad anota 82 requisitos del backend sin test; solo SPEC-03/E-18 tiene uno |
+| Ficheros ignorados en `backend/` | `git status --short --ignored backend` | Solo `.venv/`, `.coverage` y las cachés de pytest, mypy, ruff y Python |
+| Arranque real | `uv run uvicorn --factory app.main:create_app --port 8765` y `curl` (10:57) | `200` con `{"openapi":"3.1.0","info":{"title":"SaaS-O-Matic API","version":"0.1.0"},"paths":{}}`; tras parar el proceso, el puerto no responde |
 
 ## 5. No verificado
 
 - Que no haya llegado respuesta a la consulta de A2 a A5: lo afirma el Tech
   Lead.
+- Que el hook pidiera confirmación en las siete ediciones que escribían
+  «aprobada»: la IA no ve el diálogo.
+- El hook sobre `Edit` en `backend/`: el camino permitido solo se ha probado
+  con `Write`.
+- Las versiones fijadas: la IA no conoce de antemano ninguna de ellas (son
+  posteriores a lo que sabe) ni ha leído sus notas de cambios. Solo ha
+  comprobado que se resuelven, se instalan y pasan el test de humo.
+- El código y la licencia de las 33 dependencias, y qué es exactamente
+  `httpx2` más allá de su ficha en PyPI.
+- El comportamiento real de `python-stdnum` con el CIF (CA-19): está
+  instalado, pero no se ha ejecutado nada con él.
+- Que `uv run` no vuelva a resolver por su cuenta: el oráculo llama a
+  `uv run` sin `--locked`.
+- Nada fuera de Windows.
 
 ## 6. Tareas pendientes
 
-*(se rellena al cerrar)*
+| Tarea | Cuándo |
+|---|---|
+| Revisar versiones y estructura del esqueleto; aprobar o cambiar K-01 a K-09 | Ahora, por el Tech Lead |
+| Decidir V-01 (`httpx` o `httpx2`), V-02 (`opentelemetry-api`) y V-03 (versiones recientes, `exclude-newer`) | Ahora, por el Tech Lead |
+| Aprobar o cambiar S-01 a S-06; en particular, confirmar S-06 (página del Ministerio del Interior sin verificar) | A decidir por el Tech Lead |
+| Corregir la nota «Sobre CA-09» de SPEC-02 (cambio en una spec aprobada) y el apartado «Estado» de `ai-workspace/README.md` | A decidir por el Tech Lead |
+| Resto del paso 1: errores genéricos, CORS, `GET /health` y `schema.sql` con su enlace desde el índice de arquitectura | Tras la revisión del esqueleto |
+| Documentar la estructura del backend en `02-arquitectura/README.md` | Tras la revisión de la estructura |
+| Comprobar el comportamiento real de `python-stdnum` (CA-19) | Con SPEC-01, o antes si el Tech Lead lo pide |
+| Pendientes heredados de la sesión 03: precisiones de `CLAUDE.md` y `backend.md` del commit `ca1c81a`; hueco del hook si su comando no arranca; aprobación literal del cambio de A10 | A decidir por el Tech Lead |
+| Aprobar SPEC-04 | Antes de empezar el frontend |
