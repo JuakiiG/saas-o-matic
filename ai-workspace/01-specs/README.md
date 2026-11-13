@@ -133,6 +133,15 @@ alternativas y el motivo de cada una están en
   | La ruta existe pero no admite ese método (salvo `OPTIONS`, ver más abajo) | `405` | `method_not_allowed` |
   | La petición trae un parámetro de consulta no documentado | `422` | `validation_error`, con el código de campo `unknown_field` |
   | Error inesperado | `500` | `internal_error`, sin trazas ni detalles internos |
+  | La base de datos no puede abrirse o consultarse | `503` | `service_unavailable`, sin trazas ni detalles internos |
+
+  El `503` vale para **cualquier endpoint** que lea o escriba en la base de
+  datos, igual que para `GET /health` (SPEC-03, E-28). Solo cubre el fallo
+  de conexión o de consulta: un error de integridad (una clave repetida,
+  una referencia rota) no es un `503`. La validación va antes: una petición
+  no válida responde `422` sin consultar la base de datos. *Por qué: el
+  `500` dice «fallo nuestro» y el `503` «no disponible ahora», y el
+  frontend los trata distinto.*
 
   `not_found` es el de una ruta inexistente; un recurso que no existe en una
   ruta válida tiene su propio código (`customer_not_found`). El requisito y
@@ -154,3 +163,13 @@ alternativas y el motivo de cada una están en
   respuesta la consume el navegador, no el frontend. Un `OPTIONS` que no
   es una comprobación previa responde `405`, como cualquier otro método no
   admitido. El detalle está en SPEC-03 (2.7).
+
+## Historial de las convenciones
+
+Cambios de las convenciones comunes desde que el bloque backend tiene el
+visto bueno del Tech Lead (2026-11-13). Los anteriores están en el historial
+de cada spec.
+
+| Fecha | Cambio |
+|---|---|
+| 2026-11-13 | Decisión del Tech Lead al revisar SPEC-02: cualquier endpoint que no pueda abrir o consultar la base de datos responde `503` `service_unavailable`, igual que `GET /health`; no vale para un error de integridad. Fila nueva en la tabla de errores genéricos. Motivo: hasta ahora una petición válida a `POST /pricing/quote` con la base de datos inaccesible respondía `500` `internal_error`, y el frontend trata distinto «fallo nuestro» y «no disponible ahora». El porqué, en ADR-006 |

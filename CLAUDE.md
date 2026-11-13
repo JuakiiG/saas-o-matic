@@ -52,7 +52,9 @@ al tocar esa parte del repo.
    los requisitos que cubren. La IA propone el mensaje; solo hace el commit
    cuando el Tech Lead lo pide. Nunca hace `push`. Sin trailers de coautoría
    ni firmas de herramientas; el uso de la IA se documenta en
-   `ai-workspace/`.
+   `ai-workspace/`. Un commit solo se enmienda (`--amend`) si es el último
+   y no está subido, y la enmienda se anota en la bitácora. *Por qué: una
+   enmienda sin anotar cambia el historial sin dejar rastro.*
 8. **Procesos**: un proceso que la IA arranca se para por su PID, nunca por
    nombre. *Por qué: parar por nombre mata también procesos ajenos.*
 9. **Edición del código**: los ficheros de `backend/` y `frontend/` se editan

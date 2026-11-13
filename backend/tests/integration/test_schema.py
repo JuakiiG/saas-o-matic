@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.config import load_settings
 from app.main import create_app
-from app.repositories.database import Database
+from app.repositories.database import Database, DatabaseUnavailableError
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 TABLES = ["customers", "simulation_tiers", "simulations"]
@@ -193,6 +193,32 @@ def test_database_rejects_a_value_that_is_not_an_integer(
     """SPEC-03/E-19, SPEC-03/E-21: an amount with decimals or a text can never be true."""
     with closing(connection), pytest.raises(sqlite3.IntegrityError):
         connection.execute(statement, {**valid, **changes})
+
+
+def test_failed_query_is_reported_as_database_unavailable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SPEC-03/E-29: a query that the database cannot run is `DatabaseUnavailableError`."""
+    database = start_application(tmp_path / "test.db", monkeypatch)
+    with (
+        pytest.raises((sqlite3.Error, DatabaseUnavailableError)) as caught,
+        database.connection() as opened,
+    ):
+        opened.execute("SELECT 1 FROM table_that_does_not_exist")
+    assert caught.type is DatabaseUnavailableError
+
+
+def test_integrity_error_is_not_reported_as_database_unavailable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SPEC-03/E-20, SPEC-03/E-29: a broken reference is an integrity error, not a 503."""
+    database = start_application(tmp_path / "test.db", monkeypatch)
+    with (
+        pytest.raises((sqlite3.Error, DatabaseUnavailableError)) as caught,
+        database.connection() as opened,
+    ):
+        opened.execute(INSERT_SIMULATION, SIMULATION)
+    assert caught.type is sqlite3.IntegrityError
 
 
 def test_database_rejects_a_repeated_tier(connection: sqlite3.Connection) -> None:

@@ -1,10 +1,6 @@
 """Use case: is the backend able to serve requests?"""
 
-from app.repositories.database import Database, DatabaseUnavailableError
-
-
-class ServiceUnavailableError(Exception):
-    """Something the backend needs in order to answer is not available."""
+from app.repositories.database import Database
 
 
 class HealthService:
@@ -12,8 +8,5 @@ class HealthService:
         self._database = database
 
     def check(self) -> None:
-        """Raise `ServiceUnavailableError` if the database does not answer."""
-        try:
-            self._database.ping()
-        except DatabaseUnavailableError as error:
-            raise ServiceUnavailableError("database") from error
+        """Let `DatabaseUnavailableError` through if the database does not answer."""
+        self._database.ping()

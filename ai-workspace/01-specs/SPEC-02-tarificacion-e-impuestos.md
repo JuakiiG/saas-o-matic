@@ -164,6 +164,7 @@ booleanos, `null` y números con parte decimal, incluido `15.0`.
 | `404` | `customer_not_found` | No existe un cliente con ese `customer_id` | — |
 | `422` | `validation_error` | La petición no es válida | `missing`, `not_an_integer`, `out_of_range`, `unknown_field` |
 | `500` | `tax_rate_not_defined` | El país del cliente guardado no tiene tipo impositivo (fallo interno, E-10) | — |
+| `503` | `service_unavailable` | La base de datos no puede abrirse o consultarse (error genérico de las convenciones comunes) | — |
 
 Si la petición tiene a la vez un error de validación y un cliente
 inexistente, gana la validación (`422`): no se consulta la base de datos con
@@ -316,3 +317,4 @@ está cerrada (`supuestos.md`).
 | 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-01 y SPEC-03 (bloque backend) |
 | 2026-11-13 | Corrección ordenada por el Tech Lead: la nota «Sobre CA-09» decía que `scripts/check.py` aún no existía. Existe desde el 2026-11-12; la nota dice ahora qué comprueba y que el criterio no se da por cumplido mientras `domain/` no tenga código. Motivo: la nota había quedado desfasada. Sin cambios en requisitos, criterios ni casos |
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A2, A3 y A5 y, de A4, solo el uso del tipo general; la lista de países sigue siendo decisión propia. El Tech Lead mantiene su visto bueno a esta spec. Cabecera, 2.2, 5.2, decisión 6 del apartado 7 y apartado 8 actualizados, con el enlace a ADR-008; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |
+| 2026-11-13 | Decisión del Tech Lead al revisar esta spec, ya implementada: fila `503` `service_unavailable` en la tabla de errores del apartado 4. Motivo: una petición válida con la base de datos inaccesible respondía `500` `internal_error`; ahora responde como `GET /health`, por la regla nueva de las convenciones comunes (índice de specs, ADR-006). Sin cambios en el cálculo ni en la validación |

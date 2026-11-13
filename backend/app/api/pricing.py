@@ -61,6 +61,7 @@ def get_pricing_service(request: Request) -> PricingService:
             404: "No existe un cliente con ese `customer_id`",
             422: "La petición no es válida",
             500: "El país del cliente guardado no tiene tipo impositivo",
+            503: "La base de datos no responde",
         }
     ),
 )

@@ -14,7 +14,7 @@ from app.api.error_handling import install_error_handling
 from app.api.request_guard import RequestBodyGuard, reject_undocumented_query_parameters
 from app.config import load_settings
 from app.repositories.customers import CustomerRepository
-from app.repositories.database import Database
+from app.repositories.database import Database, DatabaseUnavailableError
 from app.services.health import HealthService
 from app.services.pricing import PricingService
 
@@ -54,7 +54,7 @@ def create_app() -> FastAPI:
     # The middleware added last is the outermost. CORS goes outside the guards so that
     # every response, error or not, leaves with its headers (SPEC-03/E-24).
     app.add_middleware(RequestBodyGuard)
-    install_error_handling(app)
+    install_error_handling(app, unavailable=DatabaseUnavailableError)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),

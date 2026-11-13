@@ -208,6 +208,21 @@ def test_invalid_request_is_rejected_without_reading_the_database(
     assert field_codes(quote(client, customer_id=0)) == [("customer_id", "out_of_range")]
 
 
+def test_valid_quote_without_database_returns_503_and_creates_nothing(
+    client: TestClient, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """SPEC-03/E-29: an endpoint that cannot read the database answers 503, like `/health`."""
+    path = tmp_path / "data" / "quote.db"
+    path.rename(tmp_path / "moved-away.db")
+    with caplog.at_level(logging.ERROR):
+        response = quote(client)
+    assert_problem(response, 503, "service_unavailable")
+    for leak in ("Traceback", "sqlite", "OperationalError", ".py", tmp_path.name):
+        assert leak not in response.text
+    assert not path.exists()
+    assert caplog.records
+
+
 @pytest.mark.parametrize("content", [None, b"{}"], ids=["absent-body", "empty-object"])
 def test_quote_without_fields_returns_422_with_both_missing(
     client: TestClient, content: bytes | None
@@ -236,8 +251,8 @@ def test_openapi_declares_the_contract_of_the_quote(client: TestClient) -> None:
     schemas = document["components"]["schemas"]
     operation = document["paths"].get("/pricing/quote", {}).get("post", {})
     responses = operation.get("responses", {})
-    assert sorted(responses) == ["200", "404", "422", "500"]
-    for status in ("404", "422", "500"):
+    assert sorted(responses) == ["200", "404", "422", "500", "503"]
+    for status in ("404", "422", "500", "503"):
         assert list(responses[status]["content"]) == [PROBLEM_JSON]
     reference = operation["requestBody"]["content"]["application/json"]["schema"]["$ref"]
     request = schemas[reference.rsplit("/", maxsplit=1)[-1]]

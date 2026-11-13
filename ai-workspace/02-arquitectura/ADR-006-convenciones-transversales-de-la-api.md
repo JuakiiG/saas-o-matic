@@ -52,6 +52,23 @@ implementar; fue el hallazgo H-03 de la primera evaluación. La excepción de
 CORS existe porque esa respuesta la consume el navegador, no el frontend, y
 no justifica código a medida.
 
+**Añadido el 2026-11-13**, tras la revisión de SPEC-02 por el Tech Lead:
+
+- A los errores genéricos se suma `service_unavailable` (`503`): lo
+  responde **cualquier endpoint** que no pueda abrir o consultar la base de
+  datos, no solo `GET /health`. Un error de integridad no es un `503`.
+
+| | Opción | A favor | En contra |
+|---|---|---|---|
+| **A** | **`503` en todos los endpoints**, traducido en un solo sitio | El frontend distingue «no disponible ahora» de «fallo nuestro» con un solo código, en los siete endpoints que leen la base de datos | Una regla más que probar en cada endpoint |
+| B | `503` solo en `GET /health`; en el resto, el `500` `internal_error` del error inesperado | Nada que escribir: era lo que ocurría | Un mismo fallo, la base de datos inaccesible, respondía con dos códigos según el endpoint |
+
+*Por qué*: el `500` dice que el fallo es nuestro y el `503`, que el servicio
+no está disponible ahora; el frontend los trata distinto. La traducción se
+hace una vez: el acceso a SQLite convierte el fallo de conexión o de
+consulta en un error propio, y el punto único de traducción de `api/` lo
+convierte en el `503`.
+
 ## 2. Identificadores
 
 | | Opción | A favor | En contra |
@@ -142,3 +159,10 @@ En contra, y cómo se trata:
   punto 4.
 - Si el historial creciera hasta necesitar paginación: la opción B del
   punto 5.
+
+## Historial
+
+| Fecha | Cambio |
+|---|---|
+| 2026-11-12 | Aceptado |
+| 2026-11-13 | Añadido al punto 1, por decisión del Tech Lead al revisar SPEC-02: el `503` `service_unavailable` pasa a ser un error genérico de cualquier endpoint que lea la base de datos |

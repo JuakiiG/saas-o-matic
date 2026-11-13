@@ -1,7 +1,8 @@
 """The SQLite database file, its schema and its connections."""
 
 import sqlite3
-from contextlib import closing
+from collections.abc import Iterator
+from contextlib import closing, contextmanager
 from pathlib import Path
 
 SCHEMA_FILE = Path(__file__).with_name("schema.sql")
@@ -21,6 +22,22 @@ class Database:
         """Open the existing file. A missing file is an error, never a new empty database."""
         return self._open("rw")
 
+    @contextmanager
+    def connection(self) -> Iterator[sqlite3.Connection]:
+        """A connection for one use, closed on exit. What every repository opens.
+
+        The only place where a failure of SQLite becomes `DatabaseUnavailableError`:
+        the file cannot be opened or a query cannot run. An integrity error is not
+        that: the database answered, and its answer is for the caller.
+        """
+        try:
+            with closing(self.connect()) as opened:
+                yield opened
+        except sqlite3.IntegrityError:
+            raise
+        except sqlite3.Error as error:
+            raise DatabaseUnavailableError("the database does not answer") from error
+
     def create_schema(self) -> None:
         """Create the file, its folder and the missing tables; existing data is kept.
 
@@ -39,8 +56,5 @@ class Database:
 
     def ping(self) -> None:
         """Run a trivial query that touches no business data."""
-        try:
-            with closing(self.connect()) as connection:
-                connection.execute("SELECT 1").fetchone()
-        except sqlite3.Error as error:
-            raise DatabaseUnavailableError("the database does not answer") from error
+        with self.connection() as opened:
+            opened.execute("SELECT 1").fetchone()

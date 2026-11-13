@@ -1,7 +1,5 @@
 """Read access to the stored customers."""
 
-from contextlib import closing
-
 from app.repositories.database import Database
 
 
@@ -11,7 +9,7 @@ class CustomerRepository:
 
     def country_of(self, customer_id: int) -> str | None:
         """Country of the customer, or None if there is no customer with that id."""
-        with closing(self._database.connect()) as connection:
+        with self._database.connection() as connection:
             row = connection.execute(
                 "SELECT country FROM customers WHERE id = ?", (customer_id,)
             ).fetchone()

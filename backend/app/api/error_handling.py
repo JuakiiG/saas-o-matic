@@ -25,7 +25,6 @@ from app.api.problems import (
 )
 from app.api.validation import field_errors
 from app.domain.countries import TaxRateNotDefinedError
-from app.services.health import ServiceUnavailableError
 from app.services.pricing import CustomerNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -49,8 +48,19 @@ class UnexpectedErrorGuard(BaseHTTPMiddleware):
             return problem_response(INTERNAL_ERROR)
 
 
-def install_error_handling(app: FastAPI) -> None:
-    """Register the handlers and the guard on the application."""
+def install_error_handling(app: FastAPI, unavailable: type[Exception]) -> None:
+    """Register the handlers and the guard on the application.
+
+    `unavailable` is the error that means "the database cannot be read now" (503). The
+    composition root hands it over because this layer does not import `repositories/`.
+    """
+    _install_request_handlers(app)
+    _install_use_case_handlers(app, unavailable)
+    app.add_middleware(UnexpectedErrorGuard)
+
+
+def _install_request_handlers(app: FastAPI) -> None:
+    """Errors of the request itself, found before any use case runs."""
 
     @app.exception_handler(ProblemError)
     async def handle_problem(request: Request, error: ProblemError) -> Response:
@@ -71,6 +81,10 @@ def install_error_handling(app: FastAPI) -> None:
             return problem_response(INTERNAL_ERROR)
         return problem_response(problem, error.headers)
 
+
+def _install_use_case_handlers(app: FastAPI, unavailable: type[Exception]) -> None:
+    """Errors that a service, the domain or the database raise while answering."""
+
     @app.exception_handler(CustomerNotFoundError)
     async def handle_unknown_customer(request: Request, error: CustomerNotFoundError) -> Response:
         return problem_response(CUSTOMER_NOT_FOUND)
@@ -81,9 +95,8 @@ def install_error_handling(app: FastAPI) -> None:
         logger.error("Country without tax rate: %s", error)
         return problem_response(TAX_RATE_NOT_DEFINED)
 
-    @app.exception_handler(ServiceUnavailableError)
-    async def handle_unavailable(request: Request, error: ServiceUnavailableError) -> Response:
+    @app.exception_handler(unavailable)
+    async def handle_unavailable(request: Request, error: Exception) -> Response:
+        # Whatever the endpoint: not available now, which is not a failure of ours (500).
         logger.error("Service unavailable: %s", error, exc_info=error)
         return problem_response(SERVICE_UNAVAILABLE)
-
-    app.add_middleware(UnexpectedErrorGuard)

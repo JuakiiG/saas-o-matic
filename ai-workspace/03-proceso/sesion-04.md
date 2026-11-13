@@ -679,6 +679,62 @@ Precisiones de la IA sobre SPEC-02, **sin aprobar**:
 | W-25 | `ActiveUsersOutOfRangeError` del dominio no tiene traducción HTTP propia: si llegara a lanzarse, saldría como `500` `internal_error` | La API valida el rango antes; que el dominio lo lance sería un fallo nuestro |
 | W-26 | El `405` de `GET /pricing/quote` lleva `Allow: POST`, correcto porque la ruta solo tiene un método | El pendiente de la cabecera `Allow` sigue para la primera ruta con dos métodos (SPEC-01) |
 
+### Revisión de SPEC-02 por el Tech Lead (13:07)
+
+**Aprobada.** El Tech Lead dice haber comprobado el oráculo, las tablas 5.1
+a 5.3 contra un cálculo aparte y 30 casos contra un servidor real con
+`uvicorn` (la IA no lo ha visto). Las cinco correcciones del paso 1, bien
+hechas. Aprobados U-01 a U-06, P-01 a P-08 y W-01 a W-26, con estos cambios:
+
+| # | Decisión | Motivo que da |
+|---|---|---|
+| s1 | **W-21 cambia.** Regla nueva: cualquier endpoint que no pueda abrir o consultar la base de datos responde `503` `service_unavailable`, igual que `/health`, traducido en un solo sitio. Solo para el fallo de conexión o de consulta, no para un error de integridad. Cambia las convenciones del índice de specs, ADR-006 (con fila de historial) y la tabla de errores de SPEC-02. Test en rojo antes: petición válida con el fichero apartado, `503` y el fichero no reaparece | El `500` dice «fallo nuestro» y el `503` «no disponible ahora»; el frontend los trata distinto, y SPEC-01 y SPEC-03 añaden seis endpoints que leen la base de datos |
+| s2 | W-10, W-11 y W-12 pasan a ser reglas escritas en las convenciones del índice («Errores de validación»), con fila de historial | Eran reglas que la spec no decía |
+| s3 | W-14: **no se retoca el OpenAPI generado**. Limitación conocida: el documento publica los límites como decimales y el máximo de un identificador no es exacto; la validación usa el entero exacto, y lo demuestran los casos de 2^63 − 1 y 2^63. Se anota junto a CA-10 de SPEC-02 y en la lista de limitaciones para el README | — |
+| s4 | W-15: añadir el test que fija ese comportamiento (parámetro no documentado junto a un cuerpo no válido) | — |
+| s5 | P-06: añadir el test que compara la entrada `errors` del esquema declarado con la de un `422` real de `POST /pricing/quote` | Ya hay un `422` real |
+| s6 | Actualizar la nota «Sobre CA-09» de SPEC-02, con fila de historial | El cálculo ya existe y `domain/` está al 100 % |
+| s7 | Limitación conocida nueva, para la misma lista: una clave repetida en el cuerpo JSON se acepta y gana la última | — |
+| a1 | **ADR-008 se acepta con dos añadidos**; pasa a `aceptado` cuando estén. Primero: el umbral de 10.000 € de las ventas de servicios electrónicos a particulares de otros países de la UE, que afecta a la fila «Particular de otro país de la UE» (hoy dice «Igual»). Verificarlo en la fuente oficial de la Comisión Europea y citarlo con la fecha | — |
+| a2 | Segundo: Canarias, Ceuta y Melilla están fuera del territorio del IVA de la UE (página «Territorial scope» de la Comisión Europea y artículo 6 de la Directiva 2006/112/CE). Sustituir con esa fuente la parte hoy no verificada; lo que siga sin verificar, que siga dicho. Si pasa de una página, no se recorta contenido | — |
+| n3 | **Norma de proceso**: un commit solo se enmienda si es el último y no está subido, y se anota en la bitácora | El del cierre de la bitácora se enmendó sin anotarlo |
+
+Commits pedidos: uno para la regla del `503` (specs, ADR-006, test y
+código), uno para el resto de cambios de specs y tests y uno para ADR-008,
+con el oráculo en verde tras cada uno y su salida a la vista.
+
+Después, **SPEC-01 completa**, con las mismas normas, en este orden: (a)
+dominio, normalización y validación del identificador fiscal como funciones
+puras, con una fila de test por cada fila de 5.1 a 5.6, la prueba
+diferencial con `python-stdnum` y el 100 % de ramas; (b) `POST /customers`
+y `GET /meta`; (c) `GET /customers/{id}` y el buscador, con la traducción
+de los errores de la ruta (W-18) y la cabecera `Allow` del `405`. El máximo
+de identificador se mueve a un módulo común de `api/` cuando lo use el
+segundo endpoint (W-23). Un commit por pieza. Al terminar SPEC-01, parar.
+
+**Enmienda sin anotar (n3)**: el commit de cierre de la bitácora se hizo a
+las 12:35:37 como `ae82407` y la IA lo rehízo con `git commit --amend` a las
+12:35:49 (`70c2759`) para corregir un recuento en la fila «Resultado» (26
+precisiones por 34). Era el último commit y no estaba subido, pero la
+enmienda no se anotó aquí; solo se dijo en la respuesta. La otra enmienda de
+la sesión (`bbe0c25` → `72684a9`, ADR-008) sí está anotada.
+
+### Cambios tras la revisión de SPEC-02 (desde las 13:08)
+
+| Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
+|---|---|---|---|---|
+| 13:13 | s1 | 13:09: `assert 500 == 503` (petición válida con el fichero apartado), `['200', '404', '422', '500'] == [… '503']` (OpenAPI) y `OperationalError is DatabaseUnavailableError` (consulta que falla). El test de que un error de integridad **no** se traduce pasó desde el principio: es un test de guarda. Antes del rojo se escribió un esqueleto de `Database.connection()` sin traducción, para que el rojo fuera de aserción | `Database.connection()` es el único sitio donde un fallo de SQLite pasa a `DatabaseUnavailableError`; un `IntegrityError` sale tal cual. Los repositorios abren con él. `error_handling.py` traduce ese error a `503`; la clase se la pasa `main.py`, porque `api/` no importa de `repositories/`. `ServiceUnavailableError` desaparece de `services/`. `POST /pricing/quote` declara el `503`. Índice de specs (fila nueva en los errores genéricos e historial), ADR-006 (añadido con alternativas e historial) y SPEC-02 (fila de errores e historial). Norma n3 en `CLAUDE.md` | `163 passed`. **Oráculo en rojo a las 13:11**: `install_error_handling` tenía 43 líneas (máximo 40); se dividió en dos por responsabilidad. Oráculo en verde a las 13:13 (20 correctas, 0 con fallo, 4 inactivas) |
+
+Precisiones de la IA, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| X-01 | Se traduce a `503` **todo** error de SQLite que no sea de integridad, también un `ProgrammingError` (una sentencia mal escrita por nosotros), que en rigor es un fallo nuestro | El encargo dice «fallo de conexión o de consulta, no error de integridad». Distinguir más exige enumerar clases de error de SQLite; si el Tech Lead lo quiere, se acota a `OperationalError` y `DatabaseError` |
+| X-02 | **SPEC-03 no se ha tocado**: su tabla 5.7 (errores genéricos) no tiene fila para el `503` de un endpoint que no sea `/health`. E-29 lo cubre porque remite a la tabla de las convenciones | El encargo nombra el índice, ADR-006 y SPEC-02. Si hace falta una fila en 5.7, es un cambio de SPEC-03 |
+| X-03 | Un test que ya existía cambió su valor esperado: el del OpenAPI de la proyección exige ahora también el `503` | Lo cambia la spec (fila nueva en la tabla de errores), no la implementación |
+| X-04 | La norma n3 se escribió en el punto 7 de `CLAUDE.md` sin que el encargo dijera dónde | Las normas de proceso anteriores están ahí |
+| X-05 | **Dos descuidos de la IA.** Se ejecutó `ruff format` sobre `tests/integration/test_schema.py`, que es modificar un fichero de `backend/` sin las herramientas de edición (norma n2); solo partió una línea. Y la fila de historial de SPEC-02 se añadió con una orden de la consola (`printf >>`) y no con la herramienta de edición, de modo que el hook de las specs no la vio; el texto no cambia el estado de la spec | Desde aquí, el formato se corrige a mano con la herramienta de edición y las specs solo se tocan con ella |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
