@@ -41,6 +41,17 @@ Las dependencias van en un solo sentido: `api → services → domain`,
 - Los esquemas de entrada rechazan campos desconocidos (`extra="forbid"`) y
   acotan rangos y longitudes. Los esquemas de la API no se reutilizan como
   modelos de dominio ni de persistencia.
+- **Excepción estrecha (ADR-009)**: Pydantic valida los endpoints cuyas
+  reglas son por campo y sin dependencias entre campos (como
+  `POST /pricing/quote`). Solo cuando la spec fija un orden de
+  comprobaciones dentro de un campo o una dependencia entre campos (hoy, el
+  alta de clientes: SPEC-01, 2.12), la entrada la valida a mano una función
+  pura de `domain/` y el esquema Pydantic documenta el contrato sin validar.
+  En ese caso: un test compara los campos, su orden, los obligatorios y el
+  tipo que publica el OpenAPI con los que valida el dominio; el OpenAPI
+  sigue declarando que no se admiten campos adicionales; y no publica
+  ningún límite que el código no aplique exactamente así. *Por qué: el
+  contrato publicado y la validación real no pueden separarse.*
 - Las dependencias (conexión, servicios) se inyectan con `Depends`; nada de
   estado global mutable.
 - Los errores de dominio son excepciones propias que la capa `api/` traduce a

@@ -788,6 +788,7 @@ La IA paró tras la pieza (a) y preguntó dos cosas. Respuestas:
 | Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
 |---|---|---|---|---|
 | 13:44 | t1 | 13:43: `At index 2 diff: ('zeta', 'unknown_field') != ('Beta', 'unknown_field')`, al cambiar el valor esperado del test de la ruta de prueba | `in_contract_order()` en `app/api/validation.py`: campos del contrato en su orden y después los desconocidos por nombre. Convención del índice corregida, con historial. El commit de la pieza (a) es `235322a` (13:30:18) | `302 passed`; oráculo en verde a las 13:44 (20 correctas, 0 con fallo, 4 inactivas) |
+| 13:47 | t2 | No aplica: documentos, antes del código | `ADR-009` (`aceptado`), con las tres opciones comparadas y las tres condiciones del Tech Lead; regla estrecha en `.claude/rules/backend.md`; fila en el índice de arquitectura. El commit de t1 es `dc5b0a1` (13:44:51) | Oráculo en verde antes del commit |
 
 Precisión de la IA, **sin aprobar**: «orden alfabético» se ha implementado
 como **orden por punto de código** (`Beta` va antes que `alpha`), y así

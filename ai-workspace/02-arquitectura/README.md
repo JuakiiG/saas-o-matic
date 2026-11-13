@@ -12,6 +12,7 @@
 | [ADR-006](ADR-006-convenciones-transversales-de-la-api.md) | Convenciones transversales de la API: errores en `problem+json` con código estable, identificadores, fechas, constante única de países e historial dentro de la ficha | `aceptado` (2026-11-12) |
 | [ADR-007](ADR-007-margen-de-las-versiones.md) | Ninguna dependencia se fija en una versión publicada hace menos de una semana: fecha de corte `exclude-newer` de uv | `aceptado` (2026-11-13) |
 | [ADR-008](ADR-008-casos-fiscales-no-modelados.md) | Cómo se abordarían la inversión del sujeto pasivo y los demás casos fiscales que hoy no se modelan. Es un diseño: nada está implementado | `aceptado` (2026-11-13) |
+| [ADR-009](ADR-009-validacion-del-alta-en-el-dominio.md) | El alta de clientes la valida a mano una función pura del dominio; Pydantic sigue validando los endpoints sin orden de comprobaciones ni dependencias entre campos | `aceptado` (2026-11-13) |
 
 Cada ADR recoge el contexto, las opciones comparadas, la decisión con su
 motivo y las consecuencias, también las negativas.
