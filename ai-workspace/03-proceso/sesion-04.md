@@ -66,6 +66,7 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 11:10 | — | El commit anterior es `bcabea2` (10:58:57 según `git log`). Revisión del esqueleto por el Tech Lead: aprobado, con ocho decisiones (apartado 3) |
 | 11:25 | `9344eed`, `203d602` | Fila escrita a las 11:25; las horas de dentro salen de `date` en cada comando y de `git log`. 11:11, rojo de `httpx` con los avisos como errores. 11:12, `httpx2` y fecha de corte: verde sin avisos; oráculo en verde. 11:13, commit `9344eed` (dependencias). 11:14, tests del oráculo en rojo y en verde. 11:15, oráculo real en verde, 19 correctas y 5 inactivas. 11:16, commit `203d602` (oráculo). 11:17–11:24, documentación: ADR-005, ADR-007, historiales de SPEC-01 y SPEC-02, `ai-workspace/README.md` y `CLAUDE.md` |
 | 11:32 | *(este commit)* | El commit de documentación es `c6e13f2` (11:26:01 según `git log`). Pieza 1 del paso 1, errores genéricos: rojo a las 11:30, verde a las 11:31 y oráculo en verde a las 11:31 (apartado 3) |
+| 11:34 | *(este commit)* | El commit de la pieza 1 es `fd8da13` (11:32:30 según `git log`). Pieza 2, CORS: rojo a las 11:33, verde y oráculo en verde a las 11:34 (apartado 3) |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -370,6 +371,44 @@ códigos por campo. Depende de los campos de cada contrato y se hará con el
 primer endpoint que tenga cuerpo (SPEC-02). Hasta entonces, un error así
 saldría con el formato por defecto de FastAPI; hoy ninguna ruta real lo
 puede provocar. Tampoco se ha hecho ninguna prueba de mutación.
+
+### Paso 1 · Pieza 2: CORS (11:32–11:35)
+
+Requisitos: SPEC-03/E-24, E-25, E-26, E-30 y E-31, y el segundo caso de
+E-33. Middleware de CORS estándar del framework, sin código a medida, con
+los orígenes de `CORS_ORIGINS` leídos al construir la aplicación
+(`app/config.py`).
+
+**Comportamiento estándar observado antes de escribir el test** (pendiente
+desde la sesión 03): con Starlette 1.10.0, la comprobación previa rechazada
+responde **`400`** con cuerpo de texto («Disallowed CORS origin»), que era lo
+esperado y no estaba verificado. Si el origen no está admitido no lleva
+`access-control-allow-origin`; si lo rechazado es el método, sí la lleva. El
+test compara el estado y el conjunto completo de cabeceras con valores
+escritos en el propio test.
+
+**Rojo (11:33)**: `8 failed, 4 passed`, los ocho **por aserción**
+(`None == 'http://localhost:4200'`, `405 == 200`, `405 == 400`). En la
+primera ejecución cuatro fallaban con `KeyError` al leer la cabecera
+ausente; la IA cambió la lectura a `headers.get(...)` para que el fallo
+fuera una aserción y repitió el rojo. Los cuatro que pasaban comprueban
+ausencias, que sin middleware se cumplen solas. **Verde (11:34)**:
+`35 passed`, 133 sentencias y 14 ramas cubiertas. Oráculo en verde: 20
+correctas, 0 con fallo y 4 inactivas.
+
+**Precisiones de la IA, sin aprobar**:
+
+| # | Precisión |
+|---|---|
+| C-01 | Los tests usan `GET /probe` en lugar de `GET /meta`, que no existe. Las filas de 5.6 con `/meta` (CA-15) quedan pendientes hasta SPEC-01 |
+| C-02 | `CORS_ORIGINS` admite espacios alrededor de cada origen y entradas vacías (una coma final). **Definida pero vacía no es «sin definir»**: no se admite ningún origen |
+| C-03 | El middleware estándar anuncia en `access-control-allow-headers`, además de `Content-Type`, las cabeceras `Accept`, `Accept-Language` y `Content-Language`, y añade `access-control-max-age: 600`. La spec dice que la cabecera admitida es `content-type`; no se ha escrito código para quitar las otras |
+| C-04 | La cabecera CORS acompaña también a los `404`, `405`, `415`, `400` y `422`: los dos guardas quedan dentro del middleware de CORS |
+
+**Visto y no resuelto**: en el `405` de `OPTIONS /probe`, la cabecera
+`Allow` del framework dice solo `POST`, aunque la ruta admite también
+`GET`. Las dos operaciones se declaran por separado y el framework informa
+de la primera que coincide.
 
 ## 4. Comprobaciones hechas en la sesión
 
