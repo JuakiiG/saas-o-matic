@@ -252,7 +252,7 @@ Los resultados citados como «sonda» salen de scripts de Python ejecutados con 
 - **Afecta a:** las convenciones (`400 malformed_request`).
 
 **H-08 · baja · El email admite espacios distintos de U+0020**
-- **Evidencia (sonda):** `contact_email` = `a b@c.example` (con un espacio de no separación) responde `201` y se guarda tal cual.
+- **Evidencia (sonda):** `contact_email` = `a b@c.example` (con un espacio de no separación) responde `201` y se guarda tal cual.
 - **Causa:** `app/domain/customers.py:185` solo busca U+0020.
 - **Qué dice la spec:** SPEC-01 2.1 dice «sin espacios» pero no define qué es un espacio. 2.12 define «recortar» con U+0020, no esta regla.
 - **Afecta a:** SPEC-01/E-04. Es una ambigüedad de la spec.
