@@ -1,5 +1,8 @@
 """Validation of a new customer in the domain (SPEC-01: 2.1, 2.10, 2.12 and table 5.7)."""
 
+import sys
+import unicodedata
+
 import pytest
 
 from app.domain.customers import (
@@ -31,6 +34,14 @@ SEARCH_FORMS = [
     ("Ejemplo_Uno SL", "ejemplo_uno sl"),
     ("José Pruebas SL", "jose pruebas sl"),
     ("JOSE", "jose"),
+]
+
+
+# Every character that Unicode calls a separator: space (Zs), line (Zl) and paragraph (Zp).
+SEPARATORS = [
+    chr(code_point)
+    for code_point in range(sys.maxunicode + 1)
+    if unicodedata.category(chr(code_point)) in ("Zs", "Zl", "Zp")
 ]
 
 
@@ -83,6 +94,16 @@ def test_identifier_problems_and_the_order_of_every_field_at_once(
 ) -> None:
     """SPEC-01/E-15, SPEC-01/E-16, SPEC-01/E-35: format, check character and the order of 2.12."""
     assert problems_of(customer_with(changes)) == expected
+
+
+@pytest.mark.parametrize("separator", SEPARATORS, ids=lambda text: f"U+{ord(text):04X}")
+def test_email_with_any_unicode_separator_is_not_an_email(separator: str) -> None:
+    """SPEC-01/E-04: Zs, Zl and Zp, every character of the three categories (2.1, 2.12)."""
+    assert len(SEPARATORS) > 15
+    for email in (f"a{separator}b@c.example", f"a@b{separator}c.example"):
+        assert problems_of(customer_with({"contact_email": email})) == [
+            ("contact_email", "invalid_email")
+        ]
 
 
 def test_empty_object_misses_the_five_fields() -> None:

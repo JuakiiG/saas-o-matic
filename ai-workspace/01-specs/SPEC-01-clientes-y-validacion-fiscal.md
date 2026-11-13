@@ -30,7 +30,7 @@ genéricos de la API (convenciones comunes del índice).
 |---|---|
 | `company_name` | Texto. Se recortan los espacios de los extremos; el resultado tiene de 2 a 120 caracteres y ningún carácter de las categorías Unicode Cc o Cf (saltos de línea, tabuladores, caracteres de formato invisibles). Se guarda recortado |
 | `tax_id` | Texto de 30 caracteres como máximo antes de normalizar, en cualquier país. Se normaliza (2.2), se valida según el país (2.3 a 2.6 para España, 2.8 para el resto) y **se guarda normalizado** |
-| `contact_email` | Texto. Se recortan los espacios de los extremos; ningún carácter Cc o Cf; 254 caracteres como máximo; sin espacios; exactamente una `@`, con texto delante y un dominio detrás que contiene al menos un punto y no empieza ni acaba en punto. No se comprueba que el buzón exista |
+| `contact_email` | Texto. Se recortan los espacios de los extremos; ningún carácter Cc o Cf; 254 caracteres como máximo; **ningún separador Unicode** (categorías Zs, Zl y Zp: el espacio U+0020, el espacio de no separación U+00A0, el espacio ideográfico U+3000, los separadores de línea y de párrafo…) en ninguna posición; exactamente una `@`, con texto delante y un dominio detrás que contiene al menos un punto y no empieza ni acaba en punto. No se comprueba que el buzón exista |
 | `country` | Uno de los códigos de la constante de países del dominio (SPEC-02, 2.2), en mayúsculas: `ES`, `PT`, `FR`, `DE`, `IT`, `NL`, `IE`, `BE`, `GB` |
 | `plan` | Uno de los códigos de la lista cerrada: `starter` («Básico»), `professional` («Profesional»), `enterprise` («Empresa») (A2). Dato informativo, sin efecto en el precio |
 
@@ -235,6 +235,12 @@ del alta y para `GET /meta`. No existe una segunda lista de países.
   Cc o Cf en `company_name` o en `contact_email` da `invalid_characters`.
   En `tax_id` sigue valiendo 2.2: todo lo que no sea `0`–`9` o `A`–`Z` tras
   normalizar es `invalid_tax_id_format`.
+- **Separadores en el email**: cualquier carácter de las categorías Zs, Zl
+  o Zp que quede en `contact_email` después de recortar da
+  `invalid_email`, no `invalid_characters`. Como solo se recorta U+0020,
+  un espacio de no separación en un extremo no se quita y da
+  `invalid_email`. *Por qué: un espacio de no separación llega al copiar y
+  pegar un correo, y una dirección guardada así no sirve.*
 - **Las longitudes se miden en puntos de código Unicode.**
 - **Un solo error por campo: el primero que falle**, en este orden:
 
@@ -628,6 +634,11 @@ Numeración `1234567`, con C = 4 y letra `D`.
 | `company_name` | `123` (número) | `422` | `not_a_string` |
 | `contact_email` | `a@b.example` | Válido | — |
 | `contact_email` | `sin-arroba.example`, `a@@b.example`, `@b.example`, `a@b`, `a b@c.example`, `a@.example` | `422` | `invalid_email` |
+| `contact_email` | `a`, U+00A0 y `b@c.example` (espacio de no separación, Zs) | `422` | `invalid_email` |
+| `contact_email` | `a@b.example` seguido de U+00A0 | `422` | `invalid_email`: en los extremos solo se recorta U+0020 |
+| `contact_email` | `a`, U+3000 y `b@c.example` (espacio ideográfico, Zs) | `422` | `invalid_email` |
+| `contact_email` | `a`, U+2028 y `b@c.example` (separador de línea, Zl) | `422` | `invalid_email` |
+| `contact_email` | `a`, U+2029 y `b@c.example` (separador de párrafo, Zp) | `422` | `invalid_email` |
 | `contact_email` | 255 caracteres | `422` | `too_long` |
 | `country` | `US`, `XX`, `es`, `España`, `""` | `422` | `unsupported_country` |
 | `plan` | `premium`, `Starter`, `""` | `422` | `unsupported_plan` |
@@ -837,3 +848,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-13 | Corrección ordenada por el Tech Lead: tres notas que habían quedado desfasadas dicen ahora lo que ya es un hecho. 2.7: `python-stdnum` 2.2 está instalada y la prueba diferencial se ha ejecutado. «Sobre CA-17»: `scripts/check.py` existe y comprueba el criterio en cada ejecución. «Sobre CA-19»: el resultado esperado se cumple, con sus cifras. Sin cambios en reglas, requisitos, criterios ni casos |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-01), decidida por el Tech Lead: un entero bien escrito en la ruta, por largo que sea, responde `422` con `out_of_range`. Tres filas nuevas en 5.10 (4301 nueves, 20000 nueves y un signo menos con 4301 nueves); E-24 y CA-12 no cambian de texto y las cubren. Motivo: un `id` de 4301 dígitos o más respondía `500` `internal_error`, porque la biblioteca de validación deja de leerlo como número y su error no tenía código en el contrato |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-05 y H-11), decidida por el Tech Lead: un `q` con U+0000 devuelve la lista vacía, sin cambio en el contrato, y qué se compara lo decide el dominio, no la sentencia SQL. Dos puntos nuevos en 2.10 y tres filas en 5.9 (`%00`, `a%00` y `%00a`); E-25, E-31 y CA-13 no cambian de texto y las cubren. Motivo: SQLite corta el patrón de `LIKE` en ese carácter, de modo que `%00` devolvía el listado inicial y `a%00` buscaba «acaba en `a`»; y la condición de no comparar un identificador vacío estaba escrita en el SQL (`? <> ''`), contra 2.11 |
+| 2026-11-13 | Corrección de la evaluación independiente del backend (H-08), decidida por el Tech Lead: un email con cualquier separador Unicode (categorías Zs, Zl y Zp) responde `invalid_email`. Regla del email en 2.1, punto nuevo en 2.12 y cinco filas en 5.7; E-04 y CA-07 no cambian de texto y las cubren. Motivo: «sin espacios» no decía qué es un espacio y solo se rechazaba U+0020, de modo que un email con un espacio de no separación se aceptaba y se guardaba tal cual; ese carácter llega al copiar y pegar un correo, y guardado así no sirve |

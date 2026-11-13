@@ -26,6 +26,17 @@ INVALID_EMAILS = [
     "a b@c.example",
     "a@.example",
 ]
+# Unicode separators that are not U+0020, by code point so that no editor changes them:
+# no-break space and ideographic space (Zs), line separator (Zl), paragraph separator (Zp).
+NO_BREAK_SPACE = chr(0x00A0)
+SEPARATOR_EMAILS = [
+    f"a{NO_BREAK_SPACE}b@c.example",
+    # At an end: only U+0020 is trimmed.
+    f"a@b.example{NO_BREAK_SPACE}",
+    f"a{chr(0x3000)}b@c.example",
+    f"a{chr(0x2028)}b@c.example",
+    f"a{chr(0x2029)}b@c.example",
+]
 UNSUPPORTED_COUNTRIES = ["US", "XX", "es", "España", ""]
 InvalidRow = tuple[dict[str, object], list[tuple[str, str]]]
 
@@ -65,6 +76,7 @@ INVALID_ROWS: list[InvalidRow] = [
     ({"contact_email": "a\t@b.example"}, [("contact_email", "invalid_characters")]),
     ({"company_name": 123}, [("company_name", "not_a_string")]),
     *[one_field("contact_email", email, "invalid_email") for email in INVALID_EMAILS],
+    *[one_field("contact_email", email, "invalid_email") for email in SEPARATOR_EMAILS],
     ({"contact_email": EMAIL_OF_255}, [("contact_email", "too_long")]),
     *[one_field("country", code, "unsupported_country") for code in UNSUPPORTED_COUNTRIES],
     *[one_field("plan", code, "unsupported_plan") for code in ("premium", "Starter", "")],

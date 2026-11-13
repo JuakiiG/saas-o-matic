@@ -29,6 +29,8 @@ SPACE = " "
 NUL = "\x00"
 # Unicode categories never admitted: control and invisible format characters.
 FORBIDDEN_CATEGORIES = ("Cc", "Cf")
+# Unicode categories of the separators: spaces (U+0020 among them), lines and paragraphs.
+SEPARATOR_CATEGORIES = ("Zs", "Zl", "Zp")
 DIACRITICAL_MARK = "Mn"
 
 
@@ -188,11 +190,15 @@ def _contact_email(received: Mapping[str, object]) -> str | FieldProblem:
 
 
 def _has_email_form(email: str) -> bool:
-    """One `@`, text before it and a domain with a dot that is not at either end. No spaces."""
+    """One `@`, text before it and a domain with a dot that is not at either end.
+
+    And no separator of any kind: a no-break space pasted along with the address is
+    not U+0020, and an address stored with it is of no use.
+    """
     local, _, domain = email.partition("@")
     one_at = email.count("@") == 1
     dotted = "." in domain and not domain.startswith(".") and not domain.endswith(".")
-    return one_at and bool(local) and dotted and SPACE not in email
+    return one_at and bool(local) and dotted and not _has_category(email, SEPARATOR_CATEGORIES)
 
 
 def _one_of(
@@ -220,4 +226,9 @@ def _tax_id(received: Mapping[str, object], country: str | FieldProblem) -> str 
 
 
 def _has_forbidden_characters(text: str) -> bool:
-    return any(unicodedata.category(character) in FORBIDDEN_CATEGORIES for character in text)
+    return _has_category(text, FORBIDDEN_CATEGORIES)
+
+
+def _has_category(text: str, categories: tuple[str, ...]) -> bool:
+    """Whether any character of the text is of one of those Unicode categories."""
+    return any(unicodedata.category(character) in categories for character in text)
