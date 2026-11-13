@@ -65,6 +65,7 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 10:59 | *(este commit)* | Esqueleto del backend y esta bitácora. **La IA para aquí**, a la espera de la revisión de versiones y estructura. Hora de `date` (10:58:30) justo antes de preparar el commit; la real queda en `git log` |
 | 11:10 | — | El commit anterior es `bcabea2` (10:58:57 según `git log`). Revisión del esqueleto por el Tech Lead: aprobado, con ocho decisiones (apartado 3) |
 | 11:25 | `9344eed`, `203d602` | Fila escrita a las 11:25; las horas de dentro salen de `date` en cada comando y de `git log`. 11:11, rojo de `httpx` con los avisos como errores. 11:12, `httpx2` y fecha de corte: verde sin avisos; oráculo en verde. 11:13, commit `9344eed` (dependencias). 11:14, tests del oráculo en rojo y en verde. 11:15, oráculo real en verde, 19 correctas y 5 inactivas. 11:16, commit `203d602` (oráculo). 11:17–11:24, documentación: ADR-005, ADR-007, historiales de SPEC-01 y SPEC-02, `ai-workspace/README.md` y `CLAUDE.md` |
+| 11:32 | *(este commit)* | El commit de documentación es `c6e13f2` (11:26:01 según `git log`). Pieza 1 del paso 1, errores genéricos: rojo a las 11:30, verde a las 11:31 y oráculo en verde a las 11:31 (apartado 3) |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -319,6 +320,56 @@ dato; la IA no lo ha ejecutado.
   edición. Los cambios de `scripts/` y de `pyproject.toml` sí se hicieron
   con scripts de un solo uso, que el hook no ve; ninguno toca ficheros
   protegidos ni specs.
+
+### Paso 1 · Pieza 1: errores genéricos (11:27–11:32)
+
+Requisitos: SPEC-03/E-29 y E-33, y las convenciones comunes del índice.
+
+**Diseño, y por qué.** La IA pensaba apoyarse en piezas internas de FastAPI
+y comprobó antes en el código instalado (0.162.0) que ya no son como las
+recordaba: `get_flat_dependant` no existe y `include_router` deja en la
+aplicación un objeto privado `_IncludedRouter`. Por eso solo usa API
+pública:
+
+| Error | Dónde se decide |
+|---|---|
+| `415` y `400` | Un middleware (`RequestBodyGuard`) que lee el cuerpo antes de que lo analice ningún endpoint |
+| `422` por parámetro de consulta no documentado | Una dependencia de toda la aplicación, que compara la petición con lo que el OpenAPI declara para esa operación |
+| `404` y `405` | Un manejador de las excepciones HTTP del framework |
+| `500` | Un middleware (`UnexpectedErrorGuard`) que registra el error con su traza en el log y responde `internal_error` |
+
+Los códigos de error viven en un único módulo, `app/api/problems.py`.
+
+**Rojo (11:30)**: `20 failed, 3 passed`. Diecinueve fallan **por aserción**
+(`'application/json' == 'application/problem+json'`, `422 == 400`,
+`422 == 415`, `200 == 422`, `418 == 500`). El vigésimo, el fallo inesperado,
+no falla por aserción ni por importación: la excepción de la ruta de prueba
+sale de la aplicación (`RuntimeError`). Los tres que pasaban son el de humo
+y los dos que comprueban que algo válido se acepta. **Verde (11:31)**:
+`23 passed`, 115 sentencias y 14 ramas, todas cubiertas. Oráculo en verde:
+20 correctas, 0 con fallo y 4 inactivas; la comprobación de ramas se activa
+por primera vez, con 14 de 14.
+
+**Precisiones de la IA, sin aprobar** (en el commit de esta pieza):
+
+| # | Precisión |
+|---|---|
+| G-01 | **Rutas de prueba.** Los endpoints de negocio no existen, así que los tests añaden a la aplicación real cuatro rutas `/probe` (`tests/integration/probe_app.py`). Las filas de 5.7 con las rutas reales (CA-17) quedan pendientes hasta que existan |
+| G-02 | **El cuerpo se comprueba antes de buscar la ruta.** Una petición con cuerpo mal formado a una ruta que no existe, o con un método no admitido, responde `415` o `400`, no `404` ni `405`. La spec solo fija la precedencia entre `415`, `400` y `422` |
+| G-03 | `415` para cualquier petición con cuerpo cuyo `Content-Type` no sea `application/json` (con o sin parámetros), también si falta la cabecera. `application/problem+json` y otros `+json` no valen |
+| G-04 | `400` también si el cuerpo no es UTF-8 o está anidado más allá de lo que admite el analizador de JSON |
+| G-05 | Parámetros de consulta: la fuente de lo documentado es el OpenAPI de la operación. Un error por parámetro, en el orden de la petición; uno repetido se informa una vez |
+| G-06 | Un error HTTP con un estado que el contrato no define (la ruta de prueba lanza un `418`) responde `500` `internal_error` y se registra en el log |
+| G-07 | El `500` lo produce un middleware y no un manejador de excepciones, para que la respuesta quede dentro del middleware de CORS (E-24, pieza siguiente) |
+| G-08 | `title` escrito a mano por estado. El de `422` es «Unprocessable Content», como en el ejemplo del índice; Python 3.12 daría «Unprocessable Entity» |
+| G-09 | El `405` conserva la cabecera `Allow` del framework. Las rutas `/docs`, `/redoc` y `/openapi.json` siguen activas |
+
+**No hecho en esta pieza**: la traducción de los errores de validación del
+cuerpo y de la ruta (`missing`, `not_an_integer`, `out_of_range`…) a
+códigos por campo. Depende de los campos de cada contrato y se hará con el
+primer endpoint que tenga cuerpo (SPEC-02). Hasta entonces, un error así
+saldría con el formato por defecto de FastAPI; hoy ninguna ruta real lo
+puede provocar. Tampoco se ha hecho ninguna prueba de mutación.
 
 ## 4. Comprobaciones hechas en la sesión
 
