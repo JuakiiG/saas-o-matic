@@ -6,10 +6,13 @@ The amounts are the complete result of the one calculation of the system (SPEC-0
 
 from dataclasses import dataclass
 
+from app.domain.customers import Customer
 from app.domain.pricing import Quote
 
 MAX_STORAGE_GB = 1_000_000
 MAX_ESTIMATED_API_CALLS = 1_000_000_000
+# How many simulations a history shows: the ones stored last.
+MAX_HISTORY_SIMULATIONS = 50
 
 
 @dataclass(frozen=True)
@@ -35,3 +38,19 @@ class Simulation:
     estimated_api_calls: int
     quote: Quote
     created_at: str
+
+
+@dataclass(frozen=True)
+class SimulationHistory:
+    """The last simulations of a customer, and how many it has in all (SPEC-03, 2.4)."""
+
+    simulation_count: int
+    simulations: tuple[Simulation, ...]
+
+
+@dataclass(frozen=True)
+class CustomerProfile:
+    """A customer with its history: what the API shows of one customer (SPEC-03, 4.2)."""
+
+    customer: Customer
+    history: SimulationHistory

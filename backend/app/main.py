@@ -35,13 +35,12 @@ def _utc_now() -> datetime:
 def _install_services(app: FastAPI, database: Database) -> None:
     """Built here and handed to the endpoints through `Depends`: no global state."""
     customers = CustomerRepository(database)
+    simulations = SimulationRepository(database)
     pricing_service = PricingService(customers)
     app.state.health_service = HealthService(database)
-    app.state.customer_service = CustomerService(customers, utc_now=_utc_now)
+    app.state.customer_service = CustomerService(customers, simulations, utc_now=_utc_now)
     app.state.pricing_service = pricing_service
-    app.state.simulation_service = SimulationService(
-        pricing_service, SimulationRepository(database), utc_now=_utc_now
-    )
+    app.state.simulation_service = SimulationService(pricing_service, simulations, utc_now=_utc_now)
 
 
 def create_app() -> FastAPI:

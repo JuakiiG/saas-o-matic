@@ -1,4 +1,7 @@
-"""The customers: registering one, reading one and searching them (SPEC-01: 4.1 to 4.3)."""
+"""The customers: registering one, reading one and searching them.
+
+SPEC-01 (4.1 to 4.3) and, for the history inside a customer, SPEC-03 (4.2).
+"""
 
 from typing import Annotated
 
@@ -8,12 +11,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.api.identifiers import PathId
 from app.api.problems import problem_responses
 from app.api.request_guard import received_json_object
+from app.api.simulations import SimulationResponse, simulation_response
 from app.domain.customers import (
     COUNTRY_CODES,
     MAX_SEARCH_TEXT_LENGTH,
     MAX_TAX_ID_INPUT_LENGTH,
     PLAN_CODES,
 )
+from app.domain.simulations import CustomerProfile
 from app.services.customers import CustomerService
 
 router = APIRouter()
@@ -44,6 +49,22 @@ class CustomerResponse(BaseModel):
     country: str
     plan: str
     created_at: str
+
+
+class CustomerProfileResponse(CustomerResponse):
+    # The customer and its history: the total, and the simulations stored last (SPEC-03, 4.2).
+    simulation_count: int
+    simulations: list[SimulationResponse]
+
+
+def profile_response(profile: CustomerProfile) -> CustomerProfileResponse:
+    """The profile as the API shows it: each simulation exactly as its creation answered it."""
+    customer = CustomerResponse.model_validate(profile.customer)
+    return CustomerProfileResponse(
+        **customer.model_dump(),
+        simulation_count=profile.history.simulation_count,
+        simulations=[simulation_response(stored) for stored in profile.history.simulations],
+    )
 
 
 class CustomerItem(BaseModel):
@@ -98,7 +119,7 @@ def create_customer(
 
 @router.get(
     "/customers/{id}",
-    response_model=CustomerResponse,
+    response_model=CustomerProfileResponse,
     responses=problem_responses(
         {
             404: "No existe un cliente con ese `id`",
@@ -109,8 +130,8 @@ def create_customer(
 )
 def read_customer(
     customer_id: PathId, service: Annotated[CustomerService, Depends(get_customer_service)]
-) -> CustomerResponse:
-    return CustomerResponse.model_validate(service.get(customer_id))
+) -> CustomerProfileResponse:
+    return profile_response(service.get(customer_id))
 
 
 @router.get(

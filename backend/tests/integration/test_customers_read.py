@@ -213,7 +213,9 @@ def test_openapi_declares_the_contract_of_reading_customers(client: TestClient) 
     limits = one["parameters"][0]["schema"]
     assert (limits.get("minimum"), limits.get("maximum")) == (1, MAX_ID)
     answered = one["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
-    assert list(schemas[answered.rsplit("/", maxsplit=1)[-1]]["properties"]) == CUSTOMER_FIELDS
+    # The profile adds the history of simulations to the fields of the creation (SPEC-03, 4.2).
+    profile_fields = [*CUSTOMER_FIELDS, "simulation_count", "simulations"]
+    assert list(schemas[answered.rsplit("/", maxsplit=1)[-1]]["properties"]) == profile_fields
     search = document["paths"].get("/customers", {}).get("get", {})
     assert sorted(search.get("responses", {})) == ["200", "422", "503"]
     (parameter,) = search["parameters"]

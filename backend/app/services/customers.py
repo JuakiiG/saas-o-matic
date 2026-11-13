@@ -9,7 +9,9 @@ from app.domain.customers import (
     customer_search,
     validate_new_customer,
 )
+from app.domain.simulations import MAX_HISTORY_SIMULATIONS, CustomerProfile
 from app.repositories.customers import CustomerRepository, DuplicateCustomerError
+from app.repositories.simulations import SimulationRepository
 
 # UTC, ISO 8601, to the second (index of specs, "Fechas con hora").
 TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -24,8 +26,14 @@ class CustomerNotFoundError(Exception):
 
 
 class CustomerService:
-    def __init__(self, customers: CustomerRepository, utc_now: Callable[[], datetime]) -> None:
+    def __init__(
+        self,
+        customers: CustomerRepository,
+        simulations: SimulationRepository,
+        utc_now: Callable[[], datetime],
+    ) -> None:
         self._customers = customers
+        self._simulations = simulations
         # The clock comes from outside: the domain never reads it and a test can fix it.
         self._utc_now = utc_now
 
@@ -41,12 +49,13 @@ class CustomerService:
         except DuplicateCustomerError as error:
             raise CustomerAlreadyExistsError(new.country) from error
 
-    def get(self, customer_id: int) -> Customer:
-        """The stored customer with that id (SPEC-01/E-22, E-23)."""
+    def get(self, customer_id: int) -> CustomerProfile:
+        """The stored customer with that id and its last simulations (SPEC-01/E-22, E-23)."""
         customer = self._customers.find(customer_id)
         if customer is None:
             raise CustomerNotFoundError(customer_id)
-        return customer
+        history = self._simulations.history(customer_id, MAX_HISTORY_SIMULATIONS)
+        return CustomerProfile(customer, history)
 
     def search(self, text: str | None) -> list[Customer]:
         """The first customers by name that the text matches; without text, the first ones."""
