@@ -881,6 +881,29 @@ Precisiones de la IA sobre los cambios de la revisión, **sin aprobar**:
 | Z-06 | **La fila `503` se añadió también a la tabla de 4.1 de SPEC-03** (`POST /simulations`), que el encargo no nombra, y la fila nueva de 5.7 cita ese endpoint, que aún no existe | Es la misma regla («todo endpoint que lee la base de datos») y se implementa a continuación; así la spec no nace incoherente. Su caso de 5.7 se prueba en la pieza (a) de SPEC-03 |
 | Z-07 | Dos tests que ya existían cambian su valor esperado (los estados que declara el OpenAPI) | Cambia la regla, no se relaja el test. `GET /meta` sigue declarando solo el `200`: no lee la base de datos |
 
+### SPEC-03 (desde las 14:41)
+
+Una fila por pieza, escrita al terminarla, con las mismas normas.
+
+| Hora | Pieza | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
+|---|---|---|---|---|
+| 14:49 | (a) `POST /simulations` | Con un esqueleto sin lógica (M-01). **14:45: 70 en rojo, todos por aserción** (`404 == 201`, `404 == 422`, `404 == 405`, `Failed: DID NOT RAISE IntegrityError`…), y 20 en verde: filas de 5.7 y de CA-09 sobre rutas que ya existían (M-07). Un primer rojo, segundos antes, dio lo mismo, pero un test tenía siete parámetros y se reescribió antes del código | `app/domain/simulations.py` (máximos y los dos tipos), `app/repositories/simulations.py` (la simulación y sus tres tramos en una transacción), `app/services/simulations.py` (llama al caso de uso de `POST /pricing/quote`) y `app/api/simulations.py`. Tests: 4.1, cada fila de 5.1 y de 5.2 y las de `active_users` de SPEC-02 5.4, el mismo cálculo que la proyección (cierra SPEC-02/E-08 y CA-08), país sin tipo, fallo a mitad de la escritura, sentencias con los valores solo como parámetros, OpenAPI, las filas de 5.7 con los endpoints reales y CA-09. El commit de r3 y r4 es `74cc3f2` (14:40:31) | `619 passed`. **Mutación a las 14:47**: con un `commit` tras la primera fila, fallan los tres tests de atomicidad (`[1, 0] == [0, 0]`); deshecha. **Oráculo en rojo a las 14:48**: `add` tenía 43 líneas; dividida en dos funciones. En verde a las 14:49 (20 correctas, 0 con fallo, 4 inactivas; 86 de 86 ramas). Sin test quedan SPEC-03/E-12 a E-17 (pieza b) |
+
+Precisiones de la IA sobre SPEC-03, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| M-01 | Esqueleto antes del rojo: los dos tipos y los máximos del dominio, y un `SimulationRepository.add` que devolvía una simulación con `id` 0 sin escribir nada | Para que el rojo fuera de aserción y no de importación (W-01, ya admitido) |
+| M-02 | **«El mismo cálculo»**: el servicio de simulaciones no llama a `calculate_quote`, sino al caso de uso entero de la proyección (`PricingService.quote`): una sola forma de buscar al cliente y un solo cálculo. Lo demuestran dos tests: los campos del cálculo de cada fila de 5.1 son idénticos a la respuesta de `POST /pricing/quote` (CA-03), y, sustituyendo en el test el precio del tramo 1 y el tipo de `ES`, los dos endpoints cambian igual (24000, 1000, 2400 y 26400, los valores de 5.4) | SPEC-03/E-02 y SPEC-02/E-08. El segundo test sustituye un nombre privado del dominio (`_TAX_RATES_BP`): si se renombra, hay que tocar el test |
+| M-03 | **El fallo a mitad lo provoca la propia base de datos**, no una conexión falsa: un tramo cuyo subtotal no es precio por usuarios, que el `CHECK` rechaza. Probado en el segundo y en el tercer tramo; la conexión que registra las sentencias demuestra que la simulación y los tramos anteriores ya se habían escrito. Otro test lo hace desde la API (cálculo sustituido): `500` `internal_error` y ninguna fila | CA-06 pide provocar un fallo al guardar el segundo tramo. Un rechazo real ejercita la transacción de verdad |
+| M-04 | La atomicidad se apoya en cómo abre las transacciones `sqlite3` de Python 3.12 (una transacción implícita antes del primer `INSERT`) y en cerrar la conexión sin `commit`. No hay un `BEGIN` ni un `ROLLBACK` escritos | Es el modo por defecto y el que ya usa el alta de clientes. Si una versión de Python cambia ese valor por defecto, los tests de atomicidad fallan: no pasaría inadvertido |
+| M-05 | Un error de integridad al guardar sale como `500` `internal_error`, no como `503` | La base de datos respondió: es un fallo nuestro (regla del `503`, X-01) |
+| M-06 | La simulación del dominio lleva dentro el cálculo (`quote`), y la respuesta lo aplana pasando por el modelo de la proyección: los campos del cálculo son los mismos por construcción. El modelo de respuesta los declara uno a uno para fijar el orden de 4.1 | «Los campos del cálculo son exactamente los de `POST /pricing/quote`» (4.1) |
+| M-07 | `tests/integration/test_real_endpoints.py` reproduce las filas de 5.7 y CA-09 con los endpoints que nombran. **De sus 27 casos, 20 pasaron antes de escribir código**: prueban la maquinaria común, que ya existía, sobre rutas que ya existían, y el guarda del cuerpo actúa antes de buscar la ruta. La simulación de CA-09 se inserta directamente, con un solo tramo. De 5.6 solo se reproduce con un endpoint real la fila del `500` con cabecera CORS; las demás siguen en la ruta de prueba | Cierra dos pendientes: E-18 (CA-09) y las filas de 5.7 con endpoints reales (CA-17) |
+| M-08 | El país se lee del cliente y la simulación se guarda en dos conexiones distintas | Entre una y otra el cliente no puede desaparecer (no hay borrado) ni cambiar de país (no hay edición), y la clave foránea protege el `INSERT` |
+| M-09 | Vistos a mano, sin test: un entero enorme (`10**30`) da `out_of_range`; `1e2` da `not_an_integer`; una clave repetida se acepta y gana la última (L-03); los límites del OpenAPI salen en decimal también aquí (L-02) | Siguen de reglas ya escritas |
+| M-10 | `created_at` de la simulación sale del mismo reloj inyectado que el del cliente; los tests comprueban su formato, no su valor (Y-19) | — |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |

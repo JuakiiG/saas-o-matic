@@ -10,15 +10,17 @@ from datetime import UTC, datetime
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import customers, health, meta, pricing
+from app.api import customers, health, meta, pricing, simulations
 from app.api.error_handling import install_error_handling
 from app.api.request_guard import RequestBodyGuard, reject_undocumented_query_parameters
 from app.config import load_settings
 from app.repositories.customers import CustomerRepository
 from app.repositories.database import Database, DatabaseUnavailableError
+from app.repositories.simulations import SimulationRepository
 from app.services.customers import CustomerService
 from app.services.health import HealthService
 from app.services.pricing import PricingService
+from app.services.simulations import SimulationService
 
 API_TITLE = "SaaS-O-Matic API"
 # What the frontend needs and nothing else (SPEC-03, 2.7).
@@ -33,9 +35,13 @@ def _utc_now() -> datetime:
 def _install_services(app: FastAPI, database: Database) -> None:
     """Built here and handed to the endpoints through `Depends`: no global state."""
     customers = CustomerRepository(database)
+    pricing_service = PricingService(customers)
     app.state.health_service = HealthService(database)
     app.state.customer_service = CustomerService(customers, utc_now=_utc_now)
-    app.state.pricing_service = PricingService(customers)
+    app.state.pricing_service = pricing_service
+    app.state.simulation_service = SimulationService(
+        pricing_service, SimulationRepository(database), utc_now=_utc_now
+    )
 
 
 def create_app() -> FastAPI:
@@ -61,7 +67,7 @@ def create_app() -> FastAPI:
         dependencies=[Depends(reject_undocumented_query_parameters)],
     )
     _install_services(app, database)
-    for module in (health, meta, customers, pricing):
+    for module in (health, meta, customers, pricing, simulations):
         app.include_router(module.router)
     # The middleware added last is the outermost. CORS goes outside the guards so that
     # every response, error or not, leaves with its headers (SPEC-03/E-24).
