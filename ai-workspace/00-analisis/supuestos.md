@@ -184,8 +184,9 @@ facturas, y la regla pedida es explícita.
 **Confirmado por la respuesta** (2026-11-13): no hace falta contemplar la
 inversión del sujeto pasivo ni otros casos especiales, pero se valorará que
 quede documentado cómo se abordaría. Ese documento es
-[ADR-008](../02-arquitectura/ADR-008-casos-fiscales-no-modelados.md), en
-estado `propuesto`. Nada de lo que describe está implementado.
+[ADR-008](../02-arquitectura/ADR-008-casos-fiscales-no-modelados.md),
+`aceptado` por el Tech Lead el 2026-11-13. Nada de lo que describe está
+implementado.
 
 ## Decididos
 

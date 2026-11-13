@@ -11,7 +11,7 @@
 | [ADR-005](ADR-005-dependencias-de-test.md) | Dependencias solo de test: `python-stdnum` para contrastar el validador fiscal, `httpx2` para el cliente de test y Playwright para la prueba de principio a fin y los 375 px | `aceptado` (2026-11-12); ampliado el 2026-11-13 |
 | [ADR-006](ADR-006-convenciones-transversales-de-la-api.md) | Convenciones transversales de la API: errores en `problem+json` con código estable, identificadores, fechas, constante única de países e historial dentro de la ficha | `aceptado` (2026-11-12) |
 | [ADR-007](ADR-007-margen-de-las-versiones.md) | Ninguna dependencia se fija en una versión publicada hace menos de una semana: fecha de corte `exclude-newer` de uv | `aceptado` (2026-11-13) |
-| [ADR-008](ADR-008-casos-fiscales-no-modelados.md) | Cómo se abordarían la inversión del sujeto pasivo y los demás casos fiscales que hoy no se modelan. Es un diseño: nada está implementado | `propuesto` (2026-11-13) |
+| [ADR-008](ADR-008-casos-fiscales-no-modelados.md) | Cómo se abordarían la inversión del sujeto pasivo y los demás casos fiscales que hoy no se modelan. Es un diseño: nada está implementado | `aceptado` (2026-11-13) |
 
 Cada ADR recoge el contexto, las opciones comparadas, la decisión con su
 motivo y las consecuencias, también las negativas.
