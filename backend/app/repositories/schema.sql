@@ -38,6 +38,10 @@ CREATE TABLE IF NOT EXISTS simulations (
     created_at TEXT NOT NULL
 ) STRICT;
 
+-- SQLite creates no index for a foreign key. Every customer profile counts and reads the
+-- simulations of one customer: without this, each one would go over the whole table.
+CREATE INDEX IF NOT EXISTS idx_simulations_customer_id ON simulations (customer_id);
+
 -- The breakdown of the calculation: three rows per simulation.
 CREATE TABLE IF NOT EXISTS simulation_tiers (
     simulation_id INTEGER NOT NULL REFERENCES simulations (id),

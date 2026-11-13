@@ -112,6 +112,7 @@ ese fichero; no guarda una segunda copia del DDL.
 | `tax_cents` | INTEGER | No nulo. `>= 0` |
 | `total_cents` | INTEGER | No nulo. `= base_cents + tax_cents` |
 | `created_at` | TEXT | No nulo. UTC, ISO 8601, precisión de segundos |
+| — | — | Índice `idx_simulations_customer_id` sobre `customer_id` |
 
 `simulation_tiers` — tres filas por simulación.
 
@@ -137,6 +138,12 @@ ese fichero; no guarda una segunda copia del DDL.
   tipo declarado es solo una afinidad; sin `STRICT`, una columna `INTEGER`
   guarda `10.5` como real, y un importe con decimales nunca puede ser
   cierto (E-19, A6).* Exige SQLite 3.37.0 o posterior (ADR-004).
+- **`simulations` tiene un índice sobre `customer_id`**, creado con
+  `CREATE INDEX IF NOT EXISTS` junto a las tablas. *Por qué: la ficha
+  cuenta y lee las simulaciones de un cliente en cada petición, y SQLite no
+  crea un índice para una clave foránea; sin él, cada ficha recorre la
+  tabla entera.* Una base de datos que ya existe lo recibe en el siguiente
+  arranque.
 - Cada conexión ejecuta `PRAGMA foreign_keys = ON` (ADR-001).
 - La simulación y sus tres tramos se guardan en **una sola transacción**: o
   se guardan las cuatro filas o ninguna.
@@ -576,3 +583,4 @@ del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos.
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A3 y, de A4, solo el uso del tipo general. El Tech Lead mantiene su visto bueno a esta spec. Cabecera y apartado 9 actualizados; la consulta queda cerrada. Motivo: registrar la fuente de cada supuesto. Sin cambios en reglas, requisitos, criterios ni casos |
 | 2026-11-13 | Cambio pedido por el Tech Lead en la revisión del paso 1: las tres tablas pasan a ser `STRICT` (2.6), E-21 incluye el valor que no es del tipo de su columna y 5.5 gana cuatro filas. Motivo: sin `STRICT` la base de datos guardaba `10.5` en `base_cents` y `'abc'` en `active_users`, y un importe con decimales nunca puede ser cierto (E-19, A6). Versión mínima de SQLite, 3.37.0, anotada en ADR-004 |
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-01, ya implementada: fila nueva en 5.7 para el `503` `service_unavailable` de un endpoint que no es `GET /health`, y fila `503` en la tabla de errores de 4.1. Motivo: todo endpoint que lee la base de datos declara el `503` (regla de las convenciones comunes); la tabla 5.7 no tenía ese caso. E-29 y CA-17 no cambian de texto y lo cubren |
+| 2026-11-13 | Decisión del Tech Lead al revisar el backend, ya implementado: índice `idx_simulations_customer_id` sobre `simulations(customer_id)`, creado con `CREATE INDEX IF NOT EXISTS` (2.6). Motivo: la ficha cuenta y lee las simulaciones de un cliente en cada petición, y una clave foránea sin índice obliga a recorrer la tabla entera. Sin cambios en requisitos ni criterios; un test comprueba que el plan de las consultas del historial usa el índice. Nota en ADR-004 |

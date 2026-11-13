@@ -915,6 +915,64 @@ Precisiones de la IA sobre SPEC-03, **sin aprobar**:
 | M-18 | El servicio de clientes depende ahora también del repositorio de simulaciones, y `api/customers.py` usa el modelo de respuesta de `api/simulations.py` | La ficha es de los clientes y enseña simulaciones; cada elemento es, por construcción, la respuesta de 4.1 |
 | M-19 | No hay índice sobre `simulations(customer_id)` | El esquema de 2.6 no lo trae y la IA no lo ha añadido: sería cambiar la spec. Sin medir |
 
+### Revisión del backend entero por el Tech Lead (15:36)
+
+**Backend revisado y dado por bueno, sin defectos.** El Tech Lead dice haber
+comprobado el oráculo y 55 casos de principio a fin contra un servidor real
+con `uvicorn`: las filas de 5.1 a 5.4 de SPEC-03, la inmutabilidad, la forma
+única del `id` de la ruta, CORS y la base de datos apartada (lo afirma él;
+la IA no lo ha visto). El cierre anterior de esta bitácora es `2d1b691`
+(14:58:37 según `git log`).
+
+El mensaje llegó con fragmentos de texto superpuestos (un pegado de
+terminal): el encargo aparece dos veces, la segunda con trozos cortados, y
+entre las dos hay un resumen suelto de lo comprobado y de «lo que queda
+antes del frontend». La IA ha leído como encargo lo que las dos copias
+dicen juntas, que es coherente; lo anota por si alguna frase cortada decía
+algo más.
+
+Admitidas Z-01 a Z-07 y M-01 a M-19, con dos cambios:
+
+| # | Precisión | Decisión del Tech Lead |
+|---|---|---|
+| b1 | M-19 | **Cambia: índice sobre `simulations(customer_id)`**, con `CREATE INDEX IF NOT EXISTS`. Por qué: la ficha cuenta y lee las simulaciones de un cliente en cada petición, y una clave foránea sin índice obliga a recorrer la tabla entera. Cambio de SPEC-03 2.6, con historial, y nota en ADR-004. Test en rojo antes: el plan de la consulta del historial usa el índice |
+| b2 | CA-15 (pendiente de M-07) | Reproducir con los endpoints reales las filas de 5.6 de SPEC-03 que faltan (`GET /meta` y `OPTIONS /customers`), como las de 5.7 |
+| b3 | M-13, Z-03 | Quedan como están |
+
+Un commit por cambio, con el oráculo en verde. Después:
+
+1. **Evaluación independiente del backend** con el subagente evaluador real
+   (comprobando antes que es él y qué modelo usa), en solo lectura. Evalúa
+   el código de `backend/` contra cada requisito EARS y criterio de
+   aceptación de SPEC-01, SPEC-02 y SPEC-03, contra las convenciones del
+   índice de specs y contra `.claude/rules/backend.md`. No se fía de la
+   bitácora ni de los mensajes de commit; ejecuta los tests, lee el código y
+   busca requisitos sin cubrir de verdad, tests que no demuestran lo que
+   dicen, casos límite sin probar, incoherencias entre spec y código y
+   riesgos de seguridad. Devuelve hallazgos numerados con gravedad,
+   evidencia y requisito afectado; no propone código ni toca ficheros.
+2. El informe se guarda **intacto** en
+   `ai-workspace/04-calidad/evaluacion-backend-01.md`; se comprueba con
+   `git status` que el subagente no ha tocado nada; commit del informe.
+3. `04-calidad/respuesta-evaluacion-backend-01.md`, con una fila por
+   hallazgo: si la IA está de acuerdo o no y qué propone. **Sin implementar
+   ninguna corrección.** Commit, cierre de esta bitácora y la IA para: cada
+   hallazgo lo decide el Tech Lead.
+
+### Cambios tras la revisión del backend (desde las 15:36)
+
+| Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
+|---|---|---|---|---|
+| 15:38 | b1 | 15:37: **3 en rojo por aserción**. El plan del recuento era `SCAN simulations` y el de la lista incluía `SCAN simulations` en la subconsulta; el tercero, `('idx_simulations_customer_id', 'customer_id') in []` | SPEC-03 2.6 (fila en la tabla, regla con su porqué e historial) y añadido en ADR-004. `schema.sql`: `CREATE INDEX IF NOT EXISTS idx_simulations_customer_id ON simulations (customer_id)`. Tests: el plan de las dos consultas del historial usa el índice y no recorre ninguna tabla; una base de datos sin el índice lo recibe al arrancar y conserva sus datos | `632 passed`; oráculo en verde a las 15:38 (20 correctas, 0 con fallo, 4 inactivas; 86 de 86 ramas) |
+
+Precisiones de la IA sobre los cambios de esta revisión, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| B-01 | El test del plan lee el texto de `EXPLAIN QUERY PLAN` de SQLite 3.42.0 (`SEARCH … USING COVERING INDEX idx_simulations_customer_id`): exige que aparezca el nombre del índice y que ningún paso empiece por `SCAN`. Otra versión de SQLite podría redactar el plan de otra forma | Es la única forma de comprobar que el índice se usa y no solo que existe |
+| B-02 | Visto a mano, sin test: el borrado de un cliente también usa el índice para comprobar la clave foránea | Efecto del mismo índice; la API no borra |
+| B-03 | El test de la base de datos ya existente borra el índice a mano y vuelve a arrancar la aplicación; cita SPEC-03/E-22. La tabla de 2.6 nombra el índice (`idx_simulations_customer_id`), que elige la IA | E-22 habla de «todas sus tablas» y de conservar los datos; el índice no tiene requisito propio |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |

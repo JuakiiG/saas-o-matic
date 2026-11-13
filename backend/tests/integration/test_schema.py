@@ -10,9 +10,16 @@ from fastapi.testclient import TestClient
 from app.config import load_settings
 from app.main import create_app
 from app.repositories.database import Database, DatabaseUnavailableError
+from app.repositories.simulations import COUNT_SIMULATIONS, SELECT_HISTORY
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 TABLES = ["customers", "simulation_tiers", "simulations"]
+SIMULATIONS_INDEX = "idx_simulations_customer_id"
+# Each index of the table with its column; only the ones created with CREATE INDEX.
+INDEXES_OF_SIMULATIONS = (
+    "SELECT list.name, column.name FROM pragma_index_list('simulations') AS list,"
+    " pragma_index_info(list.name) AS column WHERE list.origin = 'c'"
+)
 INSERT_CUSTOMER = (
     "INSERT INTO customers (id, company_name, company_name_search, tax_id, contact_email,"
     " country, plan, created_at) VALUES (:id, 'Acme', 'acme', :tax_id, 'a@acme.example',"
@@ -70,6 +77,36 @@ def connection(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> sqlite3.Conne
     opened.execute(INSERT_SIMULATION, SIMULATION)
     opened.commit()
     return opened
+
+
+@pytest.mark.parametrize(
+    ("statement", "parameters"),
+    [(COUNT_SIMULATIONS, (1,)), (SELECT_HISTORY, (1, 50))],
+    ids=["count", "history"],
+)
+def test_history_of_a_customer_is_read_through_the_index_of_its_simulations(
+    connection: sqlite3.Connection, statement: str, parameters: tuple[int, ...]
+) -> None:
+    """SPEC-03/E-12, SPEC-03/E-14: no query of the history goes over the whole table (2.6)."""
+    plan = connection.execute(f"EXPLAIN QUERY PLAN {statement}", parameters).fetchall()
+    steps = [str(step[-1]) for step in plan]
+    assert any(SIMULATIONS_INDEX in step for step in steps), steps
+    assert not [step for step in steps if step.startswith("SCAN")], steps
+
+
+def test_database_created_before_the_index_gets_it_on_the_next_start(
+    connection: sqlite3.Connection, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SPEC-03/E-22: an existing database keeps its data and gains the index (2.6)."""
+    connection.execute(f"DROP INDEX IF EXISTS {SIMULATIONS_INDEX}")
+    connection.commit()
+    connection.close()
+    database = start_application(tmp_path / "data" / "test.db", monkeypatch)
+    with closing(database.connect()) as opened:
+        indexes = opened.execute(INDEXES_OF_SIMULATIONS).fetchall()
+        stored = opened.execute("SELECT count(*) FROM simulations").fetchone()[0]
+    assert (SIMULATIONS_INDEX, "customer_id") in indexes
+    assert stored == 1
 
 
 def test_first_start_creates_the_folder_and_the_three_tables(

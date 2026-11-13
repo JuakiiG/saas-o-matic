@@ -108,6 +108,22 @@ Amplía la opción A del punto 2, sin cambiar la decisión:
   base de datos creada antes de este cambio sigue sin `STRICT` hasta que se
   borra el fichero. Es el coste ya aceptado en el punto 3 (sin migraciones).
 
+**Añadido el 2026-11-13**, tras la revisión del backend entero por el Tech
+Lead. Amplía la opción A del punto 3, sin cambiar la decisión:
+
+- `simulations` tiene un **índice sobre `customer_id`**
+  (`idx_simulations_customer_id`). *Por qué*: SQLite no crea un índice para
+  una clave foránea, y la ficha de un cliente cuenta y lee sus simulaciones
+  en cada petición; sin él, cada ficha recorre la tabla entera. El mismo
+  índice sirve a la comprobación de la clave foránea al intentar borrar un
+  cliente.
+- Se crea con `CREATE INDEX IF NOT EXISTS` en el mismo `schema.sql`. A
+  diferencia de `STRICT`, **sí llega a una base de datos que ya existe**:
+  un índice se puede añadir a una tabla con datos, y el esquema se aplica
+  en cada arranque.
+- Coste: una escritura más por simulación guardada. Aceptado: se lee mucho
+  más de lo que se escribe.
+
 ## Consecuencias
 
 A favor:
