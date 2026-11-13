@@ -621,6 +621,13 @@ Precisiones de la IA sobre p5, **sin aprobar**:
 | P-07 | `problem_responses` usa `Any` en su tipo de retorno, con un comentario en esa línea | Es el tipo del parámetro `responses` de FastAPI; `mypy --strict` no acepta otro más estrecho por la invarianza de `dict` |
 | P-08 | Solo se declaran los errores propios de cada endpoint (en `/health`, el `503`). Los genéricos (`400`, `404`, `405`, `415`, `422` por parámetro no documentado, `500`) no se declaran en cada operación | SPEC-03 4.4 solo lista el `200` y el `503`, y el test que ya existía exige exactamente esos dos. Si el Tech Lead los quiere en el OpenAPI, la ayuda ya sirve |
 
+**Error de la IA, corregido a las 12:20**: en el commit `1f8f80c` (p5,
+12:20:30) tres celdas de la tabla de tareas pendientes decían que la
+revisión del paso 1 fue «a las 12:05». Era una hora puesta de memoria, no
+leída: la cronología registra esa revisión a las 12:02. Las tres celdas
+dicen ahora 12:02. Es la tercera vez en dos sesiones que aparece una hora
+no leída del reloj o de la propia bitácora.
+
 Precisiones de la IA sobre p4, **sin aprobar**:
 
 | # | Precisión | Motivo |
@@ -629,6 +636,27 @@ Precisiones de la IA sobre p4, **sin aprobar**:
 | P-02 | `STRICT` no rechaza todo lo que no es entero: convierte lo que se puede convertir sin pérdida (`15.0` y `'15'` se guardan como `15`). Comprobado a mano con SQLite 3.42.0; **no hay test** de esa conversión | Es el comportamiento documentado de SQLite; queda escrito en SPEC-03 2.6 y en ADR-004 para que no se lea «rechaza cualquier real» |
 | P-03 | Una base de datos creada **antes** de este commit sigue sin `STRICT`: `CREATE TABLE IF NOT EXISTS` no toca una tabla que ya existe. Hay que borrar el fichero | Afecta a quien ya arrancó el backend (la prueba de arranque real del Tech Lead). Anotado en ADR-004 |
 | P-04 | Con un SQLite anterior a 3.37.0 el arranque falla con un error de sintaxis de SQLite, no con un mensaje propio. No se añadió una comprobación de versión | No estaba pedida. Falla al arrancar, que es lo seguro; el mensaje es mejorable |
+
+### SPEC-02 (desde las 12:21)
+
+Una fila por pieza, escrita al terminarla, con las mismas normas n1 y n2.
+
+| Hora | Pieza | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
+|---|---|---|---|---|
+| 12:23 | (a) dominio | 12:22: **31 en rojo, todos por aserción** (`AssertionError` o `DID NOT RAISE`), y **3 en verde**: las tres filas de 5.3 cuyo impuesto esperado es 0, que un esqueleto que devuelve 0 cumple sin querer. Para que el rojo no fuera de importación se escribió antes un esqueleto sin lógica: los tipos y dos funciones que devuelven 0 y una lista de tramos vacía (W-01) | `app/domain/countries.py`: la constante de países con su tipo y `tax_rate_bp_of`. `app/domain/pricing.py`: los tres tramos como datos, `tax_cents` y `calculate_quote`, que es el único cálculo. Tests en `tests/unit/test_pricing.py`: las 10 filas de 5.1, los 9 países de 5.2, las 8 filas de 5.3, el ejemplo completo del apartado 4, CA-03 (de 0 a 1000) y CA-04. El commit de p5 es `1f8f80c` (12:20:30) | `109 passed`; `domain/` al 100 % de sentencias y ramas; oráculo en verde (20 correctas, 0 con fallo, 4 inactivas; 16 de 16 ramas) |
+
+Precisiones de la IA sobre SPEC-02, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| W-01 | Antes del rojo de (a) se escribió un esqueleto del dominio sin lógica (clases de datos, errores y funciones que devuelven 0) | La norma pide un rojo por aserción y no por importación; sin el módulo, el test no llega a ejecutarse. La lógica se escribió después de ver el rojo |
+| W-02 | La tabla 5.2 se prueba con **un caso por país** (9), no uno por fila (5) | Una fila como «FR, GB» son dos países; así un tipo mal copiado en uno solo no pasa |
+| W-03 | El dominio comprueba el **rango** de usuarios, no el tipo: `calculate_quote(True, "ES")` o con un `float` no se rechaza ahí. `tax_cents` no rechaza una base o un tipo negativos | CA-04 solo pide rango y país; el tipo lo valida la API (pieza b). Un valor negativo en `tax_cents` no puede llegar desde `calculate_quote` |
+| W-04 | El código de país distingue mayúsculas: `"es"` no tiene tipo y da `TaxRateNotDefinedError` | SPEC-02 no habla de normalizar; el país llega de la base de datos, y cómo se guarda lo decide SPEC-01 |
+| W-05 | E-05 tiene un test propio: el impuesto de 2^53 + 1 céntimos al 100 % es exacto, cosa que un `float` no puede dar | El requisito lo comprueba sobre todo el oráculo (CA-09); el test añade un caso que falla si alguien introduce coma flotante |
+| W-06 | El «100 % de ramas» de `domain/` son **2 ramas**: `coverage` no cuenta como rama la expresión condicional de `_users_in_tier` (tramo con o sin límite superior) | Los dos lados se ejecutan (tramos 1 y 2 con límite, tramo 3 sin él), pero el porcentaje no lo demuestra por sí solo |
+| W-07 | Un test se retocó después del verde: el de la lista de países compara ahora ternas en vez de objetos `Country` | `ruff` (SIM300) rechazaba la forma `CONSTANTE == (…)`. Comprueba lo mismo: código, nombre y tipo de los nueve, en orden |
+| W-08 | E-07, E-08 y E-11 a E-15 siguen sin test tras (a) | Son del endpoint (pieza c) o de SPEC-03 (E-08, CA-08) |
 
 ## 4. Comprobaciones hechas en la sesión
 
@@ -689,14 +717,14 @@ Precisiones de la IA sobre p4, **sin aprobar**:
 | Aprobar o cambiar T-01 a T-08 | A decidir por el Tech Lead |
 | Fijar en npm el margen de una semana de ADR-007 y comprobar la fecha de Angular CLI 21.2.29 | Al crear el frontend |
 | ~~Resto del paso 1: errores genéricos, CORS, `GET /health` y `schema.sql` con su enlace desde el índice de arquitectura~~ | Hecho entre las 11:27 y las 11:42 |
-| ~~**Revisar el paso 1** y aprobar o cambiar G-01 a G-09, C-01 a C-04, H-01 a H-06 y Q-01 a Q-05~~ | Hecho a las 12:05: aprobado con cinco correcciones (p1 a p5), hechas entre las 12:11 y las 12:20 |
+| ~~**Revisar el paso 1** y aprobar o cambiar G-01 a G-09, C-01 a C-04, H-01 a H-06 y Q-01 a Q-05~~ | Hecho a las 12:02: aprobado con cinco correcciones (p1 a p5), hechas entre las 12:11 y las 12:20 |
 | Aprobar o cambiar P-01 a P-08 (precisiones de p4 y p5) | A decidir por el Tech Lead |
 | **Base de datos creada antes de `9ec6866`**: sigue sin `STRICT`; hay que borrar el fichero (P-03) | Quien ya haya arrancado el backend |
-| **El cuerpo de la petición no tiene límite de tamaño**: limitación conocida | A documentar en el README (decisión del Tech Lead, 12:05) |
+| **El cuerpo de la petición no tiene límite de tamaño**: limitación conocida | A documentar en el README (decisión del Tech Lead, 12:02) |
 | Reproducir las filas de SPEC-03 5.6 y 5.7 con los endpoints reales (CA-15 y CA-17); hoy están probadas con rutas de prueba | Con SPEC-02, SPEC-01 y SPEC-03, según exista cada endpoint |
 | Traducir los errores de validación del cuerpo y de la ruta a códigos por campo (`missing`, `not_an_integer`, `out_of_range`…) | Con el primer endpoint con cuerpo (SPEC-02) |
 | ~~Prueba de arranque real con `uvicorn` tras el paso 1 (la orden fue denegada)~~ | Hecha por el Tech Lead (lo afirma él; la IA no la ha visto) |
-| ~~Decidir si se corrige~~ **Corregir la cabecera `Allow` del `405`**, que solo nombra un método cuando la ruta admite dos | Con la primera ruta que tenga dos métodos, en SPEC-01 (decisión del Tech Lead, 12:05) |
+| ~~Decidir si se corrige~~ **Corregir la cabecera `Allow` del `405`**, que solo nombra un método cuando la ruta admite dos | Con la primera ruta que tenga dos métodos, en SPEC-01 (decisión del Tech Lead, 12:02) |
 | Documentar la estructura del backend en `02-arquitectura/README.md` | Tras la revisión de la estructura |
 | Comprobar el comportamiento real de `python-stdnum` (CA-19) | Con SPEC-01, o antes si el Tech Lead lo pide |
 | Pendientes heredados de la sesión 03: precisiones de `CLAUDE.md` y `backend.md` del commit `ca1c81a`; hueco del hook si su comando no arranca; aprobación literal del cambio de A10 | A decidir por el Tech Lead |
