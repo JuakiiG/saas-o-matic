@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-13 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | *En curso.* Se rellena al cerrar la sesión |
+| **Resultado** | El Tech Lead decidió los hallazgos de la evaluación independiente del backend (H-01 a H-14 y A-01; H-15 quedó sin nombrar) y la IA los aplicó, uno o un grupo por commit y con el oráculo en verde antes de cada uno. **Corregidos en el código**: un `id` de ruta de miles de dígitos (`422`), un surrogate suelto en el cuerpo (`400`, una sola regla en el guarda), el cuerpo como UTF-8 estricto, un `q` con U+0000 (lista vacía, decidido en el dominio y sin condición en el SQL), el email con cualquier separador Unicode, `/redoc` y `/docs/oauth2-redirect` desactivadas y un tipo concreto en lugar de `Any`. **Solo specs, tests o documentación**: la regla del parámetro de consulta desconocido (H-03), CORS (H-10), los comentarios de los tests escritos después del código (H-13), la prueba de las sentencias (H-14) y las limitaciones L-04 (ampliada) y L-05 (nueva: H-04 no se implementa). El informe de la primera evaluación recupera su U+00A0 y la respuesta lleva la decisión y el commit de cada fila y la tabla de sondas de antes y después. 731 tests del backend (eran 639), `domain/` al 100 %, 92 de 92 ramas y oráculo en verde con 20 comprobaciones activas y 4 inactivas. **Segunda pasada del evaluador** (Opus 5.5, comprobado en su registro), en solo lectura: 12 hallazgos corregidos, 3 conformes a lo decidido y 1 sin veredicto posible (H-13); ninguna regresión; **tres hallazgos nuevos sin corregir**: N-01 (medio: un método no admitido sobre `/docs` o `/openapi.json` responde `500`; ya ocurría antes de esta sesión), N-02 y N-03 (bajos). Tres requisitos siguen en `NO CUMPLE` por las limitaciones aceptadas L-04 y L-05. Quedan sin aprobar las precisiones R-01 a R-23 y V-08 a V-11. Sesión parada: el Tech Lead decide N-01 a N-03, H-15 y las precisiones |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -51,6 +51,10 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 |---|---|---|
 | 18:43 | — | Lectura de `CLAUDE.md`, `.claude/rules/backend.md`, el índice de specs, el informe, la respuesta, los apartados 5 y 6 de la sesión 04 (y la cabecera, la cronología y las tablas de la revisión del backend, para el formato), `04-calidad/limitaciones-conocidas.md`, los apartados de SPEC-01 que cambian y el código afectado de `backend/app/`. `git status` limpio, `HEAD` en `68ae670` |
 | 18:46 | — | Registro del subagente evaluador de la sesión 04, leído por la IA con un script de solo lectura fuera del repositorio (apartado 3). Apertura de esta bitácora |
+| 19:30 | `e71196f` a `eb0a27f` | Fila escrita a las 19:43; el detalle y las horas de cada paso están en las tablas del apartado 3, escritas en su momento. Informe con su U+00A0: `e71196f` (18:48:52 según `git log`). Apartado 3 de la respuesta: `ca85f85` (18:50:19). H-01: `33eeb83` (18:52:39). H-02 y A-01: `1b7fdd9` (18:56:47). H-07: `1e0f839` (18:59:47). H-04: `b345bc7` (19:01:28). H-03: `2e0913f` (19:03:20). H-05 y H-11: `758b880` (19:07:06). H-06: `c223520` (19:08:30). H-08: `861c6ca` (19:11:25). H-09: `a52cae5` (19:13:51). H-10: `b5411f8` (19:16:16). H-12: `b579de3` (19:19:29). H-13: `e8194d3` (19:22:20). H-14: `edbbb08` (19:24:59). Respuesta con el apartado 4 y las sondas: `5e9c7ef` (19:28:16; sustituye por enmienda a `cff0c0a`). Bitácora hasta ahí: `eb0a27f` (19:30:16). Oráculo en verde antes de cada uno |
+| 19:31–19:39 | — | Segunda pasada del evaluador, en solo lectura, sobre `eb0a27f`. La IA no tocó el repositorio mientras trabajaba |
+| 19:41 | `99aeec2` | Informe guardado intacto en `04-calidad/evaluacion-backend-02.md` y commit propio (19:41:49 según `git log`). Oráculo en verde antes |
+| 19:43 | *(este commit)* | Comprobados por la IA los tres hallazgos nuevos, sin corregir ninguno (apartado 3). Cierre de esta bitácora. **La IA para aquí**: N-01, N-02 y N-03 esperan la decisión del Tech Lead |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -165,16 +169,105 @@ Precisiones de la IA sobre las correcciones, **sin aprobar**:
 | R-22 | H-14: el alta de prueba usa valores que el dominio no dejaría pasar (comillas y `DROP TABLE` en el nombre, el email, el identificador y el plan) | El repositorio guarda lo que recibe; son los valores que cambiarían la sentencia si se escribieran en ella |
 | R-23 | Sondas: un surrogate suelto en `tax_id`, `country` o `plan`, que antes respondía `422` con el código de su campo, responde ahora `400` | Consecuencia de poner la regla en el guarda, que actúa antes que la validación de cualquier campo. Está en la tabla de la respuesta |
 
+### Segunda pasada del evaluador (19:31–19:43)
+
+| Hora | Qué |
+|---|---|
+| 19:30 | Antes de lanzarlo, leído en el registro de la sesión 04 el encargo que recibió entonces, para repetir sus restricciones a la letra |
+| 19:31 | Lanzado el subagente `evaluador` con el árbol limpio en `eb0a27f`. Encargo: solo comprobar que cada hallazgo corregido lo está de verdad y buscar regresiones. Mismas restricciones: solo lectura, no leer `03-proceso/` ni `04-calidad/` ni la historia de git, rutas relativas y decir en la cabecera qué modelo es. Como no puede leer su primer informe, el encargo le da cada hallazgo como se describió y lo que decidió el Tech Lead. **La IA no le dio ninguna conclusión propia** sobre si están corregidos, ni cómo se corrigieron, ni las precisiones R-01 a R-23. Una condición nueva: nombrar los caracteres invisibles por su código y no escribirlos, para que no se repita lo del U+00A0 |
+| 19:31–19:39 | La IA no tocó el repositorio |
+| 19:39 | Informe recibido. `git status --short` vacío, `HEAD` en `eb0a27f` y ningún `stash`: el evaluador no cambió nada versionado |
+| 19:40 | Informe escrito con `Write` en `04-calidad/evaluacion-backend-02.md`, quitando solo la sangría de dos espacios que añade la herramienta. **Comparado con el mensaje que consta en el registro del subagente** (script de solo lectura fuera del repositorio): 106 líneas y 15.197 caracteres los dos, **ninguna línea distinta**, y el mensaje no trae ningún carácter de control ni separador que no sea el espacio y el salto de línea. En el mismo registro: tipo de agente `evaluador` y modelo `claude-opus-5-5` en sus 75 respuestas |
+| 19:41 | Oráculo en verde. Commit propio del informe: `99aeec2` (19:41:49) |
+| 19:42 | La IA comprueba los tres hallazgos nuevos, sin corregir nada. Una primera orden de sondeo fue **denegada** por el modo de permisos (era larga y llevaba un borrado en la carpeta temporal); la IA la dividió en pasos sin borrado |
+
+**Resultado del informe**: oráculo en verde y 731 tests, ejecutados por el
+evaluador. De los 16 hallazgos: **12 `CORREGIDO`** (H-01, H-02, A-01, H-03,
+H-05, H-07, H-08, H-09, H-10, H-11, H-12 y H-14), **3 `CONFORME A LO
+DECIDIDO`** (H-04, H-06 y H-15) y **1 sin veredicto posible** (H-13: los
+comentarios están, pero sin leer la historia no puede saber si están
+todos). De los cinco requisitos que eran `NO CUMPLE`, dos pasan a `CUMPLE`
+(SPEC-01/E-24 y E-25) y **tres siguen en `NO CUMPLE`, por las limitaciones
+aceptadas**: SPEC-01/E-30 (L-04) y SPEC-02/E-14 y SPEC-03/E-07 (L-05).
+**Ninguna regresión encontrada y tres hallazgos nuevos**: N-01, de gravedad
+media, y N-02 y N-03, de gravedad baja.
+
+Lo que la IA ha comprobado de los hallazgos nuevos. **No ha corregido
+ninguno ni propone todavía nada**: el encargo acaba en el informe.
+
+| Hallazgo | Qué dice el informe | Qué ha comprobado la IA |
+|---|---|---|
+| N-01 · media | Un método no admitido sobre `/docs` o `/openapi.json` (`POST`, `PUT`, `DELETE`, `OPTIONS`) responde `500` `internal_error` en vez de `405`: la función que calcula la cabecera `Allow` no encuentra la ruta en la petición. El evaluador no pudo decir si es una regresión | **Se reproduce** (19:42): las cinco peticiones del informe dan `500`; `POST /health` da `405` con `Allow: GET`. **No es una regresión**: el mismo sondeo contra el código de `bda2c65`, extraído con `git archive` a una carpeta temporal fuera del repositorio, da los mismos cinco `500`, y además `POST /redoc` daba `500` (hoy da `404`). Es un defecto anterior a esta sesión, que la primera evaluación no vio y la IA tampoco. La corrección de H-09 lo hace más visible: el índice dice ahora que esas dos rutas existen. Los tests de H-09 solo prueban `GET` |
+| N-02 · baja | Quedan `Any` sin un comentario en su misma línea en `app/api/validation.py` (`_failed_fields` y `_field_error`) y en `app/api/contract.py` (`methods_of`) | **Cierto**, leído en el código: esas funciones usan `Any` y el comentario está sobre otra función del mismo fichero. No es de esta sesión: el primer informe daba esos dos ficheros por buenos («cada `Any` lleva su comentario») y el Tech Lead decidió H-12 sobre `simulations.py`. Los dos informes no miden igual |
+| N-03 · baja | (1) L-04 y L-05 no aparecen en ninguna spec: quien lea solo las specs no sabe que E-30, SPEC-02/E-14 y SPEC-03/E-07 tienen esas desviaciones. (2) La tabla 5.7 de SPEC-03 no tiene filas para el surrogate suelto, UTF-16 o UTF-32, el BOM, `/redoc` ni `/docs?x=1`, así que CA-17 («cada fila de 5.7») no alcanza a los tests nuevos | **Cierto las dos cosas**, leído: las limitaciones están solo en `04-calidad/limitaciones-conocidas.md`, que el evaluador no lee, y la tabla 5.7 no ha cambiado. El encargo pedía escribir las reglas nuevas en el índice, y ahí están; no pedía filas en 5.7 ni llevar las limitaciones a las specs |
+
+Precisiones de la IA sobre la segunda pasada, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| V-08 | Una cita del informe no cuadra: sitúa el cambio de H-09 en `backend/app/main.py:223-226`, y ese fichero tiene 85 líneas (el cambio está en las líneas 66 a 69). El informe se queda como llegó | Intacto quiere decir también con sus errores |
+| V-09 | El encargo al evaluador lo redactó la IA, incluida la descripción de cada hallazgo y de cada decisión. Es un resumen del primer informe y del encargo del Tech Lead, no su texto literal | El evaluador no puede leer `04-calidad/`. Un resumen mal hecho podría haberle orientado; el texto completo del encargo consta en el registro del subagente |
+| V-10 | El evaluador dice no haber ejecutado ninguna mutación (no puede modificar código): que los tests nuevos fallarían con el defecto original lo razona, no lo ve. Los rojos y las mutaciones de esta bitácora son de la IA | Límite del solo lectura, dicho en el apartado 5 de su informe |
+| V-11 | Un caso que el evaluador anota sin contarlo como defecto: un `q` que solo tiene una marca diacrítica (U+0301) devuelve todos los clientes, porque su forma de búsqueda queda vacía. Es el caso Y-25 de la sesión 04 (un `q` que queda vacío sin serlo), ya admitido | Para que no se lea como algo nuevo |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
 |---|---|---|
 | Estado del repo al empezar | `git status --short` y `git rev-parse --short HEAD` (18:43) | Limpio, `68ae670` |
+| Registro del evaluador de la sesión 04 | Script de solo lectura fuera del repositorio (18:45) | Tipo de agente `evaluador`, modelo `claude-opus-5-5` en 60 respuestas, y una sola línea distinta entre su mensaje y el informe guardado: la 255 |
+| U+00A0 del informe | Recuento de caracteres con Python y nueva comparación con el registro (18:47) | Exactamente un U+00A0; ninguna línea distinta del mensaje |
+| Oráculo antes de cada commit | `uv run scripts/check.py`, 19 veces entre las 18:48 y las 19:41 | Siempre código de salida 0: 20 correctas, 0 con fallo y 4 inactivas (las del frontend). Las ramas del backend pasan de 86 de 86 a 92 de 92; `domain/` sigue al 100 % |
+| Tests del backend | `uv run pytest` (19:18) y el recuento del evaluador (19:37) | `729 passed` antes de H-13 y H-14; `731 passed` al final. Al empezar eran 639 |
+| Mutaciones | Cambio temporal del código con `Edit`, tests y vuelta atrás: H-02 (18:55), H-10 (19:14) y H-14 (19:23) | Los tests que no pudieron verse en rojo fallan con la mutación. Tras cada una, `git status` sin restos |
+| Sondas del apartado 2 de la respuesta | Script fuera del repositorio, con el cliente de test (19:26) | Todas dan lo decidido; tabla en el apartado 5 de la respuesta |
+| Que el evaluador no tocó nada | `git status --short`, `git rev-parse --short HEAD` y `git stash list` (19:39) | Vacío, `eb0a27f` y ningún `stash` |
+| Segundo informe, intacto | Comparación con el mensaje del registro del subagente (19:40) | 106 líneas y 15.197 caracteres; ninguna línea distinta |
+| N-01 en el código actual y en el de `bda2c65` | Sondeo con el cliente de test; el código antiguo, extraído con `git archive` a una carpeta temporal (19:42) | `500` en los dos: no es una regresión |
 
 ## 5. No verificado
 
-*Se rellena durante la sesión.*
+- Nada con un servidor real (`uvicorn`): todas las pruebas de la sesión, las
+  de la IA y las del evaluador, son con el cliente de test.
+- Que el hook pidiera confirmación al editar las specs aprobadas (el índice,
+  SPEC-01 y SPEC-03): la IA no ve el diálogo. Las ediciones se aplicaron.
+- Que la lista de tests escritos después del código esté completa (H-13):
+  sale de lo que la bitácora de la sesión 04 anotó (r4, Y-12, Z-04, b2 y
+  M-07). Un test que pasara a la primera sin anotarse no tendría comentario.
+  El evaluador tampoco pudo comprobarlo.
+- Cuáles de los 27 casos de M-07 pasaron antes del código: la bitácora dice
+  cuántos, no cuáles (R-21).
+- Que la regla del surrogate suelto no rechace ningún texto válido más allá
+  de lo probado: emojis como pareja de escapes y en UTF-8, en un valor y en
+  un nombre de campo.
+- El coste de recorrer el cuerpo una segunda vez en el guarda (R-03): no se
+  ha medido, y el cuerpo sigue sin límite de tamaño (L-01).
+- `/docs` en un navegador: carga recursos de un servidor externo y nadie la
+  ha abierto en esta sesión; solo se ha visto su HTML y su estado.
+- Qué significa el campo `pickedEffortModel` del fichero de metadatos del
+  subagente (dice `claude-fable-5-2`); el modelo de cada respuesta del
+  registro es `claude-opus-5-5`.
+- Que el comportamiento de `LIKE` con un patrón nulo sea el mismo en otra
+  versión de SQLite: probado con la 3.42.0 del entorno.
+- Nada fuera de Windows.
+- Los tres requisitos que el evaluador mantiene en `NO CUMPLE`
+  (SPEC-01/E-30, SPEC-02/E-14 y SPEC-03/E-07) siguen así por las
+  limitaciones L-04 y L-05, aceptadas por el Tech Lead.
+- Los tres hallazgos nuevos (N-01, N-02 y N-03) están comprobados, no
+  corregidos.
 
 ## 6. Tareas pendientes
 
-*Se rellena durante la sesión.*
+| Tarea | Cuándo |
+|---|---|
+| ~~Decidir cada hallazgo de la evaluación del backend: H-01 a H-15 y A-01~~ | Hecho a las 18:42, en el encargo, salvo H-15. Corregidos entre las 18:50 y las 19:25 |
+| ~~Aprobar o cambiar B-01 a B-04 y V-04 a V-07~~ | Admitidas a las 18:42 |
+| **Decidir N-01**: un método no admitido sobre `/docs` o `/openapi.json` responde `500` en vez de `405`. Defecto anterior a esta sesión, sin corregir | Ahora, por el Tech Lead |
+| **Decidir N-02**: `Any` sin comentario en su línea en `app/api/validation.py` y `app/api/contract.py` | A decidir por el Tech Lead |
+| **Decidir N-03**: si las limitaciones L-04 y L-05 se nombran en las specs (E-30 de SPEC-01, E-14 de SPEC-02 y E-07 de SPEC-03) y si la tabla 5.7 de SPEC-03 gana filas para las reglas nuevas del `400` y de la documentación generada | A decidir por el Tech Lead |
+| **H-15**: el encargo no lo nombra. Sigue como L-01, sin la medida que la IA proponía añadir (un nombre de 2.000.000 de caracteres se procesa entero) | A decidir por el Tech Lead |
+| Aprobar o cambiar R-01 a R-23 y V-08 a V-11. Las que piden una decisión: **R-09** (cuatro filas de un test que ya existía cambian su valor esperado de `""` a `None`), **R-10** (tres rojos que no fueron por aserción), **R-23** (un surrogate en `tax_id`, `country` o `plan` pasa de `422` a `400`) y R-15 (`app/domain/customers.py` está en 234 líneas de 250) | A decidir por el Tech Lead |
+| **Documentar en el README que `/docs` carga recursos de un servidor externo** (decisión de H-09) | Al escribir el README |
+| Llevar la lista de `04-calidad/limitaciones-conocidas.md` al README, ahora con L-05 | Al escribir el README |
+| Pendientes heredados de la sesión 04 que esta sesión no toca: T-01 a T-08, la base de datos creada antes de `9ec6866` (P-03), documentar la estructura del backend en `02-arquitectura/README.md`, el margen de una semana en npm (ADR-007) y los heredados de la sesión 03 | A decidir por el Tech Lead |
+| Aprobar SPEC-04 | Antes de empezar el frontend |
