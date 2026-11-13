@@ -63,6 +63,8 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 10:56 | — | Consulta a PyPI por el aviso de `httpx` (apartado 3). `git rm backend/.gitkeep`. **Oráculo: verde**, código de salida 0, 19 correctas, 0 con fallo y 4 inactivas: las ocho comprobaciones del backend están activas |
 | 10:57 | — | Arranque real: `uv run uvicorn --factory app.main:create_app --port 8765`; `GET /openapi.json` responde `200`; servidor parado después |
 | 10:59 | *(este commit)* | Esqueleto del backend y esta bitácora. **La IA para aquí**, a la espera de la revisión de versiones y estructura. Hora de `date` (10:58:30) justo antes de preparar el commit; la real queda en `git log` |
+| 11:10 | — | El commit anterior es `bcabea2` (10:58:57 según `git log`). Revisión del esqueleto por el Tech Lead: aprobado, con ocho decisiones (apartado 3) |
+| 11:25 | `9344eed`, `203d602` | Fila escrita a las 11:25; las horas de dentro salen de `date` en cada comando y de `git log`. 11:11, rojo de `httpx` con los avisos como errores. 11:12, `httpx2` y fecha de corte: verde sin avisos; oráculo en verde. 11:13, commit `9344eed` (dependencias). 11:14, tests del oráculo en rojo y en verde. 11:15, oráculo real en verde, 19 correctas y 5 inactivas. 11:16, commit `203d602` (oráculo). 11:17–11:24, documentación: ADR-005, ADR-007, historiales de SPEC-01 y SPEC-02, `ai-workspace/README.md` y `CLAUDE.md` |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -211,6 +213,113 @@ cierta.
 `taskkill /F /IM uvicorn.exe`, que mata **todos** los procesos con ese
 nombre en la máquina, no solo el suyo. No comprobó antes si había otros.
 
+### Revisión del esqueleto (11:10)
+
+**Aprobado.** Todas las decisiones de esta tabla son del Tech Lead.
+
+| # | Sobre | Decisión del Tech Lead | Motivo |
+|---|---|---|---|
+| f1 | V-01 | Sustituir `httpx` por `httpx2` como dependencia de desarrollo y añadir `filterwarnings = ["error"]` a pytest. Antes, enseñar el rojo: con `httpx` y el filtro activo, el test debe fallar por el aviso. Si con `httpx2` aparece otro aviso, no silenciarlo: enseñarlo. Actualizar ADR-005 | `httpx2` es lo que `starlette` y `fastapi` declaran ya en sus extras. El filtro, para que un aviso de obsolescencia rompa el test en vez de pasar inadvertido |
+| f2 | V-03 | `exclude-newer = "2026-11-06T00:00:00Z"` en `[tool.uv]`, volver a resolver y enseñar la tabla de versiones antes y después. Si una versión que retrocede corregía un fallo de seguridad publicado, decirlo y decide él. Anotar la política donde corresponda según el criterio de los ADR | Una semana de margen ante versiones recién publicadas |
+| f3 | V-02 y V-04 | Aceptados como están | `opentelemetry-api` es dependencia de `fastapi`; el verde vacío de `domain/` se llena con SPEC-02 |
+| f4 | K-01 a K-09 | **Aprobados.** En K-01, añadir a las tareas pendientes que E-18 no está cubierto hasta que exista el test de CA-09 (`405` y datos sin cambios) | La trazabilidad ya lo da por probado |
+| f5 | S-01 a S-06 | **Aprobados.** S-06: confirma que aprobó SPEC-01 sabiendo que la lectura directa de la página del Ministerio del Interior sigue sin verificar. Anotarlo en el historial de SPEC-01 | El algoritmo queda cubierto por los vectores y por la prueba diferencial de CA-19 |
+| f6 | Oráculo | Con un test de `scripts/tests` que primero falle: (a) `uv run --locked`; (b) medir las ramas de verdad (`covered_branches / num_branches` de `coverage json`) manteniendo el 90 %, y ajustar el comentario de `pyproject.toml`. No relajar ningún umbral. Si hay un motivo para no hacerlo así, parar y decirlo | (a) Que falle si el lock está desfasado. (b) `--cov-branch --cov-fail-under=90` mide el total combinado de sentencias y ramas: con 11 de 11 sentencias y 2 de 4 ramas da 86,67 % |
+| f7 | Visto y no tocado | Corregir la nota «Sobre CA-09» de SPEC-02 como cambio de spec con su fila de historial, y el apartado «Estado» de `ai-workspace/README.md` | `check.py` ya existe |
+| f8 | Proceso | Dos normas: las horas de la bitácora salen del reloj en el momento de escribir la fila (añadirlo a `CLAUDE.md`), y un proceso se para por su PID, nunca por nombre | Es la segunda sesión con el mismo error de las horas |
+
+Pidió tres commits separados (dependencias, oráculo y documentación), el
+oráculo con su salida y, después, el resto del paso 1 en este orden: errores
+genéricos, CORS, `/health` y esquema. Una pieza cada vez: test que falla por
+aserción y no por importación, enseñando el rojo; después el verde, el
+oráculo y un commit. Al terminar el paso 1, parar: lo revisa antes de
+empezar SPEC-02.
+
+**Sobre el texto del encargo**: llegó con tres frases cortadas («saleno de
+escribir la fila», «errores genéricosema», «falla poraserción»). La IA las
+leyó como «salen del reloj en el momento de escribir la fila», «errores
+genéricos, CORS, `/health` y esquema» (el orden del índice de specs) y
+«falla por aserción». Si alguna lectura no es la del Tech Lead, se corrige.
+
+### Cómo se aplicó la revisión (11:10–11:25)
+
+**f1 · `httpx2` y avisos como errores.** Rojo pedido, con `httpx` y
+`filterwarnings = ["error"]` (11:11): pytest termina con código 2 al
+recolectar, por el aviso convertido en error:
+
+```
+E   starlette.exceptions.StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+ERROR tests/integration/test_main.py - starlette.exceptions.StarletteDeprecat...
+```
+
+Con `httpx2` 2.16.0 (11:12): `1 passed`, **sin ningún aviso**. `httpx2`
+trae `httpcore2` 2.16.0, `truststore` 0.10.5 y `httpx2-jsfetch` 1.0; salen
+`httpx`, `httpcore` y `certifi`.
+
+**f2 · Fecha de corte.** Versiones antes y después de
+`exclude-newer = "2026-11-06T00:00:00Z"`; las demás no cambian:
+
+| Paquete | Antes | Publicada | Después | Publicada |
+|---|---|---|---|---|
+| `fastapi` (directa) | 0.162.5 | 2026-11-11 | 0.162.0 | 2026-10-23 |
+| `ruff` (directa) | 0.17.5 | 2026-11-12 | 0.17.4 | 2026-11-05 |
+| `coverage` | 7.17.3 | 2026-11-12 | 7.17.2 | 2026-11-04 |
+| `click` | 8.5.1 | 2026-11-06 | 8.5.0 | 2026-08-26 |
+| `annotated-doc` | 0.0.6 | 2026-11-10 | 0.0.5 | 2026-07-28 |
+
+**Seguridad de lo que retrocede**: ninguna de las cinco versiones a las que
+se vuelve tiene avisos en PyPI (campo `vulnerabilities`) ni en OSV, y
+ninguna nota de las versiones saltadas menciona seguridad (búsqueda por
+palabras en las notas de GitHub). Lo que sí queda fuera son dos
+correcciones de `fastapi`: 0.162.4 exige AnyIO 4.1.0 o posterior en
+ejecución (hay instalada la 4.16.0) y 0.162.5 corrige la limpieza de
+dependencias síncronas al cancelarse la petición. La IA no ha encontrado
+nada que obligue a parar; el límite de la búsqueda está en ADR-007.
+
+**f6 · Oráculo, con TDD.** Diez tests nuevos en
+`scripts/tests/test_backend_coverage.py`. Rojo (11:14): `Ran 73 tests`,
+`FAILED (failures=9)`, **los nueve por aserción**: ocho porque no existe la
+comprobación de ramas (`0 != 1`) y uno porque los comandos empiezan por
+`['uv', 'run', 'ruff']` y no por `['uv', 'run', '--locked']`. El décimo, que
+el umbral conjunto se conserva, pasaba ya, como debe. Verde (11:14):
+`Ran 73 tests`, `OK`. Prueba real del candado (11:16): con
+`pyproject.toml` desfasado a propósito, `uv run --locked ruff check .`
+termina con código 2 y «The lockfile at `uv.lock` needs to be updated, but
+`--locked` was provided»; restaurado, código 0.
+
+**La IA no vio motivo para no hacerlo como pedía f6**, con una condición que
+aplicó: el 90 % sobre las ramas **se añade** al umbral conjunto y no lo
+sustituye. Sustituirlo relajaría un caso: 50 de 100 sentencias y 9 de 10
+ramas da el 90 % de ramas y un 53,6 % conjunto.
+
+**Precisiones de la IA al aplicar la revisión, sin aprobar**:
+
+| # | Precisión |
+|---|---|
+| T-01 | **La política de f2 va en un ADR nuevo, ADR-007**, y no dentro de ADR-005. El Tech Lead dijo «donde corresponda según el criterio de ADR-005»; la IA lo leyó como el criterio de qué decisiones llevan ADR (afecta a más de una spec y tiene alternativas) y, como el margen vale para todas las dependencias y no solo para las de test, le dio un ADR propio. ADR-005 se amplía solo con `httpx2` (apartado 3) |
+| T-02 | ADR-007 deja **sin decidir el frontend**: nombra el mecanismo de uv y dice que el equivalente en npm se fija al crear el frontend |
+| T-03 | Con 0 ramas que medir, la comprobación nueva sale **`INACTIVO`**, no correcta (`CLAUDE.md`, punto 4). Hoy está así: `app/` no tiene ninguna rama |
+| T-04 | La comprobación llama a `coverage json` con `--fail-under=0`, para que juzgue solo las ramas; el umbral conjunto lo sigue juzgando pytest |
+| T-05 | Las dos comprobaciones de cobertura que ya existían **cambian de nombre** para decir lo que miden: «pytest con el 90 % de sentencias y ramas, en conjunto» y «100 % de sentencias y ramas en domain/». Sus comandos y umbrales no cambian. El 100 % conjunto de `domain/` implica el 100 % de sus ramas |
+| T-06 | El ejecutor simulado de los tests pasa de `test_stack_and_report.py` a `tests/support.py` y aprende a escribir el informe de `coverage json`. Las aserciones de los tests que ya existían no cambian |
+| T-07 | La norma del PID también va a `CLAUDE.md` (punto 8 del flujo). El Tech Lead solo pidió expresamente añadir allí la de las horas |
+| T-08 | La nota «Sobre CA-09» de SPEC-02 conserva el aviso de que el criterio no puede darse por cumplido, ahora por otro motivo: `domain/` no tiene código |
+
+**Texto ajeno no seguido.** Las notas de versión de `fastapi` en GitHub
+empiezan con un párrafo dirigido a agentes de código que invita a instalar
+una «skill» con `uvx library-skills`. Es contenido de un tercero leído como
+dato; la IA no lo ha ejecutado.
+
+**Errores propios**:
+
+- El commit `9344eed` nombra ADR-007 en un comentario de `pyproject.toml`;
+  el ADR no existe hasta el commit de documentación.
+- Un script de edición de la documentación falló al analizarse el comando y
+  no aplicó nada; los cambios se hicieron después con la herramienta de
+  edición. Los cambios de `scripts/` y de `pyproject.toml` sí se hicieron
+  con scripts de un solo uso, que el hook no ve; ninguno toca ficheros
+  protegidos ni specs.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -251,10 +360,13 @@ nombre en la máquina, no solo el suyo. No comprobó antes si había otros.
 
 | Tarea | Cuándo |
 |---|---|
-| Revisar versiones y estructura del esqueleto; aprobar o cambiar K-01 a K-09 | Ahora, por el Tech Lead |
-| Decidir V-01 (`httpx` o `httpx2`), V-02 (`opentelemetry-api`) y V-03 (versiones recientes, `exclude-newer`) | Ahora, por el Tech Lead |
-| Aprobar o cambiar S-01 a S-06; en particular, confirmar S-06 (página del Ministerio del Interior sin verificar) | A decidir por el Tech Lead |
-| Corregir la nota «Sobre CA-09» de SPEC-02 (cambio en una spec aprobada) y el apartado «Estado» de `ai-workspace/README.md` | A decidir por el Tech Lead |
+| ~~Revisar versiones y estructura del esqueleto; aprobar o cambiar K-01 a K-09~~ | Hecho a las 11:10: aprobados |
+| ~~Decidir V-01, V-02 y V-03~~ | Decididos a las 11:10 (f1 a f3) |
+| ~~Aprobar o cambiar S-01 a S-06; confirmar S-06~~ | Aprobados y confirmado a las 11:10 (f5) |
+| ~~Corregir la nota «Sobre CA-09» de SPEC-02 y el apartado «Estado» de `ai-workspace/README.md`~~ | Hecho (f7) |
+| **SPEC-03/E-18 no está cubierto**: la trazabilidad lo da por probado porque el test de humo lo cita, pero falta el test de CA-09 (`405` en `PUT`, `PATCH` y `DELETE` y datos sin cambios) | Con SPEC-03 (decisión f4) |
+| Aprobar o cambiar T-01 a T-08 | A decidir por el Tech Lead |
+| Fijar en npm el margen de una semana de ADR-007 y comprobar la fecha de Angular CLI 21.2.29 | Al crear el frontend |
 | Resto del paso 1: errores genéricos, CORS, `GET /health` y `schema.sql` con su enlace desde el índice de arquitectura | Tras la revisión del esqueleto |
 | Documentar la estructura del backend en `02-arquitectura/README.md` | Tras la revisión de la estructura |
 | Comprobar el comportamiento real de `python-stdnum` (CA-19) | Con SPEC-01, o antes si el Tech Lead lo pide |

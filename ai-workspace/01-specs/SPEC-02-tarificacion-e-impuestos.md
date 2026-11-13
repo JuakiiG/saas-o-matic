@@ -262,11 +262,12 @@ Con `active_users` válido salvo que se indique.
 | CA-10 | El OpenAPI generado declara para `POST /pricing/quote` los campos, tipos y códigos de estado del apartado 4. | E-11, E-13, E-14 |
 | CA-11 | Un test de integración guarda directamente en la base de datos un cliente con un país sin tipo impositivo, llama a `POST /pricing/quote` y obtiene un `500` en `application/problem+json` con el código `tax_rate_not_defined`, cuyo cuerpo no contiene trazas ni nombres internos. | E-10 |
 
-**Sobre CA-09**: la comprobación la hará `scripts/check.py` recorriendo el
-árbol sintáctico (AST) de los módulos de `domain/`, además de
-`--cov-branch --cov-fail-under=100`. El script aún no existe; hasta entonces
-este criterio está **pendiente de implementar** y no puede darse por
-cumplido.
+**Sobre CA-09**: la comprobación la hace `scripts/check.py`, que existe
+desde el 2026-11-12. Recorre el árbol sintáctico (AST) de los módulos de
+`domain/` y exige el 100 % de sentencias y ramas de `domain/` con
+`coverage report --include=app/domain/* --fail-under=100`. Mientras
+`domain/` no tenga código, pasa sin nada que medir: el criterio **no puede
+darse por cumplido** hasta que exista el cálculo.
 
 ## 7. Decisiones de diseño
 
@@ -315,3 +316,4 @@ su historial.
 | 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: aprobación en bloque con SPEC-01 y SPEC-03 (N-01); la lista de países deja de figurar como ajena a esta spec en el apartado 1 (N-02, resto de H-12); fila de 20000 usuarios en 5.1 (N-08) |
 | 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A2, A3, A4 y A5 pasan a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera, 2.2, 5.2, decisión 6 del apartado 7 y apartado 8 actualizados. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
 | 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-01 y SPEC-03 (bloque backend) |
+| 2026-11-13 | Corrección ordenada por el Tech Lead: la nota «Sobre CA-09» decía que `scripts/check.py` aún no existía. Existe desde el 2026-11-12; la nota dice ahora qué comprueba y que el criterio no se da por cumplido mientras `domain/` no tenga código. Motivo: la nota había quedado desfasada. Sin cambios en requisitos, criterios ni casos |

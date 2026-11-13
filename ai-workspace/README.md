@@ -32,5 +32,8 @@ Las carpetas siguen el orden en que se hizo el trabajo:
 
 ## Estado
 
-Proyecto en fase de análisis y especificación. Este índice se actualiza a
-medida que cada carpeta recibe contenido.
+Desde el 2026-11-13: bloque backend aprobado (SPEC-01, SPEC-02 y SPEC-03) y
+backend en implementación, en el orden del índice de specs. SPEC-04 sigue en
+borrador y el frontend no se ha empezado. El detalle de cada día está en la
+bitácora de [`03-proceso/`](03-proceso/). Este índice se actualiza a medida
+que cada carpeta recibe contenido.

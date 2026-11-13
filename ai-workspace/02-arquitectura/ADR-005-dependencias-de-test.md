@@ -1,12 +1,12 @@
-# ADR-005 · Dependencias de test: python-stdnum y Playwright
+# ADR-005 · Dependencias de test: python-stdnum, httpx2 y Playwright
 
 | | |
 |---|---|
-| **Estado** | `aceptado` (2026-11-12) |
+| **Estado** | `aceptado` (2026-11-12); ampliado el 2026-11-13 con el apartado 3 |
 | **Decide** | Tech Lead |
 | **Requisitos** | R-04, R-11, R-12 |
 | **Specs** | SPEC-01 (D-15, CA-19) · SPEC-04 (D-09, CA-13, CA-14) |
-| **Relacionado** | ADR-001 (stack y versiones) · `CLAUDE.md` («Sin dependencias nuevas sin aprobación. Versiones siempre fijadas») |
+| **Relacionado** | ADR-001 (stack y versiones) · ADR-007 (margen de las versiones) · `CLAUDE.md` («Sin dependencias nuevas sin aprobación. Versiones siempre fijadas») |
 
 ## Contexto
 
@@ -58,24 +58,54 @@ complemento (CA-15).
 - La prueba de principio a fin intercepta la API de divisas con la
   respuesta de SPEC-04 (4.2); no depende de la red (ADR-003).
 
+## 3. Cliente HTTP de los tests de integración
+
+Añadido el 2026-11-13, al crear el backend. Los tests de integración llaman
+a la API con el cliente de test de FastAPI (`fastapi.testclient`, que es el
+de Starlette), y ese cliente necesita una biblioteca HTTP.
+
+| | Opción | A favor | En contra |
+|---|---|---|---|
+| **A** | **`httpx2`**, como dependencia solo de desarrollo | Es la que el cliente de test de `starlette` 1.10.0 intenta importar primero y la que su extra `full` declara (`httpx2>=2.0.0`); sin avisos | Publicada por primera vez el 2026-05-11: poco rodaje. Trae `httpcore2`, `truststore` y `httpx2-jsfetch` |
+| B | `httpx` 0.28.1 | La biblioteca de siempre; su última versión es del 2024-12-06 | `starlette` 1.10.0 la da por obsoleta en su cliente de test: cada ejecución emite `StarletteDeprecationWarning` |
+| C | `httpx` y silenciar el aviso | No cambia nada | Oculta una obsolescencia que acabará en rotura |
+
+**Decisión: opción A.** El encargo del esqueleto nombraba `httpx` y así se
+creó; al aparecer el aviso, la IA no añadió `httpx2` por su cuenta y lo
+planteó. El Tech Lead decidió el cambio y, con él, que pytest trate los
+avisos como errores (`filterwarnings = ["error"]`), para que una
+obsolescencia rompa el test en vez de pasar inadvertida.
+
+Comprobado el 2026-11-13: con `httpx` y ese filtro, el test de humo falla
+por el aviso; con `httpx2` 2.16.0 pasa sin ningún aviso. Ningún módulo de
+`backend/app/` importa `httpx2`.
+
 ## Versiones
 
-| Dependencia | Última versión vista el 2026-11-12 | Cómo se consultó | Dónde se fija |
+| Dependencia | Versión | Estado | Dónde se fija |
 |---|---|---|---|
-| `python-stdnum` | 2.2, `requires_python >=3.8` | PyPI | `uv.lock`, al crear el backend |
-| `@playwright/test` | 1.65.0, `node >=20` | `npm view` | `package-lock.json`, en la fase de QA |
+| `python-stdnum` | 2.2 (publicada el 2026-01-04) | **Fijada e instalada** el 2026-11-13 | `backend/pyproject.toml` y `uv.lock` |
+| `httpx2` | 2.16.0 (publicada el 2026-10-21) | **Fijada e instalada** el 2026-11-13 | `backend/pyproject.toml` y `uv.lock` |
+| `@playwright/test` | 1.65.0 era la última el 2026-11-12, `node >=20` (`npm view`) | Sin instalar | `package-lock.json`, en la fase de QA |
 
-La versión exacta se fija al añadir cada dependencia. La tabla dice qué
-había publicado ese día, no qué se ha instalado.
+La versión exacta se fija al añadir cada dependencia, con el margen de
+ADR-007.
 
 ## No verificado
 
-- **Ninguna de las dos se ha instalado ni ejecutado.**
+- `python-stdnum` y `httpx2` están instalados desde el 2026-11-13. Con
+  `python-stdnum` no se ha ejecutado nada todavía. Playwright no se ha
+  instalado.
+- Qué declara `fastapi` en sus extras: solo se ha leído el extra `full` de
+  `starlette`.
 - **Qué acepta `python-stdnum` para el CIF.** SPEC-01 espera que acepte todo
   lo que acepta el validador del dominio y que solo difiera en la forma del
   control (dígito o letra) según el tipo de entidad. Es una hipótesis: se
   comprueba cuando se instale. Si no se cumple, lo decide el Tech Lead.
-- La licencia de las dos dependencias no se ha revisado.
+- La licencia y el código de las tres dependencias no se han revisado. De
+  `httpx2` solo se ha leído su ficha en PyPI (repositorio
+  `github.com/pydantic/httpx2`) y se ha consultado que la versión 2.16.0 no
+  tiene avisos de seguridad en PyPI ni en OSV.
 - Que Playwright funcione con la combinación de Node 24 y Angular de
   ADR-001.
 

@@ -41,12 +41,17 @@ al tocar esa parte del repo.
 6. **Bitácora al momento**: cada sesión se registra en
    `ai-workspace/03-proceso/`, incluida cada propuesta de la IA que el Tech
    Lead corrige o rechaza (qué se propuso, por qué no y qué se hizo). Nunca se
-   reconstruye ni se embellece después.
+   reconstruye ni se embellece después. **Las horas salen del reloj**
+   (`date`) en el momento de escribir cada fila, y la de un commit, de
+   `git log --format=%ci` después de hacerlo; nunca se estiman. *Por qué: en
+   dos sesiones seguidas hubo que corregir horas estimadas.*
 7. **Commits**: Conventional Commits en español (`feat(pricing): …`), citando
    los requisitos que cubren. La IA propone el mensaje; solo hace el commit
    cuando el Tech Lead lo pide. Nunca hace `push`. Sin trailers de coautoría
    ni firmas de herramientas; el uso de la IA se documenta en
    `ai-workspace/`.
+8. **Procesos**: un proceso que la IA arranca se para por su PID, nunca por
+   nombre. *Por qué: parar por nombre mata también procesos ajenos.*
 
 ## Arquitectura
 

@@ -785,3 +785,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-12 | Decisión del Tech Lead sobre la cuestión Q-04 de la segunda respuesta: la semilla de CA-19 es `20261112` |
 | 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A2 y A4 pasan a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera y apartado 8 actualizados. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
 | 2026-11-13 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-13), a la vez que SPEC-02 y SPEC-03 (bloque backend) |
+| 2026-11-13 | Confirmación del Tech Lead sobre el apartado 8: aprobó esta spec sabiendo que la lectura directa de la página del Ministerio del Interior sigue sin verificar. Motivo: el algoritmo queda cubierto por los vectores de prueba y por la prueba diferencial de CA-19. Sin cambios en requisitos, criterios ni casos |

@@ -8,8 +8,9 @@
 | [ADR-002](ADR-002-calculo-en-tiempo-real.md) | El backend es la única fuente del cálculo; la divisa es solo presentación | `aceptado` (2026-11-12) |
 | [ADR-003](ADR-003-api-de-divisas.md) | Tipos de cambio de la API pública Frankfurter `v2`, llamada desde el navegador | `aceptado` (2026-11-12) |
 | [ADR-004](ADR-004-persistencia.md) | Tres tablas, foto completa del cálculo en `simulation_tiers`, solo invariantes en la base de datos y sin migraciones | `aceptado` (2026-11-12) |
-| [ADR-005](ADR-005-dependencias-de-test.md) | Dependencias solo de test: `python-stdnum` para contrastar el validador fiscal y Playwright para la prueba de principio a fin y los 375 px | `aceptado` (2026-11-12) |
+| [ADR-005](ADR-005-dependencias-de-test.md) | Dependencias solo de test: `python-stdnum` para contrastar el validador fiscal, `httpx2` para el cliente de test y Playwright para la prueba de principio a fin y los 375 px | `aceptado` (2026-11-12); ampliado el 2026-11-13 |
 | [ADR-006](ADR-006-convenciones-transversales-de-la-api.md) | Convenciones transversales de la API: errores en `problem+json` con código estable, identificadores, fechas, constante única de países e historial dentro de la ficha | `aceptado` (2026-11-12) |
+| [ADR-007](ADR-007-margen-de-las-versiones.md) | Ninguna dependencia se fija en una versión publicada hace menos de una semana: fecha de corte `exclude-newer` de uv | `aceptado` (2026-11-13) |
 
 Cada ADR recoge el contexto, las opciones comparadas, la decisión con su
 motivo y las consecuencias, también las negativas.
