@@ -327,6 +327,12 @@ del alta y para `GET /meta`. No existe una segunda lista de países.
 | E-31 | Cuando ningún cliente coincide, el sistema deberá responder `200` con una lista vacía. | R-10 |
 | E-33 | Cuando guarda un cliente, el sistema deberá calcular en el dominio la forma de búsqueda de su nombre (NFD, sin marcas diacríticas, `casefold`) y guardarla en una columna propia. | R-10 |
 
+**Sobre E-30**: tiene una limitación conocida y aceptada por el Tech Lead,
+**L-04** ([`limitaciones-conocidas.md`](../04-calidad/limitaciones-conocidas.md)).
+Si el parámetro `q` llega repetido, solo se usa y se valida el último
+valor: un `q` de más de 100 caracteres que no sea el último no responde
+`422`, porque se descarta sin usarse.
+
 ### `GET /meta`
 
 | Id | Requisito | Cubre |
@@ -849,3 +855,4 @@ Interior (devolvió `403`) y su fecha.
 | 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-01), decidida por el Tech Lead: un entero bien escrito en la ruta, por largo que sea, responde `422` con `out_of_range`. Tres filas nuevas en 5.10 (4301 nueves, 20000 nueves y un signo menos con 4301 nueves); E-24 y CA-12 no cambian de texto y las cubren. Motivo: un `id` de 4301 dígitos o más respondía `500` `internal_error`, porque la biblioteca de validación deja de leerlo como número y su error no tenía código en el contrato |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-05 y H-11), decidida por el Tech Lead: un `q` con U+0000 devuelve la lista vacía, sin cambio en el contrato, y qué se compara lo decide el dominio, no la sentencia SQL. Dos puntos nuevos en 2.10 y tres filas en 5.9 (`%00`, `a%00` y `%00a`); E-25, E-31 y CA-13 no cambian de texto y las cubren. Motivo: SQLite corta el patrón de `LIKE` en ese carácter, de modo que `%00` devolvía el listado inicial y `a%00` buscaba «acaba en `a`»; y la condición de no comparar un identificador vacío estaba escrita en el SQL (`? <> ''`), contra 2.11 |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (H-08), decidida por el Tech Lead: un email con cualquier separador Unicode (categorías Zs, Zl y Zp) responde `invalid_email`. Regla del email en 2.1, punto nuevo en 2.12 y cinco filas en 5.7; E-04 y CA-07 no cambian de texto y las cubren. Motivo: «sin espacios» no decía qué es un espacio y solo se rechazaba U+0020, de modo que un email con un espacio de no separación se aceptaba y se guardaba tal cual; ese carácter llega al copiar y pegar un correo, y guardado así no sirve |
+| 2026-11-13 | Corrección de la segunda pasada de la evaluación independiente del backend (`04-calidad/evaluacion-backend-02.md`, N-03), decidida por el Tech Lead: nota «Sobre E-30» tras la tabla de requisitos del buscador, que cita la limitación conocida L-04 (con un `q` repetido solo se valida el último). Sin cambios en requisitos, criterios ni casos. Motivo: quien leyera solo la spec no sabía que E-30 tiene esa desviación aceptada, registrada solo en `04-calidad/` |

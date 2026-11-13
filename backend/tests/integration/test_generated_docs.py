@@ -22,7 +22,7 @@ def client() -> TestClient:
 def test_route_of_the_framework_that_is_switched_off_returns_404_not_found(
     client: TestClient, path: str
 ) -> None:
-    """SPEC-03/E-29: a second page of documentation and an OAuth page nobody uses are no routes."""
+    """SPEC-03/E-29: a second page of documentation and an OAuth page are no routes (5.7, CA-17)."""
     body = assert_problem(client.get(path), 404, "not_found")
     assert "errors" not in body
 
@@ -52,7 +52,7 @@ def test_docs_page_is_served_and_no_longer_points_at_the_oauth_redirection(
 def test_method_that_the_generated_documentation_does_not_admit_returns_405(
     client: TestClient, method: str, path: str, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """SPEC-03/E-29, SPEC-03/E-33: `method_not_allowed` and never a 500, with what is admitted."""
+    """SPEC-03/E-29, SPEC-03/E-33: `method_not_allowed`, never a 500; the six of 5.7 (CA-17)."""
     with caplog.at_level(logging.ERROR):
         response = client.request(method, path)
     assert_problem(response, 405, "method_not_allowed")
@@ -77,7 +77,7 @@ def test_generated_documentation_admits_head_as_its_allow_header_says(
 def test_generated_documentation_does_not_apply_the_rule_of_the_unknown_parameter(
     client: TestClient, path: str
 ) -> None:
-    """SPEC-03/E-29: they are not business endpoints, and an unknown parameter is not a 422."""
+    """SPEC-03/E-29: not business endpoints; an unknown parameter is not a 422 (5.7, CA-17)."""
     assert client.get(path).status_code == 200
 
 

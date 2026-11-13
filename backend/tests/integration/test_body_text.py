@@ -93,7 +93,7 @@ def stored_counts(database: Database) -> list[int]:
 def test_body_with_a_lone_surrogate_returns_400_and_stores_nothing(
     client: TestClient, database: Database, path: str, body: dict[str, object]
 ) -> None:
-    """SPEC-03/E-29: in a value or in a field name, `malformed_request` and never a 500."""
+    """SPEC-03/E-29: in a value or a field name, `malformed_request`, never a 500 (5.7, CA-17)."""
     content = json.dumps(body).encode()
     assert b"\\ud" in content
     response = client.post(path, content=content, headers=JSON)
@@ -106,7 +106,10 @@ def test_body_with_a_lone_surrogate_returns_400_and_stores_nothing(
 def test_body_that_is_not_strict_utf8_returns_400_and_stores_nothing(
     client: TestClient, database: Database, path: str, body: dict[str, object], encoding: str
 ) -> None:
-    """SPEC-03/E-29: UTF-16 and UTF-32, with a byte order mark or without, and UTF-8 with it."""
+    """SPEC-03/E-29: UTF-16 and UTF-32, with a byte order mark or without, and UTF-8 with it.
+
+    The two rows of the encodings of 5.7 (CA-17).
+    """
     content = json.dumps(body).encode(encoding)
     assert content != json.dumps(body).encode()
     response = client.post(path, content=content, headers=JSON)

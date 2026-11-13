@@ -492,12 +492,18 @@ inserta con esa fecha de forma directa.
 |---|---|
 | `POST /customers` con el cuerpo `{"company_name":` (JSON cortado) | `400` `malformed_request` |
 | `POST /simulations` con el cuerpo `[1, 2]`, `null` o `15` | `400` `malformed_request` |
+| `POST /customers`, `POST /pricing/quote` o `POST /simulations` con un *surrogate* suelto (el escape `\ud800`) en un valor o en un nombre de campo | `400` `malformed_request`; no se guarda nada |
+| Un cuerpo válido de cualquiera de esos tres `POST`, codificado en UTF-16 o en UTF-32, con BOM o sin él | `400` `malformed_request`; no se guarda nada |
+| Un cuerpo válido de cualquiera de esos tres `POST`, en UTF-8 con BOM | `400` `malformed_request`; no se guarda nada |
 | `POST /pricing/quote` con `Content-Type: text/plain` | `415` `unsupported_media_type` |
 | `POST /pricing/quote` con `Content-Type: application/json; charset=utf-8` y un cuerpo válido | `200`: `application/json` con parámetros es válido |
 | `POST /simulations?debug=1` con `Content-Type: text/plain` y el cuerpo `{"customer_id":` | `415`: gana al `400` y al `422` |
 | `POST /simulations?debug=1` con `Content-Type: application/json` y el cuerpo `{"customer_id":` | `400` `malformed_request`: gana al `422` |
 | `GET /clientes` o `GET /customers/1/extra` | `404` `not_found` |
+| `GET /redoc` o `GET /docs/oauth2-redirect` | `404` `not_found`: están desactivadas |
+| `GET /docs?x=1` o `GET /openapi.json?x=1` | `200`: la documentación generada no aplica la regla del parámetro desconocido |
 | `GET /simulations`, `POST /customers/1`, `DELETE /meta` | `405` `method_not_allowed` |
+| `POST`, `PUT`, `DELETE` u `OPTIONS /docs`, y `POST` o `DELETE /openapi.json` | `405` `method_not_allowed`, con `Allow: GET, HEAD` |
 | `OPTIONS /customers` sin `Origin`, y `OPTIONS /customers` con `Origin: http://localhost:4200` pero sin `Access-Control-Request-Method` | `405` `method_not_allowed`: no es una comprobación previa |
 | `POST /simulations?debug=1` con un cuerpo válido | `422` `validation_error`, con `unknown_field` en el campo `debug`; no se guarda nada |
 | Un fallo inesperado, provocado en el test con un repositorio que lanza una excepción | `500` `internal_error`; el cuerpo no contiene trazas, nombres de ficheros ni el texto de la excepción |
@@ -589,3 +595,4 @@ del cliente o del cálculo, cambian las tablas de 2.6 y los ejemplos.
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-01, ya implementada: fila nueva en 5.7 para el `503` `service_unavailable` de un endpoint que no es `GET /health`, y fila `503` en la tabla de errores de 4.1. Motivo: todo endpoint que lee la base de datos declara el `503` (regla de las convenciones comunes); la tabla 5.7 no tenía ese caso. E-29 y CA-17 no cambian de texto y lo cubren |
 | 2026-11-13 | Decisión del Tech Lead al revisar el backend, ya implementado: índice `idx_simulations_customer_id` sobre `simulations(customer_id)`, creado con `CREATE INDEX IF NOT EXISTS` (2.6). Motivo: la ficha cuenta y lee las simulaciones de un cliente en cada petición, y una clave foránea sin índice obliga a recorrer la tabla entera. Sin cambios en requisitos ni criterios; un test comprueba que el plan de las consultas del historial usa el índice. Nota en ADR-004 |
 | 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-10), decidida por el Tech Lead: 2.7 y la fila de la comprobación previa admitida de 5.6 dicen el valor exacto de `access-control-allow-headers` (`Accept, Accept-Language, Content-Language, Content-Type`). Sin cambio de comportamiento; E-30 y CA-15 no cambian de texto. Motivo: la spec decía «la cabecera admitida, `content-type`» y el middleware estándar anuncia además las tres que la norma CORS admite siempre; el test solo comprobaba que `content-type` estuviera |
+| 2026-11-13 | Corrección de la segunda pasada de la evaluación independiente del backend (`04-calidad/evaluacion-backend-02.md`, N-03 y N-01), decidida por el Tech Lead: seis filas nuevas en 5.7 para reglas que ya están en las convenciones del índice: el *surrogate* suelto, el cuerpo en UTF-16 o UTF-32, el cuerpo en UTF-8 con BOM, `/redoc` y `/docs/oauth2-redirect` desactivadas, `/docs?x=1` y `/openapi.json?x=1` sin la regla del parámetro desconocido, y el `405` de un método no admitido sobre `/docs` o `/openapi.json`. E-29, E-33 y CA-17 no cambian de texto y las cubren; los tests que ya existían citan ahora estas filas. Motivo: el índice remite a esta tabla para los casos de prueba de los errores genéricos, y CA-17 («cada fila de 5.7») no alcanzaba a esos tests |
