@@ -77,15 +77,21 @@ ha cambiado al ejecutarlas.
   cada una funcione como se describe es una previsión de la IA.
 - Las sondas de la IA se hicieron con el cliente de test, como las del
   evaluador; ninguna con un servidor real.
-- En el fichero del informe, el ejemplo de H-08 dice llevar un espacio de
-  no separación. El informe se guardó a partir del mensaje que devolvió el
-  subagente, quitando solo la sangría que añade la herramienta a cada
-  línea; la IA no puede asegurar que ese carácter se haya conservado y no
-  haya quedado como un espacio corriente. El resto del texto es el que
-  llegó.
-- El informe dice que su modelo es Opus 5.5 (`claude-opus-5-5`). La
-  definición del subagente (`.claude/agents/evaluador.md`) pide `model:
-  opus`; la IA no tiene otra forma de comprobar qué modelo respondió.
+- ~~En el fichero del informe, el ejemplo de H-08 dice llevar un espacio
+  de no separación; la IA no puede asegurar que ese carácter se haya
+  conservado.~~ **Corregido el 2026-11-13 (sesión 05)**: no se conservó.
+  El mensaje del evaluador llevaba un U+00A0 entre la `a` y la `b` (línea
+  255) y el fichero se guardó con un espacio corriente. Comparado el
+  fichero con el mensaje que consta en el registro del subagente, era la
+  única diferencia. Restaurado en el commit `e71196f`: el informe tiene
+  exactamente un U+00A0 y es idéntico al mensaje, línea a línea.
+- ~~El informe dice que su modelo es Opus 5.5; la IA no tiene otra forma
+  de comprobar qué modelo respondió.~~ **Corregido el 2026-11-13 (sesión
+  05)**: comprobado en el registro del subagente, por el Tech Lead y
+  después por la IA, que el agente era el evaluador (tipo de agente
+  `evaluador`, con el texto de `.claude/agents/evaluador.md` como
+  instrucciones) y que respondió con Opus 5.5: las 60 respuestas del
+  registro llevan el modelo `claude-opus-5-5`.
 - Los cinco «NO CUMPLE» del informe (SPEC-01/E-24, E-25 y E-30,
   SPEC-02/E-14 y SPEC-03/E-07) son casos límite fuera de las tablas de las
   specs. Hasta que el Tech Lead decida cada hallazgo, esos requisitos no
