@@ -1,7 +1,9 @@
-"""The rows of SPEC-03 that name real endpoints: generic errors (5.7) and immutability (4.3).
+"""The rows of SPEC-03 that name real endpoints: CORS (5.6), generic errors (5.7) and
+immutability (4.3).
 
-`test_generic_errors.py` proves the same machinery with probe routes, written before
-the business endpoints existed. Here each row runs against the endpoint that it names.
+`test_generic_errors.py` and `test_cors.py` prove the same machinery with probe routes,
+written before the business endpoints existed. Here each row runs against the endpoint
+that it names.
 """
 
 import json
@@ -16,6 +18,12 @@ from fastapi.testclient import TestClient
 from app.main import create_app
 from app.repositories.customers import CustomerRepository
 from app.repositories.database import Database
+from tests.integration.test_cors import (
+    ALLOW_ORIGIN,
+    OTHER,
+    PREFLIGHT,
+    REJECTED_PREFLIGHT_HEADERS,
+)
 from tests.integration.test_generic_errors import assert_problem
 from tests.integration.test_pricing_quote import CUSTOMERS, INSERT_CUSTOMER, field_codes
 from tests.simulation_cases import VALID_SIMULATION
@@ -54,6 +62,15 @@ GENERIC_ROWS = [
     ("DELETE", "/meta", {}, None, 405, "method_not_allowed"),
     ("OPTIONS", "/customers", {}, None, 405, "method_not_allowed"),
     ("OPTIONS", "/customers", {"origin": FRONTEND}, None, 405, "method_not_allowed"),
+]
+TWO_ORIGINS = "http://a.example,http://b.example"
+# The four rows of `GET /meta` of 5.6: `CORS_ORIGINS` (None is undefined), the origin of the
+# request and the origin that the response admits (None is no header).
+META_ROWS = [
+    (None, FRONTEND, FRONTEND),
+    (None, OTHER, None),
+    (TWO_ORIGINS, FRONTEND, None),
+    (TWO_ORIGINS, "http://b.example", "http://b.example"),
 ]
 # 4.3: what would modify or delete, on the three routes, and the reading that does not exist.
 FORBIDDEN_OPERATIONS = [
@@ -138,6 +155,63 @@ def test_unexpected_failure_of_a_repository_returns_500_that_the_frontend_can_re
         assert leak not in response.text
     assert response.headers.get("access-control-allow-origin") == FRONTEND
     assert caplog.records
+
+
+@pytest.mark.parametrize(("configured", "origin", "allowed"), META_ROWS)
+def test_meta_answers_with_the_origin_only_to_an_admitted_one(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    configured: str | None,
+    origin: str,
+    allowed: str | None,
+) -> None:
+    """SPEC-03/E-24, SPEC-03/E-25, SPEC-03/E-26: the four rows of `GET /meta` of 5.6 (CA-15)."""
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "data" / "cors.db"))
+    if configured is None:
+        monkeypatch.delenv("CORS_ORIGINS", raising=False)
+    else:
+        monkeypatch.setenv("CORS_ORIGINS", configured)
+    with TestClient(create_app()) as started:
+        response = started.get("/meta", headers={"Origin": origin})
+    assert response.status_code == 200
+    assert [country["code"] for country in response.json()["countries"]][:2] == ["ES", "PT"]
+    # The requesting origin or no header at all: never `*`.
+    assert response.headers.get(ALLOW_ORIGIN) == allowed
+
+
+def test_preflight_of_the_customers_from_the_frontend_returns_200_with_cors_headers(
+    client: TestClient, database: Database
+) -> None:
+    """SPEC-03/E-30: the admitted preflight of `OPTIONS /customers` of 5.6, not a 405 (CA-15)."""
+    before = stored_rows(database)
+    response = client.options("/customers", headers={"Origin": FRONTEND, **PREFLIGHT})
+    assert response.status_code == 200
+    assert response.headers.get(ALLOW_ORIGIN) == FRONTEND
+    assert "POST" in response.headers["access-control-allow-methods"]
+    assert "content-type" in response.headers["access-control-allow-headers"].lower()
+    assert stored_rows(database) == before
+
+
+@pytest.mark.parametrize(
+    ("changes", "expected"),
+    [
+        ({"Origin": OTHER}, REJECTED_PREFLIGHT_HEADERS),
+        (
+            {"Access-Control-Request-Method": "DELETE"},
+            {**REJECTED_PREFLIGHT_HEADERS, ALLOW_ORIGIN: FRONTEND},
+        ),
+    ],
+    ids=["unlisted-origin", "unlisted-method"],
+)
+def test_rejected_preflight_of_the_customers_gets_the_standard_rejection(
+    client: TestClient, changes: dict[str, str], expected: dict[str, str]
+) -> None:
+    """SPEC-03/E-31: the two rejected preflights of 5.6, status and every header (CA-15)."""
+    headers = {"Origin": FRONTEND, **PREFLIGHT, **changes}
+    response = client.options("/customers", headers=headers)
+    assert response.status_code == 400
+    assert dict(response.headers) == expected
+    assert response.headers["content-type"] != "application/problem+json"
 
 
 @pytest.mark.parametrize(("method", "path"), FORBIDDEN_OPERATIONS)

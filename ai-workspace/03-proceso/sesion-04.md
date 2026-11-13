@@ -964,6 +964,7 @@ Un commit por cambio, con el oráculo en verde. Después:
 | Hora | # | Rojo visto antes del código | Qué se hizo | Verde y oráculo |
 |---|---|---|---|---|
 | 15:38 | b1 | 15:37: **3 en rojo por aserción**. El plan del recuento era `SCAN simulations` y el de la lista incluía `SCAN simulations` en la subconsulta; el tercero, `('idx_simulations_customer_id', 'customer_id') in []` | SPEC-03 2.6 (fila en la tabla, regla con su porqué e historial) y añadido en ADR-004. `schema.sql`: `CREATE INDEX IF NOT EXISTS idx_simulations_customer_id ON simulations (customer_id)`. Tests: el plan de las dos consultas del historial usa el índice y no recorre ninguna tabla; una base de datos sin el índice lo recibe al arrancar y conserva sus datos | `632 passed`; oráculo en verde a las 15:38 (20 correctas, 0 con fallo, 4 inactivas; 86 de 86 ramas) |
+| 15:42 | b2 | **No hay rojo**: las siete filas pasaron a la primera a las 15:40, porque prueban una maquinaria que ya existía sobre rutas que ya existían (como M-07). En su lugar, **mutación a las 15:40**: con CORS abierto a cualquier origen (`allow_origins=["*"]`) fallan las siete y la del `500`; deshecha | `tests/integration/test_real_endpoints.py`: las cuatro filas de `GET /meta` de 5.6 (arrancando la aplicación con cada valor de `CORS_ORIGINS`) y las tres comprobaciones previas de `OPTIONS /customers`; en las dos rechazadas se comparan el estado y todas las cabeceras con los valores ya fijados en `test_cors.py`. Sin cambios en el código de la aplicación. El commit de b1 es `3b0c946` (15:39:30) | `639 passed`; oráculo en verde a las 15:41 (20 correctas, 0 con fallo, 4 inactivas) |
 
 Precisiones de la IA sobre los cambios de esta revisión, **sin aprobar**:
 
@@ -972,6 +973,7 @@ Precisiones de la IA sobre los cambios de esta revisión, **sin aprobar**:
 | B-01 | El test del plan lee el texto de `EXPLAIN QUERY PLAN` de SQLite 3.42.0 (`SEARCH … USING COVERING INDEX idx_simulations_customer_id`): exige que aparezca el nombre del índice y que ningún paso empiece por `SCAN`. Otra versión de SQLite podría redactar el plan de otra forma | Es la única forma de comprobar que el índice se usa y no solo que existe |
 | B-02 | Visto a mano, sin test: el borrado de un cliente también usa el índice para comprobar la clave foránea | Efecto del mismo índice; la API no borra |
 | B-03 | El test de la base de datos ya existente borra el índice a mano y vuelve a arrancar la aplicación; cita SPEC-03/E-22. La tabla de 2.6 nombra el índice (`idx_simulations_customer_id`), que elige la IA | E-22 habla de «todas sus tablas» y de conservar los datos; el índice no tiene requisito propio |
+| B-04 | Los tests de CORS con la ruta de prueba (`test_cors.py`) se quedan como están; los nuevos importan de ellos las cabeceras fijadas del rechazo estándar, para no tener dos copias | CA-15 queda cubierto con los endpoints que la tabla 5.6 nombra; las dos filas de `GET /health` ya usaban el endpoint real |
 
 ## 4. Comprobaciones hechas en la sesión
 
