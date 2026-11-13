@@ -143,7 +143,7 @@ alternativas y el motivo de cada una están en
 
   | Situación | Estado | `code` |
   |---|---|---|
-  | El cuerpo no es JSON válido o no es un objeto JSON (una lista, `null`, un número) | `400` | `malformed_request` |
+  | El cuerpo no es JSON válido, no es un objeto JSON (una lista, `null`, un número) o contiene un *surrogate* suelto, en un valor o en un nombre de campo (ver «El texto del cuerpo») | `400` | `malformed_request` |
   | La petición lleva cuerpo y su `Content-Type` no es `application/json`. Con parámetros, como `application/json; charset=utf-8`, es válido | `415` | `unsupported_media_type` |
   | La ruta no existe | `404` | `not_found` |
   | La ruta existe pero no admite ese método (salvo `OPTIONS`, ver más abajo) | `405` | `method_not_allowed` |
@@ -158,6 +158,15 @@ alternativas y el motivo de cada una están en
   no válida responde `422` sin consultar la base de datos. *Por qué: el
   `500` dice «fallo nuestro» y el `503` «no disponible ahora», y el
   frontend los trata distinto.*
+
+  **El texto del cuerpo**: un cuerpo con un *surrogate* suelto (un escape
+  de `\uD800` a `\uDFFF` que no forma pareja con otro), en un valor o en un
+  nombre de campo y a cualquier profundidad, responde `400`
+  `malformed_request`, aunque su gramática sea la de JSON. Vale para
+  cualquier petición con cuerpo. *Por qué: RFC 8259 (8.2) dice que ese
+  texto no representa caracteres Unicode; no puede guardarse ni devolverse
+  en UTF-8.* Una pareja bien formada, como `😀` (un emoji), es
+  texto válido.
 
   `not_found` es el de una ruta inexistente; un recurso que no existe en una
   ruta válida tiene su propio código (`customer_not_found`). El requisito y
@@ -192,3 +201,4 @@ de cada spec.
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-02: tres reglas que la IA había aplicado al implementar y que ninguna spec decía pasan a estar escritas en «Errores de validación»: el cuerpo ausente equivale a `{}`; una validación sin código en el contrato es un `500` registrado; los campos desconocidos van después de los del contrato, en el orden de la petición. Motivo: una regla que solo está en el código no es parte del contrato |
 | 2026-11-13 | Corrección decidida por el Tech Lead: los campos desconocidos del cuerpo van por **orden alfabético** de su nombre, no por el orden de la petición. Motivo: la regla escrita ese mismo día contradecía SPEC-01 (2.12), que ya decía «por orden alfabético»; la IA la había propuesto sin haber leído ese apartado. Los parámetros de consulta no documentados siguen en el orden de la petición |
 | 2026-11-13 | Decisión del Tech Lead al revisar SPEC-01: en la ruta, un `id` tiene una sola forma (`0`, o un signo menos opcional y dígitos ASCII sin ceros a la izquierda); todo lo demás es `not_an_integer`, y el rango se aplica después. Regla nueva en «Identificadores». Motivo: un cliente, una dirección; hasta ahora `1.0`, `+1` y `01` devolvían el cliente 1 y `1_0` se leía como 10, porque lo decidía la biblioteca de validación |
+| 2026-11-13 | Corrección de la evaluación independiente del backend (`04-calidad/evaluacion-backend-01.md`, H-02, y el caso A-01 de su respuesta), decidida por el Tech Lead: un cuerpo con un *surrogate* suelto, en un valor o en un nombre de campo, responde `400` `malformed_request`. Fila del `400` de la tabla de errores genéricos y párrafo «El texto del cuerpo». Motivo: respondía `500` `internal_error` en el nombre y el email del alta (al guardar) y en un nombre de campo desconocido de cualquier `POST` (al escribir el `422`). Una sola regla en el guarda y no una por campo, porque el fallo saltaba en puntos distintos de los tres `POST`; RFC 8259 (8.2) dice que ese texto no representa caracteres Unicode |

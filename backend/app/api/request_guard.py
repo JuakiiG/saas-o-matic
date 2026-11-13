@@ -1,8 +1,8 @@
 """Checks that every request passes before reaching an endpoint (SPEC-03/E-29).
 
 In order, which is the precedence of the contract: the body must be declared as
-JSON (415), must be a JSON object (400) and the query string may only carry
-parameters documented for that operation (422).
+JSON (415), must be a JSON object whose text is Unicode (400) and the query string
+may only carry parameters documented for that operation (422).
 """
 
 import json
@@ -36,12 +36,27 @@ def _reject_constant(name: str) -> None:
     raise ValueError(f"{name} is not valid JSON")
 
 
+def _is_unicode_text(parsed: object) -> bool:
+    """False if a string or a field name, at any depth, holds a lone surrogate.
+
+    The escape `\\ud800` is JSON by its grammar, but that text does not represent Unicode
+    characters (RFC 8259, 8.2): it can be neither stored nor answered as UTF-8. The parser
+    joins a well-formed pair into one character, so only a lone one fails to encode.
+    """
+    try:
+        json.dumps(parsed, ensure_ascii=False).encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
 def _is_json_object(body: bytes) -> bool:
     try:
-        return isinstance(json.loads(body, parse_constant=_reject_constant), dict)
+        parsed = json.loads(body, parse_constant=_reject_constant)
     except (ValueError, RecursionError):
         # Not UTF-8, not JSON, or nested beyond what the parser accepts.
         return False
+    return isinstance(parsed, dict) and _is_unicode_text(parsed)
 
 
 def body_problem(content_type: str | None, body: bytes) -> Problem | None:
