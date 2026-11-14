@@ -240,7 +240,8 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 ### 2.5 Simulador
 
 - **Usuarios activos**: un control deslizante de 0 a 500 y, sincronizado con
-  él, un campo numérico que admite de 0 a 100.000 (A7). Valor inicial: 10.
+  él, un campo de texto para números que admite de 0 a 100.000 (A7). Valor
+  inicial: 10.
 - Al abrir el simulador se pide el cliente. **Mientras el cliente no se ha
   cargado no se pide ninguna proyección**, aunque el valor inicial de
   usuarios sea válido y hayan pasado los 200 ms; la primera se pide cuando
@@ -251,15 +252,23 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   responde `404` `customer_not_found`.
 - **El `customer_id` de la proyección y del guardado es el `id` del cliente
   cargado**, el que devolvió `GET /customers/{id}`, no el texto de la ruta.
-- **Qué es un valor válido en los tres campos numéricos**: un número entero
-  (`Number.isInteger`) dentro de los límites del campo; el campo vacío no
-  es válido. Se envía como número JSON sin decimales, que es lo único que
-  el backend admite (SPEC-02, 4; SPEC-03, 4.1).
+- **Qué es un valor válido en los tres campos numéricos: decide el texto
+  escrito, no el número que resulta.** Es válido un texto formado solo por
+  dígitos ASCII (`0` a `9`), al menos uno, cuyo valor está dentro de los
+  límites del campo. No lo son `1e3`, `15.0`, `1,5`, `-1`, `+15`, un texto
+  con espacios ni el campo vacío. `015` sí: son solo dígitos y vale 15. Se
+  envía el valor como número JSON sin decimales, que es lo único que el
+  backend admite (SPEC-02, 4; SPEC-03, 4.1).
+- **Los tres son campos de texto con `inputmode="numeric"`**, no controles
+  numéricos del navegador (`type="number"`). *Por qué*: un control numérico
+  solo entrega el número y esconde el texto, y el número engaña: JavaScript
+  lee `100000.000000000001` como el entero 100000 y `1e3` como 1000. Con
+  `inputmode="numeric"` el móvil sigue mostrando el teclado de números.
 - El simulador muestra el nombre de la empresa y el **nombre del país** del
   cliente, tomado de `/meta` («España»), no su código. Si `/meta` falla,
   muestra el error con «Reintentar» (2.1).
-- **Almacenamiento** y **llamadas a la API**: campos numéricos enteros, con
-  los límites de SPEC-03. Valor inicial: 0. Cambiarlos no pide una proyección
+- **Almacenamiento** y **llamadas a la API**: campos de texto para números
+  enteros, con los límites de SPEC-03. Valor inicial: 0. Cambiarlos no pide una proyección
   nueva, porque no tienen precio (A3). Un valor no válido en uno de ellos
   muestra el error junto al campo y desactiva «Guardar», pero **no retira la
   proyección**, que no depende de ellos.
@@ -290,6 +299,11 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   conservan y, en la proyección, se retiran los importes.
 - Cualquier otro error al guardar se muestra, con el aviso que le
   corresponde por su `code` (2.7), sin perder los valores del formulario.
+- **Si el guardado agota los 10 s** (`timeout`), el aviso dice además que
+  la simulación puede haberse guardado y ofrece, junto a «Reintentar», un
+  enlace al detalle del cliente para comprobarlo. *Por qué*: el frontend
+  deja de esperar, pero el servidor puede haber terminado; reintentar a
+  ciegas crearía una segunda simulación igual.
 
 ### 2.6 Divisas
 
@@ -485,14 +499,15 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | E-19 | El sistema deberá mostrar como proyección únicamente los importes devueltos por el backend, sin calcular ninguno en el navegador salvo la conversión de divisa. | A9, ADR-002 |
 | E-20 | Si la proyección falla, entonces el sistema deberá retirar los importes anteriores y mostrar un aviso con opción de reintentar. | R-17, ADR-002 |
 | E-21 | Mientras una proyección está en curso, el sistema deberá marcar los importes visibles como no vigentes. | R-17 |
-| E-22 | Si el número de usuarios no es un entero dentro de sus límites, entonces el sistema deberá mostrar el error junto al campo, no llamar a la API y retirar los importes. | A7 |
-| E-36 | Si el almacenamiento o el número de llamadas no es un entero dentro de sus límites, entonces el sistema deberá mostrar el error junto al campo y desactivar el guardado, sin retirar la proyección. | A3 |
+| E-22 | Si el texto del campo de usuarios no está formado solo por dígitos ASCII, o su valor está fuera de sus límites, entonces el sistema deberá mostrar el error junto al campo, no llamar a la API y retirar los importes. | A7 |
+| E-36 | Si el texto del campo de almacenamiento o del de llamadas no está formado solo por dígitos ASCII, o su valor está fuera de sus límites, entonces el sistema deberá mostrar el error junto al campo y desactivar el guardado, sin retirar la proyección. | A3 |
 | E-37 | Si una proyección o un guardado responde `404` con `customer_not_found`, entonces el sistema deberá mostrar la vista «Cliente no encontrado». | R-17 |
 | E-23 | Mientras la proyección del valor actual no esté disponible, haya un campo no válido o se esté guardando, el sistema deberá mantener desactivado el botón de guardar. | R-12 |
 | E-24 | Cuando el guardado responde `201`, el sistema deberá navegar al detalle del cliente. | R-05, R-11 |
 | E-25 | Si el guardado falla con un error distinto de `customer_not_found`, entonces el sistema deberá mostrar el error y conservar los valores del formulario. | R-17 |
 | E-48 | Si la proyección o el guardado responde `422`, entonces el sistema deberá mostrar cada error junto a su campo cuando el campo está en el formulario, y en el aviso general cuando no lo está. | A14, R-17 |
 | E-49 | El sistema deberá enviar como `customer_id` de la proyección y del guardado el `id` del cliente cargado, y los valores de los campos numéricos como números JSON enteros. | R-12, A14 |
+| E-55 | Si el guardado agota el tiempo de espera, entonces el sistema deberá avisar de que la simulación puede haberse guardado y ofrecer un enlace al detalle del cliente, además de «Reintentar». | R-17 |
 
 ### Divisas
 
@@ -743,13 +758,14 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | Mover a 51 mientras la de 15 sigue en curso | La de 15 se cancela | Solo se muestra la de 51: 514,25 EUR |
 | Escribir `20000` en el campo numérico | 1, con 20000 | El control deslizante queda en su máximo (500); se proyecta 20.000: total 121.205,70 EUR |
 | Escribir `-1`, `1,5`, `100001` o dejarlo vacío | 0 | Error junto al campo; sin importes; «Guardar» desactivado |
+| Escribir `15.0`, `1e3`, `+15`, `1 5` o `100000.000000000001` en el campo de usuarios | 0 | Error junto al campo; sin importes; «Guardar» desactivado: decide el texto, no el número que resulta |
 | La proyección falla | — | Sin importes; aviso con «Reintentar»; «Guardar» desactivado |
 | Cambiar almacenamiento o llamadas | 0 | La proyección no cambia |
-| Escribir `-1` o `1,5` en almacenamiento, con una proyección visible | 0 | Error junto al campo; la proyección sigue a la vista; «Guardar» desactivado |
+| Escribir `-1`, `1,5`, `2.0` o `1e2` en almacenamiento, con una proyección visible | 0 | Error junto al campo; la proyección sigue a la vista; «Guardar» desactivado |
 | Abrir `/clientes/999/simulacion` (el cliente responde `404`) | 0 | Vista «Cliente no encontrado» |
 | Abrir `/clientes/abc/simulacion` (el `id` no tiene la forma de 2.1) | 0, y tampoco se pide el cliente | Vista «Cliente no encontrado» |
 | Abrir `/clientes/7/simulacion` y proyectar | 1, con `customer_id` 7 (el `id` del cliente cargado) y `active_users` 10, los dos como números JSON | Total 121,00 EUR |
-| Escribir `15.0` en el campo de usuarios | 1, con `active_users` 15, sin decimales en el cuerpo | Total 169,40 EUR |
+| Escribir `015` en el campo de usuarios | 1, con `active_users` 15, sin decimales en el cuerpo | Total 169,40 EUR: son solo dígitos y valen 15 |
 | Una proyección responde `422` con `active_users` · `out_of_range` | — | El mensaje del backend junto al campo de usuarios; sin importes; «Guardar» desactivado |
 | «Guardar» con `422`: `storage_gb` · `out_of_range` y `customer_id` · `out_of_range` | — | El primero, junto al campo de almacenamiento; el segundo, en el aviso general; los valores se conservan |
 | Una proyección responde `404` `customer_not_found` | — | Vista «Cliente no encontrado» |
@@ -758,6 +774,7 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | «Guardar» con respuesta `201` | — | Navega al detalle; la simulación nueva es la primera |
 | Pulsar «Guardar» y, antes de que llegue la respuesta, pulsarlo otra vez | — | Una sola petición a `/simulations`: «Guardar» está desactivado mientras se guarda |
 | «Guardar» con `500` o `503` | — | El aviso que le corresponde (2.7); los valores se conservan |
+| «Guardar» y la respuesta no llega en 10 s (`timeout`) | — | Aviso de que la simulación puede haberse guardado, con «Reintentar» y un enlace al detalle del cliente; los valores se conservan |
 | «Guardar» con `404` `customer_not_found` | — | Vista «Cliente no encontrado» |
 
 ### 5.6 Errores del backend
@@ -825,7 +842,7 @@ clientes que no existen.
 | CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
 | CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas (55 y 50: «Se muestran las 50 últimas de 55»), `404` con `customer_not_found`, país y plan con los nombres de `/meta`, un país que `/meta` no trae (se muestra su código), y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
-| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-27, E-29, E-35 a E-38, E-40, E-48, E-49 |
+| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-27, E-29, E-35 a E-38, E-40, E-48, E-49, E-55 |
 | CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
 | CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
 | CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada». | E-34 |
@@ -929,3 +946,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-06, H-07 y H-11), decididas por el Tech Lead. **Se quita la rama del `422` del cliente**: con el filtro del `id`, un `422` de `GET /customers/{id}` solo puede venir de un defecto del frontend y se muestra como error inesperado; «Cliente no encontrado» queda para dos casos, el `id` que no pasa el filtro y el `404` con `customer_not_found` (2.4, 2.5, 2.7, 4.1, E-15 y una fila de 5.6 y otra de 5.7). **La forma del `id`** dice «el primero distinto de `0`», que excluye el `0` solo (2.1). **La remisión de 5.7 a SPEC-01 5.10** dice qué textos están allí y cuáles se sondearon aparte, con su resultado. Motivo: la rama del `422` venía de antes del filtro y contradecía la tabla de 2.7; «sin ceros a la izquierda» no descartaba el `0`, y los casos esperan que no se pida; y cinco textos de 5.7 no tienen fila en SPEC-01 5.10 |
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-03, H-04 y H-08) y propuestas C-02 y C-03 de la sesión 06, decididas por el Tech Lead. **Buscador**: al superar el límite se cancela la búsqueda en curso y el aviso sale al momento (2.2 y E-50); ya no se afirma que U+FFFD no coincide con ningún cliente, porque el backend lo admite en un nombre (2.2); y la fila del buscador de 4.1 recoge el `422` que declara el OpenAPI. **Panel**: una nota bajo la lista cuando llegan 20 clientes, el máximo de la API (E-53 nuevo), y un mensaje propio, «Todavía no hay clientes», con el acceso al alta, cuando el listado inicial llega vacío (E-54 nuevo). Cinco filas nuevas en 5.3 y CA-04. Motivo: una respuesta que llegara tarde podía pintar la lista retirada; la frase de U+FFFD era falsa (sondeado); la columna de 4.1 decía recoger lo que el OpenAPI declara y omitía un estado; la API no dice cuántos clientes hay; y el listado inicial vacío es lo primero que se ve con la base de datos recién creada, sin que nadie haya buscado nada |
 | 2026-11-14 | Corrección de la evaluación independiente de esta spec (H-10) y propuesta C-04 de la sesión 06, decididas por el Tech Lead. **Un código de país o de plan que `/meta` no trae se muestra tal como llega, sin marca** (2.1, E-35, una fila en 5.3 y CA-07). D-13 recoge la comprobación del *surrogate* suelto, que 2.3 y E-45 ya tenían. Motivo: la spec decía que nunca se muestran códigos y no decía qué hacer con uno que `/meta` no conoce, que es el caso de datos incoherentes de SPEC-02 E-10; y D-13 no nombraba una de las comprobaciones de la ayuda |
+| 2026-11-14 | Corrección de la evaluación independiente de esta spec (H-12) y propuesta C-05 de la sesión 06, decididas por el Tech Lead. **En los tres campos numéricos del simulador decide el texto escrito**: es válido solo si está formado por dígitos ASCII y su valor cabe en los límites; son campos de texto con `inputmode="numeric"`, no controles numéricos del navegador (2.5, E-22, E-36). En 5.5, `15.0` pasa de proyectarse a ser un error, junto con `1e3`, `+15`, `1 5` y `100000.000000000001`; `015` es válido y vale 15. **Aviso tras agotar la espera al guardar**: dice que la simulación puede haberse guardado y enlaza al detalle del cliente (2.5, E-55 nuevo, una fila en 5.5 y CA-08). Motivo: `Number.isInteger` miraba el número, y JavaScript lee `100000.000000000001` como el entero 100000 y `1e3` como 1000 (comprobado con Node), así que se enviaba un valor que el usuario no había escrito; y tras un `timeout` el servidor puede haber guardado, de modo que reintentar a ciegas duplica la simulación |
