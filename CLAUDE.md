@@ -55,6 +55,12 @@ al tocar esa parte del repo.
    `ai-workspace/`. Un commit solo se enmienda (`--amend`) si es el último
    y no está subido, y la enmienda se anota en la bitácora. *Por qué: una
    enmienda sin anotar cambia el historial sin dejar rastro.*
+   **El commit depende del código de salida del oráculo, nunca de un filtro
+   de su salida**: la salida se guarda en un fichero, se mira el código y
+   solo con 0 se hace el commit; no se encadena detrás de un `grep` ni de
+   un `tail`. *Por qué: en la sesión 07 un commit salió con el oráculo en
+   rojo porque la cadena dependía del `grep` que filtraba su salida, y el
+   `grep` había encontrado texto (AA-03).*
 8. **Procesos**: un proceso que la IA arranca se para por su PID, nunca por
    nombre. *Por qué: parar por nombre mata también procesos ajenos.*
 9. **Edición del código**: los ficheros de `backend/` y `frontend/` se editan
