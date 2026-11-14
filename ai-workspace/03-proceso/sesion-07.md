@@ -1,10 +1,10 @@
-# Sesión 07 · Frontend: armazón, lo común de `core/`, `/meta`, panel, alta, detalle y simulador en EUR
+# Sesión 07 · Frontend: armazón, lo común de `core/`, `/meta`, panel, alta, detalle, simulador y divisas
 
 | | |
 |---|---|
 | **Fecha** | 2026-11-14 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | **Parada 2 alcanzada (17:01): alta, detalle y simulador en EUR**, en siete commits de código de una tarea cada uno (`e33c800` a `35a2a2f`), todos con el oráculo en verde antes y, los que traen comportamiento nuevo, con su test visto en rojo antes. 458 tests en 15 ficheros, 99,18 % de líneas. Las cuatro rutas de la spec existen. **Un error de la IA que el Tech Lead tiene que conocer (Z-14)**: al comprobar el recorrido con `curl`, la IA escribió en la base de datos local del Tech Lead un cliente y una simulación, porque su backend de prueba no arrancó y las peticiones fueron al que el Tech Lead tenía abierto. **Nada se ha visto en un navegador.** Quedan sin aprobar las precisiones Z-01 a Z-20. · **Antes, parada 1 (15:27), aprobada a las 16:03**: el frontend existe, con el armazón, lo común de `core/`, `/meta` y el panel**, en nueve commits de una tarea cada uno (`0e9966e` a `29d1e11`), todos con su test visto en rojo antes y el oráculo en verde. 221 tests, 98,83 % de líneas. Antes, un commit de documentación (`6b66622`: el margen de npm en ADR-007, las versiones en ADR-001 y la limitación L-07). **Un imprevisto**: al activarse las comprobaciones del frontend, el oráculo no podía ejecutar `npm` en Windows con Python 3.12.0; la IA paró sin tocar `scripts/`, el Tech Lead decidió que lo corrigiera y se hizo con test en rojo y commit propio (`6859f61`). El oráculo queda con 23 comprobaciones correctas y 1 inactiva (Playwright). El fichero de bloqueo tiene 650 versiones, ninguna posterior a la fecha de corte. **Nada se ha visto en un navegador**: eso es la parada. Quedan sin aprobar las precisiones Y-01 a Y-13 |
+| **Resultado** | **Parada 3 alcanzada (18:07): divisas y cierre; el frontend de la spec está completo, a falta de la fase de QA.** Antes, los cuatro cambios de la revisión de la parada 2, un commit cada uno (`f86aea0` a `7695a79`). Después, la pieza 7 en tres commits (`ecfc5dd`, `4fa0f2c` y `bd835f3`) y la 8 en uno (`7f094ec`). 534 tests en 19 ficheros, 99,32 % de líneas; oráculo con 23 correctas y 1 inactiva (Playwright). **Dos cosas que el Tech Lead tiene que conocer**: un commit se hizo con el oráculo en rojo por un fallo de formato y se enmendó tres minutos después (AA-03), y un test ya admitido cambió porque E-26 añade una petición al arranque (AA-02). **Nada de la pieza 7 se ha visto en un navegador.** Quedan sin aprobar las precisiones AA-01 a AA-09. · **Antes, parada 2 (17:01), aprobada a las 17:36: alta, detalle y simulador en EUR**, en siete commits de código de una tarea cada uno (`e33c800` a `35a2a2f`), todos con el oráculo en verde antes y, los que traen comportamiento nuevo, con su test visto en rojo antes. 458 tests en 15 ficheros, 99,18 % de líneas. Las cuatro rutas de la spec existen. **Un error de la IA que el Tech Lead tiene que conocer (Z-14)**: al comprobar el recorrido con `curl`, la IA escribió en la base de datos local del Tech Lead un cliente y una simulación, porque su backend de prueba no arrancó y las peticiones fueron al que el Tech Lead tenía abierto. **Nada se ha visto en un navegador.** Quedan sin aprobar las precisiones Z-01 a Z-20. · **Antes, parada 1 (15:27), aprobada a las 16:03**: el frontend existe, con el armazón, lo común de `core/`, `/meta` y el panel**, en nueve commits de una tarea cada uno (`0e9966e` a `29d1e11`), todos con su test visto en rojo antes y el oráculo en verde. 221 tests, 98,83 % de líneas. Antes, un commit de documentación (`6b66622`: el margen de npm en ADR-007, las versiones en ADR-001 y la limitación L-07). **Un imprevisto**: al activarse las comprobaciones del frontend, el oráculo no podía ejecutar `npm` en Windows con Python 3.12.0; la IA paró sin tocar `scripts/`, el Tech Lead decidió que lo corrigiera y se hizo con test en rojo y commit propio (`6859f61`). El oráculo queda con 23 comprobaciones correctas y 1 inactiva (Playwright). El fichero de bloqueo tiene 650 versiones, ninguna posterior a la fecha de corte. **Nada se ha visto en un navegador**: eso es la parada. Quedan sin aprobar las precisiones Y-01 a Y-13 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -85,6 +85,14 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 17:01 | `35a2a2f` | **Pieza 6b, simulador en EUR** (E-15, E-17 a E-25, E-35 a E-38, E-40, E-47 a E-49, E-55; CA-08 menos sus dos filas de divisa, CA-17 y las filas de la proyección y del guardado de CA-16), 16:59:05. Rojo visto a las 16:51:36: fallan por aserción los 100 tests nuevos. **Primer intento de verde, a las 16:54:03, con 11 fallos**: «Guardar» no enviaba nada, por un defecto del código y no de los tests (Z-16). Verde a las 16:54:41, pero con `simulador.ts` en 340 líneas y su plantilla en 121: se dividió por responsabilidad sin tocar los tests (Z-15) y volvió a verde a las 16:56:57. Oráculo en verde a las 16:58 |
 | 17:01 | — | **Comprobación del recorrido con `curl`, y un error de la IA** (16:59 a 17:01). La IA arrancó un backend con una base de datos temporal sin mirar antes si el puerto 8000 estaba libre. **No lo estaba**: lo ocupaba el backend del Tech Lead (PID 2916), el de la IA no llegó a arrancar y las peticiones fueron al del Tech Lead. **Se crearon en `backend/data/saas-o-matic.db` un cliente y una simulación** (Z-14). La IA no ha tocado ese fichero ni ese proceso. Después repitió la comprobación con un backend propio en el puerto 8001, comprobado libre antes, y lo paró por su PID (apartado 4) |
 | 17:01 | *(este commit)* | Cierre de esta bitácora para la **parada 2**. La IA para aquí: el Tech Lead revisa las piezas 4 a 6 y hace el recorrido en el navegador |
+| 17:36 | — | El commit anterior es `8779807` (17:06:22 según `git log`). **El Tech Lead aprueba la parada 2**, después de hacer el recorrido completo en Chrome contra un backend real, también a 375 px, sin defectos; admite Z-01 a Z-20 con cuatro cambios, fija una regla para los servidores de comprobación de la IA y manda seguir con las piezas 7 y 8 hasta la parada 3 (apartado 3) |
+| 17:47 | `f86aea0`, `91406df`, `1f0f70e`, `7695a79` | Fila escrita a las 17:47. **Los cuatro cambios de la revisión de la parada 2**, un commit cada uno y con el oráculo en verde antes: SPEC-04 recoge las reglas de Z-01, Z-05 y Z-17 (17:39:29); CA-16 cambia de alcance (17:42:14), después de comprobar leyendo los tests que las cuatro vistas ya lo cumplen; las limitaciones L-08 y L-09 (17:43:52); y **el foco al primer campo con error en el alta** (17:47:45), con la regla escrita antes en SPEC-04 (2.3, E-56 nuevo y cinco filas en 5.4) y su **rojo visto a las 17:45:03**: 7 de los 10 tests nuevos fallan por aserción; los otros 3 son los de «el foco no se mueve», que ya se cumplía. Verde a las 17:45:52. Una de las reglas escritas en SPEC-04 no tiene test (AA-01) |
+| 17:56 | `ecfc5dd` | Fila escrita a las 17:56. **Pieza 7a, servicio de tipos de cambio** (E-26, E-30; CA-02 en el servicio y CA-10), 17:52:10. `core/exchange-rates.ts`, con la URL en los ficheros de entorno. Rojo visto a las 17:49:34: 27 de 31 fallan por aserción; los otros 4 son los de «rechaza la respuesta entera», que la firma trivial ya cumplía. Verde a las 17:50:17. Oráculo en verde antes |
+| 17:56 | `4fa0f2c` | **Pieza 7b, selector de divisa en la cabecera** (E-26, E-27, E-30; CA-02), 17:55:56. Rojo visto a las 17:53:17: 16 fallan por aserción (los 14 del selector y 2 del arranque). Verde a las 17:53:58 con toda la batería, 514 tests. **Un test ya aprobado cambió** (AA-02): el del arranque esperaba `/meta` como única petición y ahora espera la lista exacta de dos. Oráculo en verde antes |
+| 18:07 | `bd835f3` | Fila escrita a las 18:07. **Pieza 7c, el tipo, su fecha y el total en EUR junto a los importes convertidos** (E-27, E-29, E-31; las dos filas de divisa de 5.5, con las que CA-08 queda completo), 18:01:09. Rojo visto a las 17:57:58: 12 de los 17 tests nuevos fallan por aserción; los otros 5 afirman lo que ya ocurría en EUR. Verde a las 17:59:12 con toda la batería, 531 tests. Oráculo en verde antes |
+| 18:07 | `7f094ec` | **Pieza 8, cierre: los recorridos completos** (E-28, E-30, E-31, E-52; CA-03, CA-09 y CA-18), 18:06:56. Tres tests con la aplicación entera y su configuración real. **Nacieron en verde, a las 18:02:18** (AA-04). **El primer commit, `672938b` (18:04:23), se hizo con el oráculo en rojo** por el formato del fichero nuevo; corregido con `prettier --write`, oráculo en verde a las 18:06 con su código de salida comprobado, y **commit enmendado** (AA-03) |
+| 18:07 | — | **La API pública de divisas, con `curl`** (18:07:05): `200`, `access-control-allow-origin: *` y los tres tipos con fecha de hoy (apartado 4). La IA no ha arrancado ningún servidor en esta parte: los puertos 8000 y 4200 siguen siendo del Tech Lead |
+| 18:07 | *(este commit)* | Cierre de esta bitácora para la **parada 3**. La IA para aquí: el Tech Lead revisa las piezas 7 y 8 y prueba el selector de divisa en el navegador |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -249,6 +257,73 @@ Precisiones de la IA, **sin aprobar**:
 | Z-19 | Los límites de los campos están escritos en el frontend: 100.000, 1.000.000 y 1.000.000.000 en `simulador-help.ts`, y 2 a 120, 30 y 254 en `alta-help.ts` | La spec manda que la ayuda use los mismos límites que el backend, pero son dos sitios: si cambian en el backend hay que cambiarlos aquí. Ninguna comprobación lo vigila |
 | Z-20 | Para verificar el recorrido sin navegador la IA usó `curl` contra el backend real: primero, por error, contra el del Tech Lead (Z-14); después contra uno propio en el puerto 8001. **El frontend no se arrancó**: el puerto 4200 lo ocupa el servidor de desarrollo del Tech Lead | `curl` prueba el backend, no la aplicación |
 
+### Revisión de la parada 2 por el Tech Lead (17:36)
+
+**Parada 2 aprobada.** Lo que el Tech Lead dice haber hecho en Chrome contra
+un backend real (lo afirma él; la IA no lo ha visto): el recorrido completo
+(alta, detalle, simulador y guardado), el `409`, las rutas no válidas, el
+backend caído con «Reintentar» y la vista a 375 px. **Sin defectos.**
+
+**Z-14, admitido como error declarado.** Los dos registros se quedan en la
+base de datos local del Tech Lead y la IA no los toca. **Regla desde ahora**:
+los servidores de comprobación de la IA nunca usan el puerto 8000 ni el
+4200; antes de arrancar se mira el puerto con `netstat`, y la espera
+comprueba el PID que escucha.
+
+**Admitidas Z-01 a Z-20**, con estos cambios, un commit por cambio y con el
+oráculo en verde:
+
+| Sobre | Decisión del Tech Lead | Frente a lo que hizo la IA |
+|---|---|---|
+| Z-01, Z-05 y Z-17 | Se escriben en SPEC-04, con historial: «Reintentar» de un formulario envía lo que tiene en ese momento, pasando otra vez por la ayuda (2.7); cada desplegable lleva una primera opción desactivada (5.4); la ayuda del alta calla hasta el primer intento y la del simulador habla desde el primer carácter, porque la proyección es en vivo; la primera proyección no espera los 200 ms | **Corregido otra vez**: la IA las había dejado en el código y en la bitácora, como en Y-07 |
+| Z-08 y Z-11 | **No se añaden tests.** Cambia CA-16, con historial: los servicios de `core/` reproducen cada fila de 5.6; cada vista, o el servicio que carga sus datos, una fila por cada aviso distinto. Por qué: el reparto de `code` a aviso vive en `core/` y se prueba allí fila a fila | Admitido lo hecho, cambiando el criterio |
+| Z-17 (g) y Z-19 | Dos limitaciones conocidas nuevas: tras la espera agotada al guardar, reintentar puede guardar dos veces, y evitarlo pide una clave de idempotencia en el backend; y los límites de los campos están en el backend y en el frontend sin nada que vigile que coinciden (L-09), con un caso de frontera en Playwright apuntado para la fase de QA | La IA las había dejado como precisiones |
+| El alta | **Mejora pedida por el Tech Lead**, con test en rojo antes: tras un envío con errores, el foco va al primer campo con error. Se escribe en SPEC-04 | La IA lo había descartado al diseñar el alta |
+
+El mensaje llegó con dos frases cortadas. La IA las ha leído así, **y lo
+dice para que el Tech Lead lo corrija si no es eso**: la primera limitación
+es la L-08, la del guardado doble (Z-17 g); y en la parada 3, además del
+recorrido del selector de divisa y de lo no comprobado, hay que dejar
+apuntado para la fase de QA que Playwright necesita los puertos 8000 y 4200
+libres o una configuración propia.
+
+Después, las piezas 7 y 8 (divisas y cierre) y **parada 3**, con el
+recorrido manual del selector de divisa, incluido qué se ve si la API
+pública falla.
+
+### Piezas 7 y 8 · lo hecho (17:47–18:07)
+
+Una tarea, un commit, con el rojo visto antes del código salvo donde se
+dice, y el oráculo en verde antes de cada commit salvo en uno (AA-03).
+
+| Pieza | Commit | Rojo visto | Requisitos | Tests |
+|---|---|---|---|---|
+| Foco del alta (cambio 4) | `7695a79` | 17:45:03, 7 de 10 | E-56 | 10 más |
+| 7a · Servicio de tipos | `ecfc5dd` | 17:49:34, 27 de 31 | E-26, E-30 | 31 más |
+| 7b · Selector de divisa | `4fa0f2c` | 17:53:17, 16 de 19 | E-26, E-27, E-30 | 15 más |
+| 7c · Tipo, fecha y total en EUR | `bd835f3` | 17:57:58, 12 de 17 | E-27, E-29, E-31 | 17 más |
+| 8 · Recorridos completos | `7f094ec` | **Ninguno: nacieron en verde** | E-28, E-30, E-31, E-52 | 3 más |
+
+Al cerrar: **534 tests en 19 ficheros, todos correctos; 99,32 % de líneas**
+(587 de 591). Compilación de producción: 296,56 kB iniciales, 40 kB más que
+en la parada 2, porque el selector de la cabecera trae los formularios de
+Angular al trozo inicial. El fichero de código más largo sigue siendo
+`simulador.ts` (206 líneas).
+
+Precisiones de la IA, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| AA-01 | Una de las reglas que el Tech Lead mandó escribir en SPEC-04 **no tiene test**: con `/meta` en error, el cliente y la proyección del simulador se piden igual (2.5; era Z-17 h) | El Tech Lead mandó no añadir tests en este cambio. Es lo que hace el código; si se rompe, ningún test lo dirá |
+| AA-02 | **Un test ya admitido ha cambiado.** `app.spec.ts` afirmaba que al arrancar la única petición es `/meta`; E-26 manda pedir también los tipos. Ahora afirma la lista exacta de las dos, en su orden: cualquier otra petición al arrancar lo hace fallar | No es relajarlo, pero es tocar un test admitido: la regla 3 de `CLAUDE.md` pide avisar, y la IA avisa aquí y en el mensaje de la parada en lugar de parar a preguntar |
+| AA-03 | **Un commit se hizo con el oráculo en rojo.** `672938b` (18:04:23) llevaba el fichero de los recorridos sin pasar por `prettier --write`, y `npm run lint` fallaba. La orden encadenaba el commit con `&&` **al `grep` que filtra la salida del oráculo, no al oráculo**: como el `grep` encontraba texto, la cadena seguía. Así estaban encadenados todos los commits de la sesión; en los anteriores el oráculo estaba en verde y se ve en la salida, pero nada lo garantizaba. Corregido el formato, oráculo en verde a las 18:06 y commit enmendado en `7f094ec` (18:06:56): era el último y no está subido | Desde este commit el oráculo escribe a un fichero y la orden mira su código de salida antes de hacer el commit |
+| AA-04 | **Los tres tests de la pieza 8 nacieron en verde.** No hay código nuevo en la pieza: recorren lo que ya existe. No hubo rojo que ver, así que **no está demostrado que detecten el fallo que vigilan** | Son los criterios CA-03, CA-09 y CA-18, que piden un test de recorrido, no un comportamiento nuevo |
+| AA-05 | **Lo que la spec no dice de las divisas y la IA ha puesto**: (a) el tipo y el aviso de «orientativos» van una vez por vista: en el simulador, dentro de la proyección; en el detalle, sobre el historial, y cada tarjeta lleva su «Total en EUR»; (b) los importes del desglose por tramos también se convierten; (c) el aviso del fallo de la API vive en la cabecera, en todas las vistas, con su «Reintentar»; (d) el selector enseña los códigos (EUR, USD, GBP, CHF), no nombres; (e) una respuesta no válida deja el estado de error con el código `invalid_rates`; (f) el *pipe* de importes admite un argumento para dar el EUR exacto sea cual sea la divisa; (g) los textos «Divisa», «Cargando tipos…», «No se han podido cargar los tipos de cambio. Los importes se muestran en EUR.», «Importes orientativos: cada uno se convierte por separado.» y «Total en EUR» | (f) Sigue habiendo un solo *pipe* que convierte un importe en texto, como manda `.claude/rules/frontend.md` |
+| AA-06 | La fila de 5.5 de «un navegador en una zona con desfase negativo» **no se reproduce cambiando la zona**: los tests corren en `Europe/Madrid`. Lo que se comprueba es que la fecha del tipo se da la vuelta como texto, sin pasar por una fecha con hora, y que el 1 de enero sigue siendo el 1 de enero | Cambiar la zona de Node a mitad de proceso no es fiable en Windows |
+| AA-07 | La fila de 5.2 del «cuerpo que no es JSON» se simula con un cuerpo de texto, que el servicio rechaza con `invalid_rates`. En un navegador real el cliente HTTP fallaría antes, al leer el JSON, y el código sería `unknown_error` | Las utilidades de test entregan el texto tal cual. En los dos casos el estado es de error y la interfaz es la misma |
+| AA-08 | CA-02 pide las filas de 5.2 en el servicio; las de la respuesta están todas en `exchange-rates.spec.ts`. La columna «Importes» de esa tabla la sostienen el *pipe*, el selector (qué divisa queda elegida) y el recorrido de CA-03, no una fila por caso | El selector reproduce una fila por estado: cargando, datos, cinco de error y el reintento |
+| AA-09 | El test de recorrido espera 350 ms **reales** por la pausa del buscador | Con el *router* de verdad no se usan temporizadores simulados (Z-11). Son los únicos milisegundos reales de la batería |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -286,7 +361,41 @@ Piezas 4 a 6:
 | El recorrido contra un backend propio | `netstat` antes (8001 libre); `uvicorn … --port 8001` con `DATABASE_PATH` en la carpeta temporal; `curl` (17:01:02) | Base vacía (`{"items":[]}`). Alta de «Ejemplo Dos SL» con `12345678z`: `201`, guardado como `12345678Z`. Con `12345678A`: `422` `invalid_tax_id_check_character`. Proyección de 51: 42500, 8925 y 51425. Dos guardados `201`; el detalle devuelve `simulation_count` 2 y **primero la última guardada**. `/customers/999`: `404` `customer_not_found` |
 | El proceso de la IA, parado; los del Tech Lead, intactos | `taskkill` con el PID que escuchaba en el 8001, sacado de `netstat` (17:01:13) | Parado el 5952; el 8001, libre. Siguen escuchando el 2916 (8000) y el 18116 (4200), que no son de la IA |
 
+Cambios de la revisión de la parada 2 y piezas 7 y 8:
+
+| Qué | Cómo | Resultado |
+|---|---|---|
+| Las cuatro vistas cumplen el CA-16 nuevo antes de escribirlo | Recuento con `grep` de cada aviso en los tests de las vistas y de `core/` (17:40) | Panel, alta y simulador traen los cuatro avisos; el detalle, tres, y la espera agotada está en el test de la carga del cliente |
+| Oráculo antes de cada commit | `uv run scripts/check.py`, antes de los commits de las 17:39 a las 18:01 | Verde en los siete. **En el octavo, `672938b`, en rojo: 22 correctas y 1 con fallo** (ESLint, por el formato de un fichero); verde a las 18:06, con código de salida 0, antes de enmendarlo (AA-03) |
+| Totales al cerrar | `npm run test:ci` y `npm run build` (18:04) | 534 tests en 19 ficheros, correctos; 99,32 % de líneas; 296,56 kB iniciales |
+| **La API pública de divisas responde y admite el origen del frontend** | `curl` con `Origin: http://localhost:4200` (18:07:05) | `200`, `application/json; charset=utf-8`, `access-control-allow-origin: *` y `cache-control: public, max-age=24770, stale-if-error=86400`. Tipos con fecha `2026-11-14`: USD 1,1082, GBP 0,83558 y CHF 0,92501. La misma forma que la de 4.2 |
+| Qué importes se verán con esos tipos | `node -e`, sin escribir nada (18:07) | 10 usuarios: 134,09 USD, 101,11 GBP y 111,93 CHF. 15 usuarios: 187,73 USD, 141,55 GBP y 156,70 CHF; en USD, base 155,15 e impuesto 32,58, que suman 187,73 (hoy no hay céntimo de diferencia) |
+| Ningún servidor de la IA | `netstat` (17:01 y después) | La IA no ha arrancado nada desde las 17:01. El 8000 y el 4200 son del Tech Lead |
+
 ## 5. No verificado
+
+Al cerrar la parada 3 (18:07), además de lo de las paradas 1 y 2, que sigue
+debajo:
+
+- **Nada de la pieza 7 en un navegador**: ni el selector, ni los importes
+  convertidos, ni el aviso del fallo. Tampoco el foco del alta tras un
+  envío con errores (cambio 4), que jsdom da por bueno sin lector de
+  pantalla ni teclado de verdad.
+- **Que el navegador pueda llamar a la API pública.** `curl` ve la cabecera
+  que lo permite; un navegador real no ha hecho la petición desde
+  `http://localhost:4200`.
+- **Qué se ve con la API caída de verdad**: los tests simulan el fallo. El
+  Tech Lead puede provocarlo bloqueando la petición en las herramientas del
+  navegador (está en el recorrido de la parada).
+- El aspecto de la cabecera con el selector y con el aviso, **a 375 px y en
+  escritorio**; y las tarjetas del detalle y la proyección con una línea
+  más («Total en EUR») y la nota del tipo.
+- Un navegador en una zona horaria con desfase negativo (AA-06).
+- Que los tres tipos traigan fechas distintas, y los festivos: la API no lo
+  dice (SPEC-04, 4.2). El código muestra la fecha de la divisa elegida.
+- Que los tests de la pieza 8 detecten lo que vigilan: nacieron en verde
+  (AA-04).
+- La comprobación de Playwright del oráculo sigue inactiva.
 
 Al cerrar la parada 2 (17:01), además de lo de la parada 1, que sigue
 debajo:
@@ -344,10 +453,12 @@ De la parada 1:
 | Tarea | Cuándo |
 |---|---|
 | ~~Parada 1~~ | Hecha y aprobada a las 16:03, con Y-01 a Y-13 admitidas y sus cuatro cambios aplicados |
-| **Parada 2**: revisar las piezas 4 a 6 y hacer el recorrido en el navegador, de dar de alta un cliente a ver su simulación guardada | Ahora; es del Tech Lead |
-| **Decidir qué se hace con el cliente `id` 1 y la simulación `id` 1 que la IA creó por error en `backend/data/saas-o-matic.db`** (Z-14) | A decidir por el Tech Lead |
-| Aprobar o cambiar las precisiones Z-01 a Z-20. Las que más pesan: Z-14 (el error), Z-01, Z-05 y Z-17 (reglas que la spec no dice; las admitidas habría que escribirlas en SPEC-04, como Y-07), Z-08 y Z-11 (filas de 5.6 que no se repiten en cada vista) y Z-19 (límites en dos sitios). Siguen sin aprobar U-01 a U-05 de la sesión 06 | A decidir por el Tech Lead |
-| Piezas 7 y 8: divisas y cierre, hasta la parada 3 | Después de la parada 2 |
+| ~~Parada 2~~ | Hecha y aprobada a las 17:36, con Z-01 a Z-20 admitidas y sus cuatro cambios aplicados. Los dos registros de Z-14 se quedan en la base local del Tech Lead |
+| **Parada 3**: revisar las piezas 7 y 8 y probar el selector de divisa en el navegador, también con la API pública bloqueada | Ahora; es del Tech Lead |
+| Aprobar o cambiar las precisiones AA-01 a AA-09. Las que más pesan: AA-03 (el commit en rojo, enmendado), AA-02 (un test admitido que cambió), AA-04 (tests de recorrido que nacieron en verde) y AA-05 (lo que la spec no dice de las divisas; lo admitido habría que escribirlo en SPEC-04). Siguen sin aprobar U-01 a U-05 de la sesión 06 | A decidir por el Tech Lead |
+| **Fase de QA, Playwright**: necesita los puertos 8000 y 4200 libres, porque el frontend llama al backend en `127.0.0.1:8000` y el backend solo admite por CORS el origen `http://localhost:4200`; o una configuración propia, con otros dos puertos, otra URL del backend para el frontend, otro origen admitido en el backend y su propia base de datos. Hoy los dos puertos los ocupan los servidores del Tech Lead, y la IA no puede usarlos (regla de las 17:36) | Fase de QA; a decidir por el Tech Lead cuál de las dos |
+| Fase de QA, Playwright: el caso de frontera de L-09 (un valor en el límite se guarda y uno un paso más allá se rechaza), además de CA-13 y CA-14 | Fase de QA |
+| Fase de QA: evaluador independiente del frontend (CA-12), capturas a 375 px y 1280 px (CA-15) y README | Fase de QA |
 | **Para el README de la raíz**: los 27 avisos moderados de `npm audit` que verá quien instale el frontend (L-07), con las demás limitaciones; y que el frontend se abre en `http://localhost:4200`, no en `127.0.0.1:4200` | Cuando se escriba el README |
 | L-07: volver a mirar los avisos al adelantar la fecha de corte de `frontend/.npmrc` (ESLint 10.15.0 cumple la semana el 2026-11-20) y, como muy tarde, antes de cerrar la fase de QA | Fase de QA |
 | El oráculo no comprueba las fechas del fichero de bloqueo de npm ni que cada test del frontend cite su requisito | A decidir por el Tech Lead |
