@@ -7,6 +7,14 @@ const BASIS_POINTS_PER_UNIT = 10000;
 const EURO = currencyFormat('EUR');
 const RATE = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 6 });
 const PERCENT = new Intl.NumberFormat(LOCALE, { style: 'percent', maximumFractionDigits: 2 });
+const INTEGER = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
+const DATE_TIME_PARTS: Intl.DateTimeFormatOptions = {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+};
 
 function currencyFormat(currency: string): Intl.NumberFormat {
   return new Intl.NumberFormat(LOCALE, { style: 'currency', currency, currencyDisplay: 'code' });
@@ -46,6 +54,24 @@ export function formatRate(rate: number): string {
 /** A tax rate in basis points as a percentage (`2100` is `21 %`). A rate is not money. */
 export function formatPercent(basisPoints: number): string {
   return PERCENT.format(basisPoints / BASIS_POINTS_PER_UNIT);
+}
+
+/**
+ * A date with time of the backend (`created_at`, in UTC) shown in the time zone of the browser
+ * (`12/11/2026, 15:30`). The zone is a parameter only so that a test does not depend on the
+ * machine it runs on. A text that is not a date is shown as it arrives: it is not hidden.
+ */
+export function formatDateTime(createdAt: string, timeZone?: string): string {
+  const moment = new Date(createdAt);
+  if (Number.isNaN(moment.getTime())) {
+    return createdAt;
+  }
+  return new Intl.DateTimeFormat(LOCALE, { ...DATE_TIME_PARTS, timeZone }).format(moment);
+}
+
+/** A count (users, gigabytes, calls) the Spanish way: `250.000`. */
+export function formatInteger(value: number): string {
+  return INTEGER.format(value);
 }
 
 /** Name of a pricing tier by its limits; the last one has no upper limit. */

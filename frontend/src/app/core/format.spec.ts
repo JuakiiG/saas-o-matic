@@ -1,4 +1,4 @@
-import { formatPercent, formatRate, tierLabel } from './format';
+import { formatDateTime, formatInteger, formatPercent, formatRate, tierLabel } from './format';
 
 const NO_BREAK_SPACE = String.fromCodePoint(0xa0);
 
@@ -31,5 +31,44 @@ describe('tierLabel · SPEC-04 2.8', () => {
     [51, null, 'del 51 en adelante'],
   ])('should name the tier from %d to %s by its limits', (fromUsers, toUsers, expected) => {
     expect(tierLabel(fromUsers, toUsers)).toBe(expected);
+  });
+});
+
+describe('formatDateTime · SPEC-04 2.8', () => {
+  const CREATED_AT = '2026-11-12T14:30:00Z';
+
+  it.each([
+    [CREATED_AT, 'Europe/Madrid', '12/11/2026, 15:30'],
+    [CREATED_AT, 'America/New_York', '12/11/2026, 09:30'],
+    [CREATED_AT, 'UTC', '12/11/2026, 14:30'],
+    ['2026-11-12T23:30:00Z', 'Europe/Madrid', '13/11/2026, 00:30'],
+    ['2026-07-01T08:05:00Z', 'Europe/Madrid', '01/07/2026, 10:05'],
+  ])('should show the UTC time %s in the zone %s as «%s»', (createdAt, timeZone, expected) => {
+    expect(formatDateTime(createdAt, timeZone)).toBe(expected);
+  });
+
+  it('should use the time zone of the browser when none is given', () => {
+    const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    expect(formatDateTime(CREATED_AT)).toBe(formatDateTime(CREATED_AT, browserZone));
+    expect(formatDateTime(CREATED_AT)).toContain('/11/2026');
+  });
+
+  it('should show the text as it arrives when it is not a date', () => {
+    expect(formatDateTime('ayer')).toBe('ayer');
+  });
+});
+
+describe('formatInteger · SPEC-04 2.8', () => {
+  // The Spanish format groups from five digits on: `1000` has no separator.
+  it.each([
+    [0, '0'],
+    [15, '15'],
+    [1000, '1000'],
+    [20000, '20.000'],
+    [250000, '250.000'],
+    [1000000000, '1.000.000.000'],
+  ])('should show %d the Spanish way, as «%s»', (value, expected) => {
+    expect(formatInteger(value)).toBe(expected);
   });
 });
