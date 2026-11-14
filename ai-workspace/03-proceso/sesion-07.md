@@ -1,10 +1,10 @@
-# Sesión 07 · Frontend: armazón, lo común de `core/`, `/meta` y panel
+# Sesión 07 · Frontend: armazón, lo común de `core/`, `/meta`, panel, alta, detalle y simulador en EUR
 
 | | |
 |---|---|
 | **Fecha** | 2026-11-14 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | **Parada 1 alcanzada: el frontend existe, con el armazón, lo común de `core/`, `/meta` y el panel**, en nueve commits de una tarea cada uno (`0e9966e` a `29d1e11`), todos con su test visto en rojo antes y el oráculo en verde. 221 tests, 98,83 % de líneas. Antes, un commit de documentación (`6b66622`: el margen de npm en ADR-007, las versiones en ADR-001 y la limitación L-07). **Un imprevisto**: al activarse las comprobaciones del frontend, el oráculo no podía ejecutar `npm` en Windows con Python 3.12.0; la IA paró sin tocar `scripts/`, el Tech Lead decidió que lo corrigiera y se hizo con test en rojo y commit propio (`6859f61`). El oráculo queda con 23 comprobaciones correctas y 1 inactiva (Playwright). El fichero de bloqueo tiene 650 versiones, ninguna posterior a la fecha de corte. **Nada se ha visto en un navegador**: eso es la parada. Quedan sin aprobar las precisiones Y-01 a Y-13 |
+| **Resultado** | **Parada 2 alcanzada (17:01): alta, detalle y simulador en EUR**, en siete commits de código de una tarea cada uno (`e33c800` a `35a2a2f`), todos con el oráculo en verde antes y, los que traen comportamiento nuevo, con su test visto en rojo antes. 458 tests en 15 ficheros, 99,18 % de líneas. Las cuatro rutas de la spec existen. **Un error de la IA que el Tech Lead tiene que conocer (Z-14)**: al comprobar el recorrido con `curl`, la IA escribió en la base de datos local del Tech Lead un cliente y una simulación, porque su backend de prueba no arrancó y las peticiones fueron al que el Tech Lead tenía abierto. **Nada se ha visto en un navegador.** Quedan sin aprobar las precisiones Z-01 a Z-20. · **Antes, parada 1 (15:27), aprobada a las 16:03**: el frontend existe, con el armazón, lo común de `core/`, `/meta` y el panel**, en nueve commits de una tarea cada uno (`0e9966e` a `29d1e11`), todos con su test visto en rojo antes y el oráculo en verde. 221 tests, 98,83 % de líneas. Antes, un commit de documentación (`6b66622`: el margen de npm en ADR-007, las versiones en ADR-001 y la limitación L-07). **Un imprevisto**: al activarse las comprobaciones del frontend, el oráculo no podía ejecutar `npm` en Windows con Python 3.12.0; la IA paró sin tocar `scripts/`, el Tech Lead decidió que lo corrigiera y se hizo con test en rojo y commit propio (`6859f61`). El oráculo queda con 23 comprobaciones correctas y 1 inactiva (Playwright). El fichero de bloqueo tiene 650 versiones, ninguna posterior a la fecha de corte. **Nada se ha visto en un navegador**: eso es la parada. Quedan sin aprobar las precisiones Y-01 a Y-13 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -77,6 +77,14 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 16:12 | `1967209`, `6cd21b5`, `8d09fe6`, `4703eb9` | Fila escrita a las 16:12. **Los cuatro cambios de la revisión**, un commit cada uno y con el oráculo en verde antes: SPEC-04 recoge las reglas de Y-07 (16:05:38), con un test nuevo del panel que nace en verde porque el código ya lo hacía; la regla 9 de `CLAUDE.md` (16:07:34); `.claude/rules/frontend.md` (16:09:23); y el corrector ortográfico del buscador (16:11:28), con su **rojo visto a las 16:09:26** (`expected null to be 'false'`) y la regla escrita en SPEC-04 2.8. Al escribir Y-07 en la spec la IA añadió una regla más, que el Tech Lead no ha visto (Z-01) |
 | 16:28 | `e33c800` | Fila escrita a las 16:28. **Refactor sin cambio de comportamiento**, 16:14:32: el estado de `/meta` (cargando, error con «Reintentar» o el contenido) pasa del panel a un componente compartido, `shared/meta-gate.ts`, porque el alta, el detalle y el simulador lo necesitan igual. Sin test nuevo: los 35 del panel siguen en verde. Oráculo en verde antes. Nadie lo pidió (Z-03) |
 | 16:28 | `c4ef635` | **Pieza 4, alta de cliente** (E-05 a E-11, E-40, E-41, E-44 a E-46; CA-05, CA-06 y las filas de `POST /customers` de CA-16), 16:27:53. **Primer rojo, a las 16:16:00, no válido**: el test no compilaba (`TS2345`, un error del propio test). Corregido el test, **rojo por aserción a las 16:18:37**: 44 de 47. Antes de escribir el componente la IA rehízo los tests para seguir CA-05 al pie de la letra (Z-04) y volvió a ver el rojo, **a las 16:23:29: 56 de 59 fallan, todos `AssertionError`**; los 3 que pasan son las filas de rutas que ya existían. Verde a las 16:25:45 (59 de 59) y oráculo en verde a las 16:26 |
+| 16:43 | `e96d1a5` | Fila escrita a las 16:43. Commit de esta bitácora con la revisión de la parada 1 y la pieza 4, 16:30:48, con el oráculo en verde antes |
+| 16:43 | `e7aea4f` | **Pieza 5a, carga del cliente de la ruta** (E-15, E-47, E-32, E-33; CA-10), 16:34:52. `core/customer-loader.ts`, que usan el detalle y el simulador. Rojo visto a las 16:32:25: 20 de 20 fallan por aserción. Verde a las 16:32:54. Oráculo en verde antes |
+| 16:43 | `76051f7` | **Pieza 5b, formato de fechas y de recuentos** (SPEC-04 2.8), 16:37:51. Rojo visto a las 16:35:31: 9 de los 13 tests nuevos fallan por aserción; los otros 4 son valores que la firma trivial ya devolvía igual (`ayer`, 0, 15 y 1000). Los valores esperados se sacaron antes sondeando `Intl` con `node -e`, sin escribir nada. Oráculo en verde antes |
+| 16:43 | `f3179e9` | **Pieza 5c, detalle del cliente** (E-12 a E-15, E-35, E-40, E-47; CA-07, CA-17 y las filas de `GET /customers/{id}` de CA-16), 16:43:17. Rojo visto a las 16:40:01: 36 de 40 fallan por aserción (los 35 del detalle y la fila nueva de rutas). Verde a las 16:41:13 y oráculo en verde a las 16:43 |
+| 17:01 | `d4a60f7` | Fila escrita a las 17:01. **Pieza 6a, el reparto de un error de formulario pasa a `core/`** (E-09, E-11, E-48), 16:49:25. `formErrors` en `core/api-error.ts`; el alta deja su copia y sus 55 tests siguen en verde sin tocarlos. Rojo visto a las 16:46:53: 9 de los 10 tests nuevos fallan por aserción. Oráculo en verde antes |
+| 17:01 | `35a2a2f` | **Pieza 6b, simulador en EUR** (E-15, E-17 a E-25, E-35 a E-38, E-40, E-47 a E-49, E-55; CA-08 menos sus dos filas de divisa, CA-17 y las filas de la proyección y del guardado de CA-16), 16:59:05. Rojo visto a las 16:51:36: fallan por aserción los 100 tests nuevos. **Primer intento de verde, a las 16:54:03, con 11 fallos**: «Guardar» no enviaba nada, por un defecto del código y no de los tests (Z-16). Verde a las 16:54:41, pero con `simulador.ts` en 340 líneas y su plantilla en 121: se dividió por responsabilidad sin tocar los tests (Z-15) y volvió a verde a las 16:56:57. Oráculo en verde a las 16:58 |
+| 17:01 | — | **Comprobación del recorrido con `curl`, y un error de la IA** (16:59 a 17:01). La IA arrancó un backend con una base de datos temporal sin mirar antes si el puerto 8000 estaba libre. **No lo estaba**: lo ocupaba el backend del Tech Lead (PID 2916), el de la IA no llegó a arrancar y las peticiones fueron al del Tech Lead. **Se crearon en `backend/data/saas-o-matic.db` un cliente y una simulación** (Z-14). La IA no ha tocado ese fichero ni ese proceso. Después repitió la comprobación con un backend propio en el puerto 8001, comprobado libre antes, y lo paró por su PID (apartado 4) |
+| 17:01 | *(este commit)* | Cierre de esta bitácora para la **parada 2**. La IA para aquí: el Tech Lead revisa las piezas 4 a 6 y hace el recorrido en el navegador |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -204,6 +212,17 @@ verde antes de cada commit.
 |---|---|---|---|---|
 | Preparación · `MetaGate` | `e33c800` | — (refactor en verde) | E-40 | 0 nuevos |
 | 4 · Alta | `c4ef635` | 16:23:29, 56 de 59 | E-05 a E-11, E-40, E-41, E-44 a E-46 | 56 más |
+| 5a · Carga del cliente | `e7aea4f` | 16:32:25, 20 de 20 | E-15, E-47, E-32, E-33 | 20 más |
+| 5b · Fechas y recuentos | `76051f7` | 16:35:31, 9 de 13 | SPEC-04 2.8 | 13 más |
+| 5c · Detalle | `f3179e9` | 16:40:01, 36 de 40 | E-12 a E-15, E-35, E-40, E-47 | 36 más |
+| 6a · Errores de un formulario | `d4a60f7` | 16:46:53, 9 de 10 | E-09, E-11, E-48 | 10 más |
+| 6b · Simulador en EUR | `35a2a2f` | 16:51:36, 100 de 105 | E-15, E-17 a E-25, E-35 a E-38, E-40, E-47 a E-49, E-55 | 100 más |
+
+Al cerrar: **458 tests en 15 ficheros, todos correctos; 99,18 % de líneas**
+(488 de 492), con el umbral en 80. Compilación de producción: 256,69 kB
+iniciales, con el panel, el alta, el detalle y el simulador en trozos de
+carga diferida. El fichero de código más largo tiene 206 líneas
+(`simulador.ts`) y la plantilla más larga, 111 (`simulador.html`).
 
 Precisiones de la IA, **sin aprobar**:
 
@@ -217,6 +236,18 @@ Precisiones de la IA, **sin aprobar**:
 | Z-06 | Textos que la spec no fija: los siete mensajes de la ayuda, las etiquetas, «Guardando el cliente…», el enlace «Cancelar» y el aviso del `409`, que es una constante del frontend aunque hoy coincida con el `detail` del backend (el test de CA-06 comprueba que no lo copia). El email lleva `inputmode="email"` y `autocapitalize="none"`, que no validan nada | Como Y-07 (d) |
 | Z-07 | Componente nuevo `shared/form-notice.ts` (el aviso general de un formulario, con «Reintentar» opcional) y dos clases globales, `.field` y `.form-actions`. **No tiene fichero de test propio**: lo cubren los tests del alta | Lo usará también el simulador |
 | Z-08 | De las filas «cualquiera» de 5.6, en la vista del alta se reproducen `500`, `503`, `400`, un código desconocido, `502` sin JSON, sin conexión y espera agotada. **`415` y `405` no**: van por la misma rama que el `400` y están probados en `core/api-error.spec.ts` | CA-16 pide «cada fila» en los servicios y en las vistas; aquí se ha tomado una por rama |
+| Z-09 | El plan traía el detalle como una pieza y se ha hecho en **tres commits**: la carga del cliente (`core/customer-loader.ts`, que cada vista provee para sí), el formato de fechas y recuentos, y la vista | Las dos primeras las usa también el simulador y se prueban solas |
+| Z-10 | **Lo que la spec no dice del detalle y la IA ha puesto**: (a) el título de la vista es fijo, «Detalle del cliente», y el nombre de la empresa encabeza su tarjeta; (b) el almacenamiento se muestra como «500 GB»; (c) los recuentos se agrupan a la española, y `Intl` en `es-ES` no separa los números de cuatro cifras («1000», «20.000»); (d) una fecha que no se puede leer se muestra tal como llega; (e) la fecha lleva día, mes, año, hora y minuto («12/11/2026, 15:30»); (f) el desglose por tramos es una lista y no una tabla; (g) el cliente se pide aunque `/meta` esté cargando, como la lista del panel; (h) «Cliente no encontrado» no espera a `/meta`; (i) los textos «Cargando el cliente…», «Simulaciones», «Nueva simulación», «Crear la primera simulación», «Este cliente todavía no tiene simulaciones.», «Desglose por tramos» y «No hay ningún cliente en esta dirección.» | (f) Una tabla de cuatro columnas no cabe en 375 px con importes de seis cifras. (h) Esa vista no enseña ni país ni plan |
+| Z-11 | En la vista del detalle no se reproduce la fila de la espera agotada de 5.6: está en el test de la carga del cliente, con temporizadores simulados. Tampoco `400`, `415` ni `405`, como en Z-08. El texto esperado de las fechas se calcula en el test con la misma función `formatDateTime`, que tiene sus tests con la zona fijada | Los tests de la vista usan el *router* de verdad (`RouterTestingHarness`), que espera a que la aplicación se estabilice y no se lleva bien con los temporizadores simulados. La fecha visible depende de la zona de la máquina |
+| Z-12 | La regla `.card` pasa de `panel.css` a un fichero global nuevo, `styles/cards.css`, con la lista de datos de una tarjeta | La usan tres vistas. Ningún test ve el CSS: **el aspecto del panel hay que volver a mirarlo en el navegador** |
+| Z-13 | Las cuatro filas de las 16:43 de la cronología se escribieron con «16:44» **antes de leer el reloj**, que marcaba 16:43:54. Corregidas al momento | Es el mismo desliz de la fila de las 14:23: la hora se lee antes de escribir, no después |
+| Z-14 | **Error de la IA: escribió en la base de datos local del Tech Lead.** Para comprobar el recorrido arrancó `uvicorn` con `DATABASE_PATH` en la carpeta temporal **sin mirar antes si el puerto 8000 estaba libre**. Lo ocupaba el backend del Tech Lead (PID 2916, que la IA no arrancó), así que el de la IA terminó con `[Errno 10048]` y su espera a `/health` dio por bueno el otro. Las peticiones de las 16:59:53 y 16:59:54 fueron a ese backend: `POST /customers` creó el **cliente `id` 1** («Ejemplo Uno SL», `B12345674`, `ES`, `professional`, email `compras@ejemplo-uno.example`) y `POST /simulations` creó la **simulación `id` 1** de ese cliente (15 usuarios, 500 GB, 250.000 llamadas, 169,40 EUR). `backend/data/saas-o-matic.db` cambió a las 16:59:54. Otras dos peticiones respondieron `409` y `422` y no escribieron nada; las demás eran lecturas. La lista inicial solo trae ese cliente | La IA **no ha tocado** la base de datos ni los procesos del Tech Lead (PID 2916 en el 8000 y 18116 en el 4200): la API no tiene borrado, y borrar a mano o parar un proceso ajeno no le corresponde. El fichero está fuera de git (`*.db`). **Qué hacer con esos dos registros lo decide el Tech Lead.** Para que no se repita: antes de arrancar un servidor se mira el puerto con `netstat`, y la espera comprueba el PID que escucha, no solo que algo responda |
+| Z-15 | La primera versión del simulador que pasó los tests tenía **340 líneas en `simulador.ts` y 121 en la plantilla**, por encima de los límites. Antes del oráculo se dividió en `projector.ts` (el motor de la proyección: espera de 200 ms, cancelación y qué importes se enseñan), `quote-panel` (la tarjeta de la proyección en sus tres estados), `simulador-view.ts` (qué se enseña de cada campo y de un guardado fallido, como funciones puras) y `simulador-help.ts` (la lectura de los campos y sus límites) | No se subió ningún límite ni se tocó ningún test. `Projector` es un servicio de la carpeta de la vista, no de `core/`, y **ni él ni `simulador-view.ts` tienen fichero de test propio**: los cubren los 73 tests de la vista |
+| Z-16 | En el primer intento de verde, «Guardar» no enviaba nada: el `<form>` no tenía grupo y sin él Angular no emite `ngSubmit`. Corregido en el código (un `FormGroup` con los cuatro controles); los tests no se tocaron | Lo encontraron los 11 tests del guardado. Sin ellos habría llegado al navegador |
+| Z-17 | **Reglas del simulador que la spec no dice y la IA ha puesto**, con test salvo (h): (a) la primera proyección se pide en cuanto llega el cliente, sin esperar los 200 ms; (b) durante esos 200 ms los importes ya están marcados como «actualizando» y «Guardar», desactivado; (c) «Reintentar» de la proyección pide al momento; (d) la ayuda de los tres campos habla desde el primer carácter, no tras un intento de guardar; (e) con un texto no válido el deslizante se queda donde estaba; (f) el mensaje del backend junto a un campo tras un guardado fallido se retira cuando ese campo cambia; (g) «Reintentar» tras un guardado fallido guarda lo que el formulario tiene en ese momento, como en el alta (Z-05 c), **también tras la espera agotada**; (h) con `/meta` en error, el cliente y la proyección se piden igual, por detrás del aviso; (i) «Guardar» sigue desactivado después del `201`; (j) los textos: la frase de la ayuda («Escribe un número entero de 0 a 100.000, solo con cifras.»), «Calculando la proyección…», «Actualizando…», «Guardando la simulación…», «Proyección», «Almacenamiento (GB)», «Llamadas a la API estimadas», «Volver al detalle», «Ver el detalle del cliente» y la frase de la espera agotada | (a) El cliente ya ha tardado lo suyo. (b) Es lo que pide E-23: la proyección del valor actual aún no está. (g) Tras una espera agotada, reintentar puede guardar dos veces: el aviso lo dice y enlaza al detalle, pero no lo impide |
+| Z-18 | Los tests del simulador **no usan el *router* de verdad**: la ruta es un objeto de prueba con el `id`, por los temporizadores simulados (Z-11). Las filas de 5.7 le dan el texto ya descodificado (`1` y un espacio, no `1%20`). La navegación tras el `201` se comprueba espiando `navigateByUrl`, no navegando. Que «la simulación nueva es la primera» se comprueba en el detalle por el orden de la API, no de principio a fin | De principio a fin es CA-14, con Playwright, en la fase de QA. El detalle sí usa el *router* de verdad con las mismas filas |
+| Z-19 | Los límites de los campos están escritos en el frontend: 100.000, 1.000.000 y 1.000.000.000 en `simulador-help.ts`, y 2 a 120, 30 y 254 en `alta-help.ts` | La spec manda que la ayuda use los mismos límites que el backend, pero son dos sitios: si cambian en el backend hay que cambiarlos aquí. Ninguna comprobación lo vigila |
+| Z-20 | Para verificar el recorrido sin navegador la IA usó `curl` contra el backend real: primero, por error, contra el del Tech Lead (Z-14); después contra uno propio en el puerto 8001. **El frontend no se arrancó**: el puerto 4200 lo ocupa el servidor de desarrollo del Tech Lead | `curl` prueba el backend, no la aplicación |
 
 ## 4. Comprobaciones hechas en la sesión
 
@@ -243,7 +274,48 @@ Precisiones de la IA, **sin aprobar**:
 | Los dos procesos, parados | `taskkill` con el PID que escuchaba en cada puerto, sacado de `netstat` (15:25) | Parados el 8484 (backend) y el 23468 (frontend) con sus procesos hijos; ningún puerto ocupado después; `backend/data/` no existe |
 | `npm ci` acepta el fichero de bloqueo | `npm ci --dry-run` (15:26) | Código de salida 0 |
 
+Piezas 4 a 6:
+
+| Qué | Cómo | Resultado |
+|---|---|---|
+| Oráculo antes de cada commit | `uv run scripts/check.py`, antes de los siete commits de código de las 16:14 a las 16:59 y de los dos de esta bitácora (`e96d1a5` y este, pasado a las 17:04 y repetido tras retocar esta fila) | Verde todas: 23 correctas, 0 con fallo y 1 inactiva (Playwright) |
+| Caracteres invisibles en `frontend/src` | Recorrido con Python de los `.ts`, `.html` y `.css` (16:26, 16:43 y 16:58) | Ninguno |
+| Qué devuelve `Intl` para las fechas y los recuentos | `node -e`, sin escribir nada (16:35) | «12/11/2026, 15:30» en `Europe/Madrid`; «1000», «10.000», «250.000» |
+| Totales al cerrar | `npm run test:ci` y `npm run build` (16:59) | 458 tests en 15 ficheros, correctos; 99,18 % de líneas; 256,69 kB iniciales |
+| **El recorrido contra el backend del Tech Lead, por error** (Z-14) | `curl` a `127.0.0.1:8000` con `Origin: http://localhost:4200` (16:59:53) | La comprobación previa de `POST /customers` responde 200 con `GET, POST` y `Content-Type` admitido. Alta `201` con `id` 1 y el identificador normalizado; repetida, `409`; con el control mal, `422` `invalid_tax_id_check_character`. Proyección de 10 usuarios, 12100; de 15, 16940. Guardado `201`. **Dejó un cliente y una simulación en la base de datos del Tech Lead** |
+| El recorrido contra un backend propio | `netstat` antes (8001 libre); `uvicorn … --port 8001` con `DATABASE_PATH` en la carpeta temporal; `curl` (17:01:02) | Base vacía (`{"items":[]}`). Alta de «Ejemplo Dos SL» con `12345678z`: `201`, guardado como `12345678Z`. Con `12345678A`: `422` `invalid_tax_id_check_character`. Proyección de 51: 42500, 8925 y 51425. Dos guardados `201`; el detalle devuelve `simulation_count` 2 y **primero la última guardada**. `/customers/999`: `404` `customer_not_found` |
+| El proceso de la IA, parado; los del Tech Lead, intactos | `taskkill` con el PID que escuchaba en el 8001, sacado de `netstat` (17:01:13) | Parado el 5952; el 8001, libre. Siguen escuchando el 2916 (8000) y el 18116 (4200), que no son de la IA |
+
 ## 5. No verificado
+
+Al cerrar la parada 2 (17:01), además de lo de la parada 1, que sigue
+debajo:
+
+- **Nada de las piezas 4 a 6 en un navegador**: ni el alta, ni el detalle,
+  ni el simulador. Los 458 tests corren en Node con jsdom.
+- **La aplicación no ha hecho ninguna petición real.** Lo comprobado con
+  `curl` es que el backend responde lo que los tests suponen; no que el
+  código del frontend lo pida bien ni que el navegador dé por buena la
+  comprobación previa de CORS de los tres `POST`.
+- **El recorrido completo**, de dar de alta a ver la simulación guardada: es
+  lo que hace el Tech Lead en esta parada.
+- El aspecto de todo lo nuevo, **a 375 px y en escritorio**: el formulario
+  del alta, las tarjetas del detalle en una y en dos columnas, el bloque
+  desplegable, el deslizante (al que se le ha quitado el borde de los
+  campos de texto) y los importes atenuados mientras se actualizan. Y el
+  panel otra vez, porque su tarjeta ahora sale de una hoja global (Z-12).
+- Arrastrar el deslizante de verdad, el teclado de números del móvil
+  (`inputmode`), el orden del foco, y que Intro en un campo guarda.
+- Los tiempos reales: los 200 ms y los 10 s son temporizadores simulados.
+- La navegación de verdad tras el `201` del simulador (se espía la
+  llamada) y que el detalle al que se llega trae la simulación nueva la
+  primera.
+- Las fechas en un navegador y en otra zona horaria: los tests del formato
+  fijan la zona; los de las vistas usan la de esta máquina
+  (`Europe/Madrid`).
+- Las dos filas de divisa de 5.5: son de la pieza 7.
+
+De la parada 1:
 
 - **Nada en un navegador.** La aplicación no se ha abierto: ni su aspecto,
   ni a 375 px ni en escritorio, ni el foco y el teclado, ni la carga
@@ -271,10 +343,11 @@ Precisiones de la IA, **sin aprobar**:
 
 | Tarea | Cuándo |
 |---|---|
-| **Parada 1**: revisar las piezas 0 a 3 y abrir la aplicación en el navegador, con el backend real | Ahora; es del Tech Lead |
-| Aprobar o cambiar las precisiones Y-01 a Y-13. Las que más pesan: Y-05 (firmas antes del rojo), Y-07 (reglas que la spec no dice) y Y-01 (sin `ng generate`). Siguen sin aprobar U-01 a U-05 de la sesión 06 | A decidir por el Tech Lead |
-| Piezas 4 a 6: alta, detalle y simulador en EUR, hasta la parada 2 | Después de la parada 1 |
-| `CLAUDE.md`, regla 9: recoger la excepción de P-05 (Y-13) | A decidir por el Tech Lead |
+| ~~Parada 1~~ | Hecha y aprobada a las 16:03, con Y-01 a Y-13 admitidas y sus cuatro cambios aplicados |
+| **Parada 2**: revisar las piezas 4 a 6 y hacer el recorrido en el navegador, de dar de alta un cliente a ver su simulación guardada | Ahora; es del Tech Lead |
+| **Decidir qué se hace con el cliente `id` 1 y la simulación `id` 1 que la IA creó por error en `backend/data/saas-o-matic.db`** (Z-14) | A decidir por el Tech Lead |
+| Aprobar o cambiar las precisiones Z-01 a Z-20. Las que más pesan: Z-14 (el error), Z-01, Z-05 y Z-17 (reglas que la spec no dice; las admitidas habría que escribirlas en SPEC-04, como Y-07), Z-08 y Z-11 (filas de 5.6 que no se repiten en cada vista) y Z-19 (límites en dos sitios). Siguen sin aprobar U-01 a U-05 de la sesión 06 | A decidir por el Tech Lead |
+| Piezas 7 y 8: divisas y cierre, hasta la parada 3 | Después de la parada 2 |
 | **Para el README de la raíz**: los 27 avisos moderados de `npm audit` que verá quien instale el frontend (L-07), con las demás limitaciones; y que el frontend se abre en `http://localhost:4200`, no en `127.0.0.1:4200` | Cuando se escriba el README |
 | L-07: volver a mirar los avisos al adelantar la fecha de corte de `frontend/.npmrc` (ESLint 10.15.0 cumple la semana el 2026-11-20) y, como muy tarde, antes de cerrar la fase de QA | Fase de QA |
 | El oráculo no comprueba las fechas del fichero de bloqueo de npm ni que cada test del frontend cite su requisito | A decidir por el Tech Lead |
