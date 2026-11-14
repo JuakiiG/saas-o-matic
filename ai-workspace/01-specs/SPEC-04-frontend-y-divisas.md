@@ -5,7 +5,7 @@
 | **Estado** | `borrador` (2026-11-12) |
 | **Requisitos** | R-09, R-10, R-11, R-12 y R-17 |
 | **Supuestos** | A3, A6, A7, A8, A9, A12, A13, A14, A16 y A17 (`decidido`). A3, confirmado por la respuesta del 2026-11-13 |
-| **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres aprobadas el 2026-11-13; ADR-001, ADR-002 y ADR-003 |
+| **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres aprobadas el 2026-11-13; las convenciones comunes de la API del índice de specs (ADR-006); ADR-001, ADR-002, ADR-003 y ADR-007 |
 | **Bloqueos para aprobarla** | Ninguno ajeno desde el 2026-11-13: A3 decidido y confirmado por la respuesta (apartado 9) y el bloque backend, aprobado. Falta la aprobación del Tech Lead: esta spec se aprueba aparte, después de ese bloque y antes de empezar el frontend (índice de specs) |
 
 ## 1. Objetivo
@@ -151,11 +151,17 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   `400` `malformed_request` (índice de specs, «El texto del cuerpo»), que
   es un error de la petición y no de un campo: el usuario no sabría qué
   corregir.
-- **Qué se envía**: el valor de cada campo tal como está escrito, sin
-  recortarlo ni normalizarlo; recorta y normaliza el backend, y el detalle
-  muestra lo que el backend devuelve (el identificador, normalizado). El
-  cuerpo se construye siempre a partir de un objeto con los cinco campos
-  del contrato y nada más.
+- **Qué se envía**: el nombre y el email, **recortados** (solo U+0020, el
+  mismo recorte con el que la ayuda los ha medido); el identificador, tal
+  como está escrito; y los códigos de país y de plan de `/meta`. Nada se
+  normaliza: lo hace el backend, y el detalle muestra lo que el backend
+  devuelve (el identificador, normalizado). El cuerpo se construye siempre
+  a partir de un objeto con los cinco campos del contrato y nada más. *Por
+  qué se recortan el nombre y el email*: la ayuda mide el texto recortado,
+  así que sin recortar se podría enviar un nombre válido rodeado de
+  megabytes de espacios, y el backend lee entero cualquier cuerpo (su
+  limitación L-01; 4.3). El resultado es el mismo: el backend recorta ese
+  mismo carácter.
 - Al enviar, el botón se desactiva hasta que llega la respuesta, para que no
   haya dos altas.
 - Respuestas:
@@ -361,6 +367,24 @@ entorno de Angular, no repartidas por el código. El backend admite por CORS
 solo el origen del frontend (A16); el requisito y su criterio están en
 SPEC-03, «Operación del backend».
 
+Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
+
+- **Origen**: el frontend se sirve desde `http://localhost:4200`, el origen
+  que el backend admite por defecto. Desde otro origen
+  (`http://127.0.0.1:4200` lo es) el navegador oculta todas las respuestas
+  del backend y cada llamada acaba en `network_error`.
+- **Métodos y cabeceras**: solo `GET` y `POST`, y **ninguna cabecera
+  propia**. Las únicas que viajan son `Accept` y, en los `POST`,
+  `Content-Type: application/json`. Con una cabecera de más (la de un
+  interceptor, por ejemplo) el backend rechaza la comprobación previa, y el
+  frontend vería un `network_error`.
+- **Cabeceras de respuesta**: el frontend no lee ninguna. El backend no
+  expone ninguna por CORS, así que `Location` (en el `201` del alta) y
+  `Allow` (en el `405`) no se pueden leer desde el navegador.
+- **Cuerpos**: siempre un objeto JSON serializado por el cliente HTTP, en
+  UTF-8 y sin marca de orden de bytes, que es lo único que el backend lee
+  (índice de specs, «El texto del cuerpo»).
+
 ## 3. Requisitos (EARS)
 
 ### Panel y buscador
@@ -391,8 +415,7 @@ SPEC-03, «Operación del backend».
 | E-41 | El sistema deberá medir en la validación de ayuda del navegador las longitudes en puntos de código y recortar solo el carácter U+0020, igual que el backend. | A17 |
 | E-44 | El sistema deberá comprobar del email, en la validación de ayuda, únicamente que tras recortarlo no está vacío, no supera los 254 caracteres y contiene una `@` que no está en un extremo, sin usar el validador de email del framework ni el del navegador. | A17 |
 | E-45 | Si un campo de texto del alta contiene un *surrogate* suelto, entonces el sistema deberá mostrar el error junto al campo y no enviar el alta. | A14 |
-| E-46 | El sistema deberá enviar los valores del alta tal como están escritos, sin recortarlos ni normalizarlos, y tomar el `id` del cliente creado del cuerpo del `201`. | A17 |
-
+| E-46 | El sistema deberá enviar el nombre y el email del alta recortados (solo U+0020) y el identificador tal como está escrito, sin normalizar ninguno, y tomar el `id` del cliente creado del cuerpo del `201`. | A17 |
 ### Detalle
 
 | Id | Requisito | Cubre |
@@ -443,22 +466,41 @@ SPEC-03, «Operación del backend».
 | E-34 | Si la ruta no corresponde a ninguna vista, entonces el sistema deberá mostrar la página «no encontrada» con un enlace al panel. | — |
 | E-42 | Si una llamada al backend responde `503` con `service_unavailable`, entonces el sistema deberá mostrar el aviso de servicio no disponible, distinto del de error inesperado, con un botón «Reintentar». | R-17, A14 |
 | E-43 | Si una llamada al backend responde con un error que su vista no trata por su `code` (un `500`, un `400`, un `415`, un `405`, un `404` con `not_found`, un código que el frontend no conoce o un error sin `code`), entonces el sistema deberá mostrar el aviso de error inesperado con un botón «Reintentar» y conservar en el estado de error el `code` recibido, o `unknown_error` si no lo hay. | R-17, A14 |
+| E-52 | El sistema deberá llamar al backend solo con `GET` y `POST`, sin cabeceras propias y con cuerpos JSON, y no deberá leer ninguna cabecera de sus respuestas. | A16 |
 
 ## 4. Contratos consumidos
 
 ### 4.1 Backend
 
-| Llamada | Desde | Spec |
-|---|---|---|
-| `GET /meta` | Al arrancar la aplicación. La usan el panel, el detalle y el simulador (nombres de país y plan) y el alta (desplegables) | SPEC-01 |
-| `GET /customers?q=` | Panel | SPEC-01 |
-| `POST /customers` | Alta | SPEC-01 |
-| `GET /customers/{id}` | Detalle, simulador (nombre y país del cliente) | SPEC-01, SPEC-03 |
-| `POST /pricing/quote` | Simulador | SPEC-02 |
-| `POST /simulations` | Simulador | SPEC-03 |
+| Llamada | Desde | Spec | Respuestas propias |
+|---|---|---|---|
+| `GET /meta` | Al arrancar la aplicación. La usan el panel, el detalle y el simulador (nombres de país y plan) y el alta (desplegables) | SPEC-01, 4.4 | `200`. No lee la base de datos y no responde `503` |
+| `GET /customers?q=` | Panel | SPEC-01, 4.3 | `200` con `items`; `503` |
+| `POST /customers` | Alta | SPEC-01, 4.1 | `201`; `422` con `errors`; `409` `customer_already_exists`; `503` |
+| `GET /customers/{id}` | Detalle, simulador (nombre y país del cliente) | SPEC-01, 4.2, y SPEC-03, 4.2 | `200`; `404` `customer_not_found`; `422`; `503` |
+| `POST /pricing/quote` | Simulador | SPEC-02, 4 | `200`; `404` `customer_not_found`; `422`; `500` `tax_rate_not_defined`; `503` |
+| `POST /simulations` | Simulador | SPEC-03, 4.1 | `201`; `404` `customer_not_found`; `422`; `500` `tax_rate_not_defined`; `503` |
 
 `/meta` se pide una vez, al arrancar, y se guarda en memoria durante la
 sesión (2.1).
+
+La columna «Respuestas propias» recoge los estados que el OpenAPI del
+backend declara para cada operación (`/openapi.json`, leído el 2026-11-14
+con la aplicación arrancada). Además, cualquier llamada puede recibir los
+errores genéricos de las convenciones comunes; qué muestra el frontend con
+cada uno está en 2.7. El `422` del buscador no es una respuesta que el
+frontend deba provocar (2.2) y se trata como error genérico.
+
+**Las interfaces de `core/` se escriben a mano a partir de las specs**
+(ADR-001), no se generan del OpenAPI. Campos que llegan y el frontend no
+usa:
+
+| Campo | Dónde llega | Por qué no se usa |
+|---|---|---|
+| `tax_rate_bp` de cada país | `GET /meta` | El frontend no calcula impuestos (ADR-002). El tipo que se muestra es el de la proyección o el de la simulación guardada |
+| `currency` | Proyección y simulaciones | Los importes del backend son siempre céntimos de euro (convenciones comunes); la divisa que se muestra la elige el usuario (2.6) |
+| `country` y `customer_id` | Proyección y simulaciones | El país que se muestra es el del cliente (2.4 y 2.5) |
+| `active_users` | Proyección | La interfaz muestra el valor del formulario; la petición anterior se cancela, así que la respuesta es la del valor actual (2.5) |
 
 ### 4.2 API de divisas
 
@@ -474,16 +516,43 @@ el 2026-11-12 a las 14:53:
 Con una divisa inexistente (`quotes=XXX`) respondió `422` con
 `{"status":422,"message":"invalid currency: XXX"}`.
 
+**Comprobada de nuevo el 2026-11-14 a las 09:29, sábado**, con curl y la
+cabecera `Origin: http://localhost:4200`: `200`, el mismo tipo de contenido
+y la misma forma, con los tipos de ese día:
+
+```json
+[{"date":"2026-11-14","base":"EUR","quote":"CHF","rate":0.92491},{"date":"2026-11-14","base":"EUR","quote":"GBP","rate":0.83559},{"date":"2026-11-14","base":"EUR","quote":"USD","rate":1.1083}]
+```
+
+El ejemplo del día 12 sigue siendo el de los casos de prueba (5.1, 5.2 y
+5.5): los tests no salen a la red y no dependen del tipo del día.
+
 | Dato | Estado |
 |---|---|
 | Sin clave ni registro; sin cuota diaria ni mensual | **Verificado** en la documentación (<https://frankfurter.dev/>, leída el 2026-11-12) |
-| Forma de la respuesta de la `v2` | **Verificado** con la petición de arriba |
-| La `v1` está declarada obsoleta en favor de la `v2` | **Verificado** en la documentación; por eso se usa la `v2` (D-01) |
-| El navegador puede llamarla (CORS) | **Verificado** el 2026-11-12 con curl y la cabecera `Origin: http://localhost:4200`: la `v2` y la `v1` responden `access-control-allow-origin: *` y `access-control-allow-methods: GET, OPTIONS`. Lo comprobó también el Tech Lead. No se ha probado desde un navegador real |
-| La respuesta se puede servir desde caché | **Verificado**: la cabecera fue `cache-control: public, max-age=36362`; por eso se muestra la fecha de cada tipo |
+| Forma de la respuesta de la `v2` | **Verificado** con las dos peticiones de arriba |
+| La `v1` está declarada obsoleta en favor de la `v2` | **Verificado** en la documentación; por eso se usa la `v2` (D-01). El 2026-11-14 la `v1` responde además con una cabecera `deprecation` |
+| El navegador puede llamarla (CORS) | **Verificado** el 2026-11-12 con curl y la cabecera `Origin: http://localhost:4200`: la `v2` y la `v1` responden `access-control-allow-origin: *` y `access-control-allow-methods: GET, OPTIONS`. Lo comprobó también el Tech Lead. **Verificado otra vez el 2026-11-14**: las mismas dos cabeceras, y una comprobación previa `OPTIONS` responde `200` con ellas. No se ha probado desde un navegador real |
+| La respuesta se puede servir desde caché | **Verificado**: la cabecera fue `cache-control: public, max-age=36362` el día 12 y `cache-control: public, max-age=55805, stale-if-error=86400` el día 14; por eso se muestra la fecha de cada tipo |
 | Límite de peticiones por segundo | **No declarado** por la documentación |
-| Que los tres tipos traigan siempre la misma fecha | **No verificado**: en la lectura coincidían; la documentación dice que agrega varias fuentes |
-| Comportamiento en fines de semana y festivos | **No verificado**: la documentación no lo dice |
+| Que los tres tipos traigan siempre la misma fecha | **No verificado**: en las dos lecturas coincidían; la documentación dice que agrega varias fuentes |
+| Comportamiento en fines de semana | **Verificado solo para un sábado**, el 2026-11-14: la API responde igual y los tres tipos traen la fecha de ese mismo día |
+| Comportamiento en festivos | **No verificado**: la documentación no lo dice |
+
+### 4.3 Limitaciones del backend y lo que el frontend envía
+
+Las limitaciones conocidas del backend
+([`limitaciones-conocidas.md`](../04-calidad/limitaciones-conocidas.md))
+dependen de lo que un cliente le envíe. Esto es lo que el frontend envía y
+por qué no las alcanza:
+
+| Limitación del backend | Lo que envía el frontend |
+|---|---|
+| **L-01**: el cuerpo de una petición no tiene límite de tamaño | Ningún cuerpo pasa de unos pocos kilobytes: el nombre y el email se envían recortados y la ayuda los acota a 120 y a 254 caracteres, el identificador a 30 sin recortar (2.3), y los demás campos son códigos de `/meta` o números |
+| **L-02**: el OpenAPI publica los límites numéricos como decimales, y el máximo de un `id`, inexacto | Las interfaces y los límites del frontend salen de las specs, no del OpenAPI. Todos los importes y máximos del contrato caben exactos en un número de JavaScript; los `id`, hasta 2^53 − 1 (2.1) |
+| **L-03**: una clave repetida en el cuerpo se acepta y gana la última | El cuerpo se serializa a partir de un objeto, que no puede repetir una clave |
+| **L-04**: con un `q` repetido solo se valida y se usa el último | El buscador envía un solo `q`, o ninguno (2.2) |
+| **L-05**: un entero de más de 4300 dígitos en el cuerpo responde `400` | Ningún número que envía el frontend pasa de 16 dígitos: los campos numéricos se validan antes de enviar (2.5) y el `id` de la ruta se filtra (2.1) |
 
 ## 5. Casos de prueba
 
@@ -570,15 +639,16 @@ funcionando.
 | Nombre de 121 caracteres `ñ` | Error de ayuda junto al campo; no se envía |
 | Nombre `A` rodeado de espacios U+0020 | Error de ayuda: un carácter tras recortar; no se envía |
 | Nombre `AB` precedido de un tabulador | La ayuda no recorta el tabulador ni lo rechaza: se envía, y el `422` `invalid_characters` del backend se muestra junto al campo |
-| Nombre `  Ejemplo Uno SL ` (con espacios U+0020 en los extremos) | Se envía tal cual, sin recortar; el detalle muestra el nombre que devuelve el backend |
+| Nombre `  Ejemplo Uno SL ` (con espacios U+0020 en los extremos) | Se envía recortado, `Ejemplo Uno SL`; el detalle muestra el nombre que devuelve el backend |
+| Nombre `AB` seguido de un espacio de no separación (U+00A0) | Se envía tal cual: solo se recorta U+0020 |
 | Nombre `AB` seguido de un *surrogate* suelto (U+D800) | Error de ayuda junto al campo; no se envía |
 | Email `josé@empresa.example` | La ayuda no lo rechaza: se envía (el backend lo acepta) |
 | Email `a@b` | La ayuda no lo rechaza: se envía, y el `422` `invalid_email` del backend se muestra junto al campo |
 | Email `a`, U+00A0 y `b@c.example` | La ayuda no lo rechaza: se envía, y el `422` `invalid_email` del backend se muestra junto al campo |
 | Email `sin-arroba.example`, `@b.example` o `a@` | Error de ayuda junto al campo; no se envía |
 | Email de 255 caracteres tras recortar | Error de ayuda junto al campo; no se envía |
-| Email de 254 caracteres rodeado de espacios U+0020 | La ayuda no lo rechaza: se envía |
-| Identificador `12345678Z` seguido de 21 espacios (30 caracteres) | La ayuda no lo rechaza: se envía |
+| Email de 254 caracteres rodeado de espacios U+0020 | La ayuda no lo rechaza: se envía recortado |
+| Identificador `12345678Z` seguido de 21 espacios (30 caracteres) | La ayuda no lo rechaza: se envía tal cual, con sus espacios |
 | Identificador `12345678Z` seguido de 22 espacios (31 caracteres) | Error de ayuda junto al campo; no se envía |
 | Identificador de solo espacios | La ayuda no lo rechaza (no está vacío): se envía, y el `422` `invalid_tax_id_format` del backend se muestra junto al campo |
 | `422` con un error en `plan` y un `unknown_field` en `zeta` | El de `plan`, junto a su campo; el de `zeta`, en el aviso general |
@@ -682,6 +752,7 @@ en SPEC-01, 5.10.
 | CA-15 | Capturas manuales de las cuatro vistas a 375 px y a 1280 px, guardadas en `04-calidad/` como complemento de CA-13. | E-16 |
 | CA-16 | Tests de los servicios de `core/` y de las cuatro vistas reproducen cada fila de 5.6, comprobando el aviso que se muestra, que hay «Reintentar» y el `code` del estado de error. | E-11, E-42, E-43 |
 | CA-17 | Tests del detalle y del simulador reproducen cada fila de 5.7, comprobando el número de peticiones del cliente y la URL exacta de cada una. | E-15, E-47 |
+| CA-18 | Un test recorre todas las peticiones al backend de un recorrido completo (panel, búsqueda, alta, detalle, proyección y guardado) y comprueba que su método es `GET` o `POST`, que no llevan más cabeceras que `Accept` y, en los `POST`, `Content-Type: application/json`, y que el cuerpo de cada `POST` es un objeto JSON con los campos del contrato y ninguno más. | E-52 |
 
 **Sobre CA-12 a CA-15**: CA-12 es una revisión del evaluador y CA-15 una
 comprobación manual; ninguna de las dos la hace el oráculo. CA-13 y CA-14 se
@@ -718,8 +789,11 @@ criterio de qué decisiones llevan ADR está en `02-arquitectura/README.md`.
 
 **Sobre D-09**: la versión de Playwright se fija al añadir la dependencia,
 en la fase de QA. El 2026-11-12 la última publicada de `@playwright/test`
-era la 1.65.0, que declara `node >=20` (consultado con `npm view`). No se ha
-instalado ni ejecutado.
+era la 1.65.0, que declara `node >=20` (consultado con `npm view`). El
+2026-11-14 la última es la 1.65.1, publicada el día 13; con el margen de
+una semana de ADR-007, la elegible ese día sigue siendo la 1.65.0,
+publicada el 2026-11-05 (fechas del registro de npm). No se ha instalado ni
+ejecutado.
 
 ## 8. Cambios que provoca en otros documentos
 
@@ -747,7 +821,8 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | Asunto | Qué cambiaría en esta spec |
 |---|---|
 | A3 · almacenamiento y API | Nada: confirmado. Cambiarlos no pide una proyección nueva (2.5) |
-| SPEC-01, SPEC-02 y SPEC-03 | Si cambian sus contratos, las tablas de 5.4 y 5.5 |
+| SPEC-01, SPEC-02 y SPEC-03 | Sus contratos cambiaron el 2026-11-13, después de escribirse esta spec, y el 2026-11-14 se puso al día con ellos (historial). Si vuelven a cambiar: 2.7, 4.1, 4.3 y las tablas de 5.3 a 5.7 |
+| Limitación del `id` por encima de 2^53 − 1 (2.1) | Pendiente de que el Tech Lead la acepte o la cambie. Si no la acepta, cambian 2.1, E-15, E-47 y la tabla 5.7 |
 
 ## Historial
 
@@ -763,3 +838,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-03, DV-06 y DV-09, y la parte del alta de DV-02 y DV-08), propuesta por la IA y pendiente de la revisión del Tech Lead. **Alta**: tabla en 2.3 con lo que la ayuda comprueba de cada campo y lo que deja al backend; del email, solo que no esté vacío, que no pase de 254 caracteres y que tenga una `@` que no esté en un extremo, sin el validador de email del framework ni el del navegador; el identificador se mide sin recortar; ningún campo lleva `maxlength`; un texto con un *surrogate* suelto no se envía; los valores se envían como están escritos; el `id` del cliente creado sale del cuerpo del `201`; y la forma de `errors` (un error por campo, en el orden del contrato). Requisitos nuevos E-44, E-45 y E-46, catorce filas en 5.4, CA-05 y D-13. Motivo: «forma básica del email» no decía qué se comprueba, y el validador de Angular 21.2.26 rechaza direcciones que el backend acepta desde la regla nueva del email del día 13 (SPEC-01, 2.1); el backend mide el identificador antes de normalizar; un *surrogate* suelto responde `400` desde el día 13; y CORS no expone la cabecera `Location` |
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-04, DV-05 y DV-13, y la parte del simulador de DV-03), propuesta por la IA y pendiente de la revisión del Tech Lead. **El `id` de la ruta**: el frontend no lo convierte en número; si no es de 1 a 16 dígitos ASCII sin ceros a la izquierda o pasa de 2^53 − 1, muestra «Cliente no encontrado» sin llamar, y si lo es, pide el cliente con ese mismo texto (2.1, 2.4, 2.5, E-15, E-47 nuevo, tabla 5.7 y CA-17). `/clientes/abc` y `/clientes/01` muestran «Cliente no encontrado». **Detalle**: el aviso del historial dice el número de simulaciones recibidas, no un 50 escrito (2.4 y CA-07). **Simulador**: el `customer_id` es el `id` del cliente cargado, un campo numérico válido es un entero dentro de sus límites que se envía como número JSON, y un `422` de la proyección o del guardado se muestra junto a su campo (2.5, E-48 y E-49 nuevos, cinco filas en 5.5 y CA-08). Motivo: el backend fijó el día 13 que el `id` de la ruta tiene una sola forma (índice de specs), y JavaScript convierte `01`, `+1` y `1.0` en 1 y redondea por encima de 2^53 − 1, así que un frontend que convirtiera el texto daría varias direcciones a un cliente o pediría otro. Deja una limitación, dicha en 2.1 y pendiente de que el Tech Lead la acepte: un `id` entre 2^53 y 2^63 − 1 no puede abrirse desde el frontend |
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencia DV-07), propuesta por la IA y pendiente de la revisión del Tech Lead. **Buscador**: el límite de 100 caracteres se mide como el backend, en puntos de código y sin recortar, y al superarlo no se llama a la API y se avisa junto al campo; el texto se envía tal como está escrito, en un solo parámetro `q` del cliente HTTP y nunca concatenado, y sin `q` si está vacío; un *surrogate* suelto se sustituye por U+FFFD; y el frontend muestra lo que llega, también cuando es el listado inicial. Requisitos nuevos E-50 y E-51, ocho filas en 5.3 y CA-04. Motivo: «el campo admite 100 caracteres» no decía en qué unidad ni sobre qué texto, y el backend mide puntos de código antes de recortar (SPEC-01, 2.12); un texto concatenado en la URL cambia la consulta (`q=a+b` se lee como «a b»), y los casos de SPEC-01 5.9 (`%`, `_`, `\`, la comilla) solo se cumplen si el texto llega literal |
+| 2026-11-14 | Puesta al día con el contrato final del backend y con lo externo (sesión 06, divergencias DV-08, DV-09, DV-12 y DV-14, y el paso 2), propuesta por la IA y pendiente de la revisión del Tech Lead. **Contratos consumidos**: 4.1 gana las respuestas que el OpenAPI declara para cada llamada y los campos que llegan y no se usan; apartado nuevo 4.3 con lo que el frontend envía frente a las limitaciones L-01 a L-05 del backend; 2.9 dice lo que la configuración de CORS del backend exige (origen exacto, solo `GET` y `POST`, ninguna cabecera propia y ninguna cabecera de respuesta legible), con E-52 y CA-18 nuevos. **Corrección de un cambio de este mismo día**: el nombre y el email se envían recortados, no tal como están escritos (2.3, E-46 y dos filas de 5.4), porque al escribir 4.3 se vio que sin recortar se podía enviar un cuerpo de cualquier tamaño (L-01). **Lo externo, comprobado el 2026-11-14**: la API de divisas responde igual que el día 12, también en sábado (4.2); la nota de D-09 dice qué versión de Playwright es elegible con el margen de ADR-007; fila «Depende de» y apartado 9 al día. Motivo: la spec no decía qué respuestas trata de cada llamada ni nombraba las limitaciones del backend, que dependen de lo que un cliente envíe; y los datos de la API de divisas y de las versiones eran del día 12 |
