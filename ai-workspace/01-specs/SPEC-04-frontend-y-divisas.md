@@ -79,16 +79,37 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Al escribir, la búsqueda se lanza tras **300 ms** sin cambios y cancela la
   petición anterior, de modo que una respuesta antigua nunca pisa a una más
   reciente.
-- El campo admite 100 caracteres como máximo, el límite de la API.
+- **Límite del texto**: 100 caracteres como máximo, **medidos como el
+  backend** (SPEC-01, 2.12 y 4.3): en puntos de código y sobre el texto tal
+  como está escrito, sin recortar. Si el texto lo supera, no se llama a la
+  API, se muestra junto al campo «El texto de búsqueda admite 100
+  caracteres como máximo» y se retira la lista anterior. El campo no lleva
+  `maxlength`, que cuenta unidades UTF-16 y cortaría antes un texto que el
+  backend admite.
+- **Qué se envía**: el texto tal como está escrito, sin recortar (recorta
+  el backend), en **un solo parámetro `q`** puesto con los parámetros del
+  cliente HTTP, nunca concatenado en la URL. Con el texto vacío la petición
+  va sin `q`. *Por qué*: concatenado, un `%`, un `&`, un `#` o un `+`
+  cambiarían la consulta (el backend lee `q=a+b` como «a b»); y con un `q`
+  repetido el backend solo valida y usa el último (su limitación L-04).
+- El frontend no interpreta el texto: `%`, `_`, `\` y las comillas viajan
+  como texto y el backend los busca literalmente (SPEC-01, 5.9).
+- Un *surrogate* suelto no se puede codificar en una URL: antes de enviar
+  se sustituye por U+FFFD (`toWellFormed()`), que no coincide con ningún
+  cliente.
 - Cada resultado muestra el nombre, el identificador fiscal, el país y el
   plan, y enlaza con el detalle. El país y el plan se muestran **con los
   nombres de `GET /meta`** («España», «Profesional»), no con sus códigos. Si
   `/meta` falla, el panel muestra el error con «Reintentar» en lugar del
   buscador y de la lista (2.1).
-- Cuatro estados visibles: cargando, error con botón «Reintentar», sin
-  resultados («No hay clientes que coincidan») y lista.
+- Cuatro estados visibles de la petición: cargando, error con botón
+  «Reintentar», sin resultados («No hay clientes que coincidan») y lista.
+  El aviso del límite del texto no es un estado de la petición: con él no
+  hay petición.
 - El frontend no filtra ni ordena: muestra lo que devuelve la API, en su
-  orden.
+  orden. También cuando, para un texto que no está vacío, el backend
+  devuelve el listado inicial: es lo que hace con un texto de solo espacios
+  o de solo marcas diacríticas (SPEC-01, 5.9).
 
 ### 2.3 Alta de cliente
 
@@ -350,6 +371,8 @@ SPEC-03, «Operación del backend».
 | E-02 | Cuando el texto del buscador lleva 300 ms sin cambiar, el sistema deberá pedir la búsqueda y cancelar la petición anterior si sigue en curso. | R-10 |
 | E-03 | El sistema deberá mostrar los resultados en el orden en que los devuelve la API, sin filtrarlos ni reordenarlos. | R-10 |
 | E-04 | Cuando la búsqueda no devuelve clientes, el sistema deberá mostrar un mensaje de «sin resultados» distinto del estado de carga y del de error. | R-10, R-17 |
+| E-50 | Si el texto del buscador supera los 100 caracteres, medidos en puntos de código y sin recortarlo, entonces el sistema deberá mostrar un aviso junto al campo, no llamar a la API y retirar la lista. | R-10, A14 |
+| E-51 | El sistema deberá enviar el texto del buscador tal como está escrito, en un único parámetro `q` codificado por el cliente HTTP, y sin `q` cuando el texto está vacío. | R-10 |
 | E-35 | El sistema deberá mostrar el país y el plan con los nombres que devuelve `GET /meta`, no con sus códigos, en el panel, el alta, el detalle y el simulador. | R-10, R-11, R-12 |
 | E-39 | Cuando arranca la aplicación, el sistema deberá pedir `GET /meta` una sola vez y conservar la respuesta en memoria durante la sesión. | A13 |
 | E-40 | Si `GET /meta` falla, entonces el sistema deberá mostrar en el panel, el alta, el detalle y el simulador el error con un botón «Reintentar» en lugar de su contenido, sin mostrar ningún código de país o de plan. | R-17 |
@@ -521,6 +544,14 @@ funcionando.
 | `/meta` falla y después «Reintentar» con éxito | 1 más a `/meta` | El panel muestra el listado inicial, con nombres |
 | Navegar del panel al detalle y volver, con `/meta` ya cargado | Ninguna nueva a `/meta` | Se pide una sola vez por sesión |
 | La petición falla | — | Aviso con «Reintentar»; al pulsarlo se repite la misma búsqueda |
+| Borrar el texto después de una búsqueda | 1, sin `q` | Listado inicial |
+| Escribir tres espacios | 1, con un `q` de tres espacios (`q=%20%20%20`) | Lo que devuelve la API, que para ese texto es el listado inicial |
+| Escribir `100% a+b&c#d` | 1; el parámetro `q` vale exactamente ese texto y la URL lleva `q=100%25%20a%2Bb%26c%23d` | Lo que devuelve la API |
+| Escribir 100 veces el emoji U+1F600 (100 puntos de código, 200 unidades UTF-16) | 1 | Lo que devuelve la API: el texto está dentro del límite |
+| Escribir 101 caracteres `x` | 0 | Aviso del límite junto al campo; sin lista |
+| Escribir 100 caracteres `x` y un espacio | 0 | Aviso del límite: se mide sin recortar, como el backend |
+| Con el aviso del límite a la vista, borrar hasta 100 caracteres | 1 | Desaparece el aviso; lo que devuelve la API |
+| Escribir `a`, un *surrogate* suelto (U+D800) y `b` | 1, con `q` igual a `a`, U+FFFD y `b` | Lo que devuelve la API |
 
 ### 5.4 Alta: respuesta → interfaz
 
@@ -637,7 +668,7 @@ en SPEC-01, 5.10.
 | CA-01 | Un test parametrizado del *pipe* de importes reproduce cada celda de 5.1, incluido el caso del céntimo de diferencia. | E-27, E-28 |
 | CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-30 |
 | CA-03 | Un test comprueba que, con la API de divisas en error, el panel, el detalle y el simulador muestran sus datos en EUR. | E-28, E-30 |
-| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40 |
+| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones, el parámetro `q` y la URL de cada una, y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40, E-50, E-51 |
 | CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
 | CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas (55 y 50: «Se muestran las 50 últimas de 55»), `404` con `customer_not_found`, país y plan con los nombres de `/meta`, y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
@@ -731,3 +762,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-01, DV-02, DV-10 y DV-11), propuesta por la IA y pendiente de la revisión del Tech Lead. **Errores genéricos del backend, por su `code`**: tabla nueva en 2.7 con el aviso de cada uno; el `503` `service_unavailable` tiene un aviso propio, distinto del de error inesperado; el `400`, el `415`, el `405`, el `404` `not_found` y un código desconocido muestran el de error inesperado y dejan su `code` en el estado de error; `tax_rate_not_defined` se trata como `internal_error`. «Cliente no encontrado» se decide por `customer_not_found` y no por el estado `404`, también al guardar (2.4, 2.5, E-15, E-25 y E-37). Requisitos nuevos E-42 y E-43, tabla 5.6, CA-16 y la fila de «Guardar» de 5.5 partida en dos. Motivo: esta spec se escribió el día 12 y el backend fijó el 13 que cualquier endpoint que lee la base de datos responde `503`, que el frontend debe tratar distinto del `500` (índice de specs); la spec no nombraba ninguno de esos errores, y decidía una vista por el estado `404` cuando ese estado tiene dos códigos |
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-03, DV-06 y DV-09, y la parte del alta de DV-02 y DV-08), propuesta por la IA y pendiente de la revisión del Tech Lead. **Alta**: tabla en 2.3 con lo que la ayuda comprueba de cada campo y lo que deja al backend; del email, solo que no esté vacío, que no pase de 254 caracteres y que tenga una `@` que no esté en un extremo, sin el validador de email del framework ni el del navegador; el identificador se mide sin recortar; ningún campo lleva `maxlength`; un texto con un *surrogate* suelto no se envía; los valores se envían como están escritos; el `id` del cliente creado sale del cuerpo del `201`; y la forma de `errors` (un error por campo, en el orden del contrato). Requisitos nuevos E-44, E-45 y E-46, catorce filas en 5.4, CA-05 y D-13. Motivo: «forma básica del email» no decía qué se comprueba, y el validador de Angular 21.2.26 rechaza direcciones que el backend acepta desde la regla nueva del email del día 13 (SPEC-01, 2.1); el backend mide el identificador antes de normalizar; un *surrogate* suelto responde `400` desde el día 13; y CORS no expone la cabecera `Location` |
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-04, DV-05 y DV-13, y la parte del simulador de DV-03), propuesta por la IA y pendiente de la revisión del Tech Lead. **El `id` de la ruta**: el frontend no lo convierte en número; si no es de 1 a 16 dígitos ASCII sin ceros a la izquierda o pasa de 2^53 − 1, muestra «Cliente no encontrado» sin llamar, y si lo es, pide el cliente con ese mismo texto (2.1, 2.4, 2.5, E-15, E-47 nuevo, tabla 5.7 y CA-17). `/clientes/abc` y `/clientes/01` muestran «Cliente no encontrado». **Detalle**: el aviso del historial dice el número de simulaciones recibidas, no un 50 escrito (2.4 y CA-07). **Simulador**: el `customer_id` es el `id` del cliente cargado, un campo numérico válido es un entero dentro de sus límites que se envía como número JSON, y un `422` de la proyección o del guardado se muestra junto a su campo (2.5, E-48 y E-49 nuevos, cinco filas en 5.5 y CA-08). Motivo: el backend fijó el día 13 que el `id` de la ruta tiene una sola forma (índice de specs), y JavaScript convierte `01`, `+1` y `1.0` en 1 y redondea por encima de 2^53 − 1, así que un frontend que convirtiera el texto daría varias direcciones a un cliente o pediría otro. Deja una limitación, dicha en 2.1 y pendiente de que el Tech Lead la acepte: un `id` entre 2^53 y 2^63 − 1 no puede abrirse desde el frontend |
+| 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencia DV-07), propuesta por la IA y pendiente de la revisión del Tech Lead. **Buscador**: el límite de 100 caracteres se mide como el backend, en puntos de código y sin recortar, y al superarlo no se llama a la API y se avisa junto al campo; el texto se envía tal como está escrito, en un solo parámetro `q` del cliente HTTP y nunca concatenado, y sin `q` si está vacío; un *surrogate* suelto se sustituye por U+FFFD; y el frontend muestra lo que llega, también cuando es el listado inicial. Requisitos nuevos E-50 y E-51, ocho filas en 5.3 y CA-04. Motivo: «el campo admite 100 caracteres» no decía en qué unidad ni sobre qué texto, y el backend mide puntos de código antes de recortar (SPEC-01, 2.12); un texto concatenado en la URL cambia la consulta (`q=a+b` se lee como «a b»), y los casos de SPEC-01 5.9 (`%`, `_`, `\`, la comilla) solo se cumplen si el texto llega literal |
