@@ -775,12 +775,18 @@ Node 24 el 2026-11-14:
 | `date` ausente o sin forma de fecha en una divisa | Solo EUR | En EUR | Sí |
 | Un objeto (como el de la `v1`) en lugar de una lista | Solo EUR | En EUR | Sí |
 | Lista válida con un objeto añadido de `JPY` | Cuatro divisas | En la divisa elegida | No: lo no pedido se ignora |
-| Cuerpo que no es JSON | Solo EUR | En EUR | Sí |
+| Cuerpo que no es JSON | Solo EUR | En EUR | Sí. El estado es de error; su `code` puede ser `invalid_rates` o `unknown_error` |
 | Error y después «Reintentar» con éxito | Cuatro divisas | En la divisa elegida | Desaparece |
 | Cambio de divisa diez veces | — | Se actualizan | Ninguna petición nueva |
 
 En todas las filas de error, el buscador, el detalle y el simulador siguen
 funcionando.
+
+En la fila del cuerpo que no es JSON lo que se exige es el **estado de
+error**, no un `code` concreto: si el cliente HTTP entrega el texto, lo
+rechaza la validación (`invalid_rates`); si falla antes, al leer el JSON,
+el error es el genérico (`unknown_error`). La interfaz es la misma en los
+dos casos, porque el selector y el aviso deciden por el estado.
 
 ### 5.3 Buscador
 
@@ -1072,3 +1078,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 2 del frontend (sesión 07, precisiones Z-08 y Z-11): **CA-16 cambia de alcance**. Los servicios de `core/` reproducen cada fila de 5.6; cada vista, o el servicio que carga sus datos, una fila por cada aviso distinto. Antes pedía cada fila también en las cuatro vistas. Sin cambios en 5.6, en los requisitos ni en los tests: es lo que los tests ya hacían. Motivo: el reparto de `code` a aviso vive en `core/` y se prueba allí fila a fila |
 | 2026-11-14 | Mejora mandada por el Tech Lead al revisar la parada 2 del frontend (sesión 07): **tras un envío del alta con errores, el foco va al primer campo con error**, en el orden del formulario, tanto si lo impide la ayuda como si el backend responde `422`; sin campo con error, el foco no se mueve (2.3, requisito nuevo E-56, cinco filas en 5.4 y CA-05). Motivo: quien usa el teclado o un lector de pantalla llega directamente a lo que tiene que corregir |
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 3 del frontend (sesión 07, precisión AA-05): **reglas de las divisas que la IA había puesto en el código sin que la spec las dijera** (2.6). El tipo aplicado y el aviso de «orientativos» van una vez por vista: en el simulador, dentro de la proyección, y en el detalle, sobre el historial; el «Total en EUR» va junto a cada total convertido. Se convierten todos los importes visibles, también los del desglose por tramos. El aviso del fallo de la API vive en la cabecera, en todas las vistas, con «Reintentar». El selector enseña los códigos, no nombres. Una respuesta no válida deja el estado de error con el código `invalid_rates`. El *pipe* de importes admite un argumento para dar el EUR exacto. Y los cinco textos de la interfaz de las divisas. Sin requisitos nuevos ni filas nuevas: precisan E-27, E-29 y E-30, y los tests ya lo comprueban. Motivo: una regla no puede estar solo en el código |
+| 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 3 del frontend (sesión 07, precisión AA-07): **la fila de 5.2 del cuerpo que no es JSON dice que el estado es de error y que su `code` puede ser `invalid_rates` o `unknown_error`**, con una nota bajo la tabla. Sin cambios en requisitos, criterios ni tests. Motivo: las utilidades de test entregan el cuerpo como texto y lo rechaza la validación; en un navegador, el cliente HTTP puede fallar antes, al leer el JSON. En los dos casos la interfaz es la misma |
