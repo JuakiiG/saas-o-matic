@@ -73,6 +73,10 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 15:27 | `29d1e11` | Fila escrita a las 15:27. **Pieza 3, panel** (E-01 a E-04, E-50, E-51, E-53, E-54; CA-04), 15:23:53. **Rojo visto a las 15:18:18**: 34 de 36 tests fallan, con el componente reducido a su título; todas las líneas de error recogidas son `AssertionError` (Y-06). Con el código, los 36 pasan a la primera. El oráculo, en cambio, **salió en rojo a las 15:21**: ESLint señaló que el test del panel importaba el fichero de entorno, y una feature solo puede salir hacia `core/` o `shared/`. La regla no se tocó: `core/` exporta la URL base del backend y el test la toma de ahí. Oráculo en verde antes del commit. Recorrido de `frontend/src` con Python: ningún carácter invisible |
 | 15:27 | — | Fila escrita a las 15:27. **Comprobación de las órdenes de arranque, sin navegador** (15:24 a 15:25): backend con `uv run --locked uvicorn --factory app.main:create_app` y una base de datos en la carpeta temporal, y frontend con `npm start`; peticiones con `curl`; los dos procesos, parados por su PID (apartado 4). No se ha creado `backend/data/` |
 | 15:27 | *(este commit)* | Cierre de esta bitácora para la **parada 1**. La IA para aquí: el Tech Lead revisa las piezas 0 a 3 y abre la aplicación en el navegador |
+| 16:03 | — | El commit anterior es `530e909` (15:28:52 según `git log`). **El Tech Lead aprueba la parada 1**, después de abrir la aplicación en Chrome con el backend real; admite Y-01 a Y-13 con cuatro cambios y manda seguir con las piezas 4 a 6 hasta la parada 2 (apartado 3). La bitácora sigue en este fichero: el encargo de la sesión 07 es el frontend |
+| 16:12 | `1967209`, `6cd21b5`, `8d09fe6`, `4703eb9` | Fila escrita a las 16:12. **Los cuatro cambios de la revisión**, un commit cada uno y con el oráculo en verde antes: SPEC-04 recoge las reglas de Y-07 (16:05:38), con un test nuevo del panel que nace en verde porque el código ya lo hacía; la regla 9 de `CLAUDE.md` (16:07:34); `.claude/rules/frontend.md` (16:09:23); y el corrector ortográfico del buscador (16:11:28), con su **rojo visto a las 16:09:26** (`expected null to be 'false'`) y la regla escrita en SPEC-04 2.8. Al escribir Y-07 en la spec la IA añadió una regla más, que el Tech Lead no ha visto (Z-01) |
+| 16:28 | `e33c800` | Fila escrita a las 16:28. **Refactor sin cambio de comportamiento**, 16:14:32: el estado de `/meta` (cargando, error con «Reintentar» o el contenido) pasa del panel a un componente compartido, `shared/meta-gate.ts`, porque el alta, el detalle y el simulador lo necesitan igual. Sin test nuevo: los 35 del panel siguen en verde. Oráculo en verde antes. Nadie lo pidió (Z-03) |
+| 16:28 | `c4ef635` | **Pieza 4, alta de cliente** (E-05 a E-11, E-40, E-41, E-44 a E-46; CA-05, CA-06 y las filas de `POST /customers` de CA-16), 16:27:53. **Primer rojo, a las 16:16:00, no válido**: el test no compilaba (`TS2345`, un error del propio test). Corregido el test, **rojo por aserción a las 16:18:37**: 44 de 47. Antes de escribir el componente la IA rehízo los tests para seguir CA-05 al pie de la letra (Z-04) y volvió a ver el rojo, **a las 16:23:29: 56 de 59 fallan, todos `AssertionError`**; los 3 que pasan son las filas de rutas que ya existían. Verde a las 16:25:45 (59 de 59) y oráculo en verde a las 16:26 |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -166,6 +170,53 @@ Precisiones de la IA, **sin aprobar**:
 | Y-11 | Los enlaces a `/clientes/nuevo` y a `/clientes/{id}` llevan hoy a «Página no encontrada» | El alta y el detalle son las piezas 4 y 5 |
 | Y-12 | La corrección del oráculo no cubre un caso: un fichero sin extensión en una carpeta del `PATH` y su `.cmd` solo en otra posterior | No es el de npm, que los instala juntos |
 | Y-13 | `CLAUDE.md`, regla 9, sigue diciendo que los ficheros de `frontend/` se editan con las herramientas de edición, sin la excepción de P-05. La IA no la ha tocado: no se le pidió | Una sesión futura que solo lea `CLAUDE.md` no sabrá que `ng generate`, `npm install`, `npm ci` y `prettier --write` están admitidos |
+
+### Revisión de la parada 1 por el Tech Lead (16:03)
+
+**Parada 1 aprobada.** Lo que el Tech Lead dice haber comprobado en Chrome
+con el backend real (lo afirma él; la IA no lo ha visto): el panel carga
+con CORS, muestra los nombres de `/meta`, busca «EJEMPLÓ» y encuentra
+«Ejemplo Uno SL» con una sola petición, y con el backend parado muestra el
+error con «Reintentar». La consola no tiene errores. **No ha comprobado la
+vista a 375 px.**
+
+**Admitidas Y-01 a Y-13**, con estos cambios, un commit por cambio y con el
+oráculo en verde:
+
+| Sobre | Decisión del Tech Lead | Frente a lo que hizo la IA |
+|---|---|---|
+| Y-07 (a), (b) y (c) | Se escriben en SPEC-04, con historial. Por qué: una regla no puede estar solo en el código. Los textos de (d) valen | **Corregido**: la IA las había dejado en el código y en la bitácora |
+| Y-13 | La regla 9 de `CLAUDE.md` recoge la excepción de P-05 | La IA lo había dejado a su decisión |
+| Y-01 | Se ajusta `.claude/rules/frontend.md`: los generadores se usan para el proyecto y los ficheros de entorno; los componentes se escriben a mano, con el nombre que les daría el CLI, porque el test va antes | Admitido lo hecho, cambiando la regla |
+| El campo de búsqueda | **Defecto visto por el Tech Lead en el navegador**: el corrector subraya el texto. Se desactiva ahí y en los campos del alta donde no tiene sentido (nombre, identificador fiscal y email) | La IA no lo había previsto ni podía verlo sin navegador |
+
+Después, las piezas 4 a 6 como dice el plan (alta, detalle y simulador en
+EUR) y **parada 2**, con el recorrido que el Tech Lead tiene que hacer en el
+navegador, de dar de alta un cliente a ver su simulación guardada, y lo no
+comprobado.
+
+### Piezas 4 a 6 · lo hecho (desde las 16:14)
+
+Una tarea, un commit, con el rojo visto antes del código y el oráculo en
+verde antes de cada commit.
+
+| Pieza | Commit | Rojo visto | Requisitos | Tests |
+|---|---|---|---|---|
+| Preparación · `MetaGate` | `e33c800` | — (refactor en verde) | E-40 | 0 nuevos |
+| 4 · Alta | `c4ef635` | 16:23:29, 56 de 59 | E-05 a E-11, E-40, E-41, E-44 a E-46 | 56 más |
+
+Precisiones de la IA, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| Z-01 | Al escribir Y-07 en SPEC-04 (2.3) la IA añadió una regla que el Tech Lead no había visto: **un `422` que no deja ninguna entrada que mostrar se trata como error inesperado**, con aviso general y conservando lo escrito | Sin ella, un `422` con `errors` vacío o mal formado dejaría el formulario sin ningún mensaje. Está en la spec y en su historial, pero no la ha aprobado nadie |
+| Z-02 | El test del panel añadido con Y-07 (c) («la lista no espera a `/meta`») **nació en verde** | El código ya lo hacía; la regla se escribió después que el código, así que no hubo rojo que ver |
+| Z-03 | El refactor `e33c800` no estaba en el encargo | Evita repetir en cuatro vistas los tres estados de `/meta`. No cambia lo que se ve: los tests del panel no se tocaron |
+| Z-04 | **Los tests del alta se escribieron tres veces antes del código.** (1) La primera versión no compilaba. (2) La segunda dio rojo por aserción (16:18:37), pero no seguía CA-05: los textos y el sobre de los errores eran inventados y no los ejemplos de SPEC-01 4.1, y de las cuatro filas de 5.4 que dicen «se envía, y el `422` del backend se muestra junto al campo» solo comprobaba el envío. (3) La tercera usa los ejemplos de SPEC-01 4.1, comprueba las dos mitades de esas filas, añade las filas de 5.6 que faltaban (`400`, `502` sin JSON y espera agotada) y **corrige un error del propio test**: el email «de 254 caracteres» tenía 255 y el «de 255», 256. Entre la segunda y la tercera, una ejecución a las 16:22:08 corrió contra la versión vieja porque la escritura del fichero había fallado; no cuenta | Los cambios endurecen los tests; ninguno se relajó. El componente no se empezó hasta ver el rojo de la tercera |
+| Z-05 | **Reglas del alta que la spec no dice y la IA ha puesto**, cada una con su test: (a) la ayuda calla hasta el primer intento de envío y después acompaña a lo que se escribe; (b) el mensaje del backend junto a un campo se retira cuando ese campo cambia; (c) **«Reintentar» envía lo que el formulario tiene en ese momento**, pasando otra vez por la ayuda, y no el cuerpo anterior tal cual (2.7 dice «repite la misma petición»); (d) cada desplegable tiene una primera opción desactivada, «Elige un país» y «Elige un plan», y 5.4 dice «ninguna opción más»: el test cuenta las que se pueden elegir; (e) «Guardar» sigue desactivado después del `201`, hasta que la navegación saca el formulario; (f) la ayuda de país y plan comprueba que el código está en la lista de `/meta`, no solo que no está vacío | (c) Si se cambió algo tras el error, enviar el cuerpo viejo daría de alta datos que ya no están en pantalla. (d) Sin ella, el desplegable enseñaría «España» elegido sin que nadie lo eligiera. (e) Un doble clic entre el `201` y la navegación crearía un segundo cliente o un `409` |
+| Z-06 | Textos que la spec no fija: los siete mensajes de la ayuda, las etiquetas, «Guardando el cliente…», el enlace «Cancelar» y el aviso del `409`, que es una constante del frontend aunque hoy coincida con el `detail` del backend (el test de CA-06 comprueba que no lo copia). El email lleva `inputmode="email"` y `autocapitalize="none"`, que no validan nada | Como Y-07 (d) |
+| Z-07 | Componente nuevo `shared/form-notice.ts` (el aviso general de un formulario, con «Reintentar» opcional) y dos clases globales, `.field` y `.form-actions`. **No tiene fichero de test propio**: lo cubren los tests del alta | Lo usará también el simulador |
+| Z-08 | De las filas «cualquiera» de 5.6, en la vista del alta se reproducen `500`, `503`, `400`, un código desconocido, `502` sin JSON, sin conexión y espera agotada. **`415` y `405` no**: van por la misma rama que el `400` y están probados en `core/api-error.spec.ts` | CA-16 pide «cada fila» en los servicios y en las vistas; aquí se ha tomado una por rama |
 
 ## 4. Comprobaciones hechas en la sesión
 
