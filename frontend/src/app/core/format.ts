@@ -1,0 +1,54 @@
+// Formats of the interface (SPEC-04, 2.6 and 2.8). Everything is shown the Spanish way.
+
+const LOCALE = 'es-ES';
+const CENTS_PER_UNIT = 100;
+const BASIS_POINTS_PER_UNIT = 10000;
+
+const EURO = currencyFormat('EUR');
+const RATE = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 6 });
+const PERCENT = new Intl.NumberFormat(LOCALE, { style: 'percent', maximumFractionDigits: 2 });
+
+function currencyFormat(currency: string): Intl.NumberFormat {
+  return new Intl.NumberFormat(LOCALE, { style: 'currency', currency, currencyDisplay: 'code' });
+}
+
+/**
+ * An amount in euro cents, as the backend sends it, shown exactly (`16940` is `169,40 EUR`).
+ *
+ * Integers only: the euros are an exact division and the cents are the remainder, written over
+ * the fraction that `Intl` produces. The amount is never divided by 100, which would be floating
+ * point on money (ADR-002). Amounts from the backend are never negative.
+ */
+export function formatEuroCents(cents: number): string {
+  const remainder = cents % CENTS_PER_UNIT;
+  const euros = (cents - remainder) / CENTS_PER_UNIT;
+  const fraction = String(remainder).padStart(2, '0');
+  return EURO.formatToParts(euros)
+    .map((part) => (part.type === 'fraction' ? fraction : part.value))
+    .join('');
+}
+
+/**
+ * An amount in euro cents converted to another currency, only to be shown.
+ *
+ * This is the one place where money goes through floating point (ADR-002): the result is
+ * rounded when formatted and is never stored nor sent to the backend.
+ */
+export function formatConverted(cents: number, currency: string, rate: number): string {
+  return currencyFormat(currency).format((cents * rate) / CENTS_PER_UNIT);
+}
+
+/** An exchange rate with the decimals it brings, up to six (`1,1139`, `0,92316`). */
+export function formatRate(rate: number): string {
+  return RATE.format(rate);
+}
+
+/** A tax rate in basis points as a percentage (`2100` is `21 %`). A rate is not money. */
+export function formatPercent(basisPoints: number): string {
+  return PERCENT.format(basisPoints / BASIS_POINTS_PER_UNIT);
+}
+
+/** Name of a pricing tier by its limits; the last one has no upper limit. */
+export function tierLabel(fromUsers: number, toUsers: number | null): string {
+  return toUsers === null ? `del ${fromUsers} en adelante` : `del ${fromUsers} al ${toUsers}`;
+}
