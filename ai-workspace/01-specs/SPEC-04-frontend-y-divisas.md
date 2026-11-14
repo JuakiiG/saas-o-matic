@@ -195,7 +195,21 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   limitación L-01; 4.3). El resultado es el mismo: el backend recorta ese
   mismo carácter.
 - Al enviar, el botón se desactiva hasta que llega la respuesta, para que no
-  haya dos altas.
+  haya dos altas. **Tras un `201` sigue desactivado** hasta que la
+  navegación retira el formulario. *Por qué*: un doble clic entre la
+  respuesta y la navegación crearía un segundo cliente o un `409`.
+- **La ayuda calla hasta el primer intento de envío** y, desde entonces,
+  acompaña a lo que se escribe. *Por qué*: un formulario recién abierto no
+  tiene errores que señalar. (La del simulador habla desde el primer
+  carácter; 2.5.)
+- **Cada desplegable lleva una primera opción desactivada**, «Elige un
+  país» y «Elige un plan», que no se puede elegir y es la que se ve al
+  abrir el formulario. Las opciones que se pueden elegir son exactamente
+  las de `/meta`. *Por qué*: sin ella el desplegable enseñaría el primer
+  país como si alguien lo hubiera elegido.
+- **El mensaje del backend junto a un campo se retira cuando ese campo
+  cambia**, aquí y en el simulador. *Por qué*: lo que el backend juzgó ya
+  no es lo que está escrito.
 - Respuestas:
 
 | Respuesta | Comportamiento |
@@ -297,6 +311,23 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   llama a `POST /pricing/quote`, cancelando la petición anterior (ADR-002).
   Se muestran los tres tramos, el coste base, el impuesto con su tipo y el
   total, en la divisa elegida.
+- **La primera proyección no espera los 200 ms**: se pide en cuanto llega
+  el cliente. Tampoco espera la de «Reintentar», que pide al momento la de
+  los usuarios escritos. *Por qué*: la espera existe para no pedir una
+  proyección por cada paso del deslizante, y en esos dos casos no hay
+  pasos intermedios.
+- **Durante los 200 ms de espera** los importes que estén a la vista ya se
+  marcan como «actualizando» y «Guardar» está desactivado. *Por qué*: desde
+  que el valor cambia, la proyección del valor actual no está.
+- **La ayuda de los tres campos numéricos habla desde el primer carácter**,
+  sin esperar a un intento de guardar. *Por qué*: la proyección es en vivo,
+  y un valor no válido la retira en ese mismo momento; callar dejaría la
+  pantalla sin importes y sin explicación. (La del alta calla hasta el
+  primer intento de envío; 2.3.)
+- Con un texto no válido en el campo de usuarios, **el control deslizante
+  se queda donde estaba**.
+- Si `/meta` falla, el cliente y su primera proyección se piden igual,
+  detrás del aviso: al reintentar `/meta` el simulador aparece ya cargado.
 - Estados de la proyección:
 
 | Estado | Qué se ve |
@@ -308,7 +339,9 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 
 - **Guardar**: llama a `POST /simulations`. El botón está desactivado
   mientras la proyección no esté en estado «datos» para el valor actual,
-  mientras haya un campo no válido y mientras se guarda.
+  mientras haya un campo no válido y mientras se guarda. Tras un `201`
+  sigue desactivado hasta que la navegación retira la vista, como en el
+  alta (2.3).
 - Tras un `201` se navega al detalle, donde la simulación nueva aparece la
   primera. Lo que se muestra de ella es lo que devolvió el servidor, no la
   proyección.
@@ -423,6 +456,12 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   vea un test o quien depure. «Reintentar» repite la misma petición. El
   texto de los avisos es del frontend: el `detail` del backend no decide
   nada.
+- **«Reintentar» en un formulario** (el alta y el guardado del simulador)
+  hace lo mismo que «Guardar»: envía **lo que el formulario tiene en ese
+  momento**, pasando otra vez por la ayuda, y no el cuerpo de la petición
+  que falló. *Por qué*: si algo se cambió después del error, enviar el
+  cuerpo anterior guardaría datos que ya no están en pantalla. Si nada se
+  cambió, es la misma petición.
 - **El `404` tiene dos códigos** y solo uno es «Cliente no encontrado»:
   `customer_not_found` es un cliente que no existe; `not_found` es una ruta
   de la API que no existe, es decir, una URL mal construida por el
@@ -750,7 +789,10 @@ funcionando.
 | `500` o sin conexión | Aviso general con «Reintentar» |
 | Doble clic en «Guardar» | Una sola petición |
 | `/meta` falla | Error con «Reintentar»; sin formulario enviable |
-| `/meta` responde con el ejemplo de SPEC-01 (4.4) | Los desplegables ofrecen exactamente sus nueve países y sus tres planes, con sus nombres («España», «Básico») y en su orden, y ninguna opción más; lo que se envía al elegir uno es su código (`ES`, `starter`) |
+| `/meta` responde con el ejemplo de SPEC-01 (4.4) | Los desplegables ofrecen exactamente sus nueve países y sus tres planes, con sus nombres («España», «Básico») y en su orden, y ninguna otra opción que se pueda elegir: la primera de cada uno, «Elige un país» y «Elige un plan», está desactivada; lo que se envía al elegir uno es su código (`ES`, `starter`) |
+| Escribir un nombre de un solo carácter sin haber pulsado «Guardar» | Ningún mensaje de ayuda: calla hasta el primer intento de envío |
+| `422` en el identificador y, después, se cambia el identificador | El mensaje del backend se retira |
+| `500`, se cambia el nombre y se pulsa «Reintentar» | Se envía el nombre nuevo: «Reintentar» envía lo que el formulario tiene en ese momento |
 | Nombre de 61 caracteres `𝔸` (U+1D538; 61 puntos de código, 122 unidades UTF-16) | La ayuda no lo rechaza: se envía |
 | Nombre de 121 caracteres `ñ` | Error de ayuda junto al campo; no se envía |
 | Nombre `A` rodeado de espacios U+0020 | Error de ayuda: un carácter tras recortar; no se envía |
@@ -790,6 +832,9 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | Escribir `-1`, `1,5`, `100001` o dejarlo vacío | 0 | Error junto al campo; sin importes; «Guardar» desactivado |
 | Escribir `15.0`, `1e3`, `+15`, `1 5` o `100000.000000000001` en el campo de usuarios | 0 | Error junto al campo; sin importes; «Guardar» desactivado: decide el texto, no el número que resulta |
 | La proyección falla | — | Sin importes; aviso con «Reintentar»; «Guardar» desactivado |
+| Con la proyección fallida, pulsar «Reintentar» | 1, al momento, con los usuarios escritos | Al llegar, los importes vuelven y el aviso se retira |
+| Con el total de 10 usuarios a la vista, escribir 15, antes de que pasen los 200 ms | 0 todavía | Los importes de 10 usuarios ya están marcados como «actualizando» y «Guardar», desactivado |
+| «Guardar» falla con `500` y se pulsa «Reintentar» | — | Una petición nueva a `/simulations` con lo que el formulario tiene en ese momento |
 | Cambiar almacenamiento o llamadas | 0 | La proyección no cambia |
 | Escribir `-1`, `1,5`, `2.0` o `1e2` en almacenamiento, con una proyección visible | 0 | Error junto al campo; la proyección sigue a la vista; «Guardar» desactivado |
 | Abrir `/clientes/999/simulacion` (el cliente responde `404`) | 0 | Vista «Cliente no encontrado» |
@@ -983,3 +1028,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-14), aparte del bloque backend y antes de empezar el frontend, con los doce hallazgos de la evaluación independiente y las propuestas C-01 a C-05 de la sesión 06 decididos y aplicados |
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 1 del frontend (sesión 07, precisión Y-07), con la spec ya en vigor: **tres reglas que la IA había puesto en el código sin que la spec las dijera**. El panel pide su lista sin esperar a `/meta` y la enseña cuando `/meta` llega (2.2 y una fila en 5.3). De un `422`, una entrada de `errors` sin la forma del contrato se ignora, y un segundo error del mismo campo va al aviso general (2.3 y dos filas en 5.4). Añadida por la IA al escribirlas, y pendiente de que el Tech Lead la vea: un `422` que no deja ninguna entrada que mostrar se trata como error inesperado (2.3 y una fila en 5.4). Sin requisitos nuevos: precisan E-01, E-09 y E-48. Motivo: una regla no puede estar solo en el código |
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 1 del frontend en el navegador (sesión 07): **el corrector ortográfico del navegador se desactiva** en el campo de búsqueda y en el nombre, el identificador fiscal y el email del alta (2.8). Sin requisitos nuevos. Motivo: el corrector subrayaba el texto del buscador como si fuera una falta |
+| 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 2 del frontend (sesión 07, precisiones Z-01, Z-05 y Z-17): **reglas del alta y del simulador que la IA había puesto en el código sin que la spec las dijera**. «Reintentar» de un formulario envía lo que el formulario tiene en ese momento, pasando otra vez por la ayuda (2.7, una fila en 5.4 y otra en 5.5). **Alta** (2.3 y tres filas en 5.4): la ayuda calla hasta el primer intento de envío; cada desplegable lleva una primera opción desactivada que no se puede elegir; el mensaje del backend junto a un campo se retira cuando ese campo cambia; y «Guardar» sigue desactivado tras el `201`. **Simulador** (2.5 y dos filas en 5.5): la primera proyección y la de «Reintentar» no esperan los 200 ms; durante la espera los importes ya se marcan «actualizando» y «Guardar» está desactivado; la ayuda de los tres campos habla desde el primer carácter, porque la proyección es en vivo; con un texto no válido el deslizante se queda donde estaba; y con `/meta` en error el cliente y la proyección se piden igual. El Tech Lead admite además la regla que la IA había añadido en el cambio de Y-07 y él no había visto: un `422` que no deja nada que mostrar es un error inesperado (2.3). Sin requisitos nuevos: precisan E-05, E-07, E-09, E-18, E-22, E-23, E-25 y E-36. Motivo: una regla no puede estar solo en el código |
