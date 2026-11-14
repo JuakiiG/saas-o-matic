@@ -38,6 +38,12 @@ describe('Routes · SPEC-04/E-34', () => {
     expect(page.querySelector('main h1')?.textContent?.trim()).toBe('Detalle del cliente');
   });
 
+  it('should show the simulator when the route is /clientes/:id/simulacion (SPEC-04 2.1)', async () => {
+    const page = await open('/clientes/7/simulacion');
+
+    expect(page.querySelector('main h1')?.textContent?.trim()).toBe('Simulador');
+  });
+
   it('should show the not found page when the route matches no view', async () => {
     const page = await open('/esta-ruta-no-existe');
 

@@ -16,6 +16,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/detalle/detalle').then((file) => file.Detalle),
   },
   {
+    path: 'clientes/:id/simulacion',
+    loadComponent: () => import('./features/simulador/simulador').then((file) => file.Simulador),
+  },
+  {
     path: '**',
     loadComponent: () => import('./features/not-found/not-found').then((file) => file.NotFound),
   },

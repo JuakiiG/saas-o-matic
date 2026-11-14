@@ -1,0 +1,20 @@
+/* The tiers above, the three amounts below. Amounts that are not current are dimmed. */
+.projection h2 {
+  margin-bottom: var(--space-3);
+}
+
+.quote {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.quote-updating {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.quote-stale app-tier-list,
+.quote-stale .facts {
+  opacity: 0.55;
+}

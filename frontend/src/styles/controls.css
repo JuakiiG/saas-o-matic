@@ -21,6 +21,14 @@ select {
   background: var(--color-surface);
 }
 
+/* A slider draws its own track: it takes none of the box of a text control. */
+input[type='range'] {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--color-accent);
+}
+
 input[aria-invalid='true'],
 select[aria-invalid='true'] {
   border-color: var(--color-danger);

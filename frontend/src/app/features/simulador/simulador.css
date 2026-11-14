@@ -1,0 +1,24 @@
+/* Placement only. One column at 375 px; from 48rem the fields and the projection go side by
+   side. */
+.simulator-customer {
+  margin-bottom: var(--space-4);
+}
+
+.simulator-form,
+.simulator-layout,
+.simulator-fields {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.simulator-fields {
+  align-content: start;
+}
+
+@media (min-width: 48rem) {
+  .simulator-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--space-6);
+  }
+}

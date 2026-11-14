@@ -1,0 +1,36 @@
+<section class="card projection" aria-labelledby="simulador-projection">
+  <h2 id="simulador-projection">Proyección</h2>
+  @if (projecting()) {
+    <app-loading-notice label="Calculando la proyección…" />
+  }
+  @if (quote(); as amounts) {
+    <div class="quote" [class.quote-stale]="updating()" [attr.aria-busy]="updating()">
+      @if (updating()) {
+        <p class="quote-updating" role="status">Actualizando…</p>
+      }
+      <app-tier-list [tiers]="amounts.tiers" />
+      <dl class="facts">
+        <div>
+          <dt>Coste base</dt>
+          <dd>{{ amounts.base_cents | money }}</dd>
+        </div>
+        <div>
+          <dt>{{ taxLabel() }}</dt>
+          <dd>{{ amounts.tax_cents | money }}</dd>
+        </div>
+        <div class="fact-total">
+          <dt>Total</dt>
+          <dd>{{ amounts.total_cents | money }}</dd>
+        </div>
+      </dl>
+    </div>
+  }
+  @if (notice(); as failure) {
+    <app-form-notice
+      class="projection-notice"
+      [messages]="failure.messages"
+      [retryable]="failure.retryable"
+      (retry)="retry.emit()"
+    />
+  }
+</section>

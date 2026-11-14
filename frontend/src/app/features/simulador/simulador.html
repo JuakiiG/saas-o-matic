@@ -1,0 +1,111 @@
+@if (notFound()) {
+  <app-customer-not-found />
+} @else {
+  <h1>Simulador</h1>
+
+  <app-meta-gate>
+    @if (loading()) {
+      <app-loading-notice label="Cargando el cliente…" />
+    }
+    @if (loadError(); as failure) {
+      <app-error-notice [error]="failure" (retry)="retryCustomer()" />
+    }
+    @if (customer(); as card) {
+      <p class="simulator-customer">
+        <strong>{{ card.name }}</strong> · {{ card.country }}
+      </p>
+
+      <form class="simulator-form" novalidate [formGroup]="form" (ngSubmit)="save()">
+        <div class="simulator-layout">
+          <div class="simulator-fields">
+            <div class="field">
+              <label for="simulador-users">Usuarios activos</label>
+              <input
+                id="simulador-users"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                [formControl]="usersBox"
+                [attr.aria-invalid]="fields().active_users.invalid"
+                [attr.aria-describedby]="fields().active_users.errorId"
+              />
+              <input
+                id="simulador-users-slider"
+                type="range"
+                min="0"
+                step="1"
+                aria-label="Usuarios activos, de 0 a 500"
+                [attr.max]="sliderMax"
+                [formControl]="slider"
+              />
+              @if (fields().active_users.error; as message) {
+                <p id="simulador-users-error" class="field-error" role="alert">{{ message }}</p>
+              }
+            </div>
+
+            <div class="field">
+              <label for="simulador-storage">Almacenamiento (GB)</label>
+              <input
+                id="simulador-storage"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                [formControl]="storageBox"
+                [attr.aria-invalid]="fields().storage_gb.invalid"
+                [attr.aria-describedby]="fields().storage_gb.errorId"
+              />
+              @if (fields().storage_gb.error; as message) {
+                <p id="simulador-storage-error" class="field-error" role="alert">{{ message }}</p>
+              }
+            </div>
+
+            <div class="field">
+              <label for="simulador-calls">Llamadas a la API estimadas</label>
+              <input
+                id="simulador-calls"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                [formControl]="callsBox"
+                [attr.aria-invalid]="fields().estimated_api_calls.invalid"
+                [attr.aria-describedby]="fields().estimated_api_calls.errorId"
+              />
+              @if (fields().estimated_api_calls.error; as message) {
+                <p id="simulador-calls-error" class="field-error" role="alert">{{ message }}</p>
+              }
+            </div>
+          </div>
+
+          <app-quote-panel
+            [quote]="quote()"
+            [updating]="updating()"
+            [projecting]="projecting()"
+            [notice]="projectionNotice()"
+            (retry)="retryProjection()"
+          />
+        </div>
+
+        @if (saveNotice(); as notice) {
+          <app-form-notice
+            class="save-notice"
+            [messages]="notice.messages"
+            [retryable]="notice.retryable"
+            (retry)="save()"
+          >
+            @if (notice.detailLink; as link) {
+              <p><a [routerLink]="link">Ver el detalle del cliente</a></p>
+            }
+          </app-form-notice>
+        }
+        @if (saving()) {
+          <app-loading-notice label="Guardando la simulación…" />
+        }
+
+        <div class="form-actions">
+          <button type="submit" [disabled]="saveDisabled()">Guardar</button>
+          <a [routerLink]="card.detailLink">Volver al detalle</a>
+        </div>
+      </form>
+    }
+  </app-meta-gate>
+}
