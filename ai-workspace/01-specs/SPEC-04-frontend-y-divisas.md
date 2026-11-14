@@ -90,7 +90,7 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 | `201` | Navega al detalle del cliente creado |
 | `422` con `errors` | Cada error se muestra junto a su campo (`field`), con el `message` del backend. El formulario conserva lo escrito |
 | `409` `customer_already_exists` | Aviso en el formulario: ya existe un cliente con ese identificador en ese país. Conserva lo escrito |
-| Otro error o sin conexión | Aviso general con «Reintentar». Conserva lo escrito |
+| Otro error o sin conexión | Aviso general con «Reintentar», con el texto que le corresponde por su `code` (tabla de 2.7). Conserva lo escrito |
 
 - El frontend decide **por el código**, nunca por el texto. Un código de
   campo que no conoce se muestra igualmente junto a su campo; un `field` que
@@ -108,9 +108,10 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Si `simulation_count` es mayor que el número de simulaciones recibidas, se
   indica: «Se muestran las 50 últimas de *N*».
 - Sin simulaciones: mensaje y enlace al simulador.
-- Si `GET /customers/{id}` responde `404`, o `422` porque el `id` de la ruta
-  no es válido (`/clientes/abc`, `/clientes/0`): vista «Cliente no
-  encontrado», con enlace al panel.
+- Si `GET /customers/{id}` responde `404` con `customer_not_found`, o `422`
+  porque el `id` de la ruta no es válido (`/clientes/abc`, `/clientes/0`):
+  vista «Cliente no encontrado», con enlace al panel. Cualquier otro error
+  se muestra como dice 2.7, no con esa vista.
 - **Responsive**: a 375 px, una columna y sin desplazamiento horizontal; en
   escritorio, las tarjetas del historial en varias columnas.
 
@@ -121,9 +122,10 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Al abrir el simulador se pide el cliente. **Mientras el cliente no se ha
   cargado no se pide ninguna proyección**, aunque el valor inicial de
   usuarios sea válido y hayan pasado los 200 ms; la primera se pide cuando
-  llega el cliente. Si responde `404`, o `422` por un `id` no válido, se
-  muestra la vista «Cliente no encontrado» y no se pide ninguna proyección.
-  Lo mismo si una proyección responde `404` `customer_not_found`.
+  llega el cliente. Si responde `404` con `customer_not_found`, o `422` por
+  un `id` no válido, se muestra la vista «Cliente no encontrado» y no se
+  pide ninguna proyección. Lo mismo si una proyección o un guardado
+  responde `404` `customer_not_found`.
 - El simulador muestra el nombre de la empresa y el **nombre del país** del
   cliente, tomado de `/meta` («España»), no su código. Si `/meta` falla,
   muestra el error con «Reintentar» (2.1).
@@ -151,7 +153,8 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Tras un `201` se navega al detalle, donde la simulación nueva aparece la
   primera. Lo que se muestra de ella es lo que devolvió el servidor, no la
   proyección.
-- Un error al guardar se muestra sin perder los valores del formulario.
+- Cualquier otro error al guardar se muestra, con el aviso que le
+  corresponde por su `code` (2.7), sin perder los valores del formulario.
 
 ### 2.6 Divisas
 
@@ -210,6 +213,35 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Los errores no se tragan: el servicio los convierte en un estado de error
   con el `code` de la API cuando existe, y en `network_error` o `timeout`
   cuando no hay respuesta.
+- **Errores del backend que no son propios de una vista.** Las seis
+  llamadas de 4.1 pueden recibir los errores genéricos de las convenciones
+  comunes (índice de specs). El frontend los distingue **por su `code`** y
+  los muestra donde la vista muestra su estado de error (en los
+  formularios, el aviso general):
+
+| Lo que llega | `code` del estado de error | Qué se ve |
+|---|---|---|
+| `503` `service_unavailable` | `service_unavailable` | Aviso de servicio no disponible: «El servicio no está disponible en este momento. Inténtalo de nuevo dentro de unos minutos.», con «Reintentar» |
+| `500` `internal_error` o `tax_rate_not_defined` | El recibido | Aviso de error inesperado: «Se ha producido un error inesperado.», con «Reintentar» |
+| `400` `malformed_request`, `415` `unsupported_media_type`, `405` `method_not_allowed`, `404` `not_found` o un `422` `validation_error` en el buscador | El recibido | El aviso de error inesperado, con «Reintentar» |
+| Un `code` que el frontend no conoce | El recibido | El aviso de error inesperado, con «Reintentar» |
+| Una respuesta de error sin `code` (su cuerpo no es el de la API) | `unknown_error` | El aviso de error inesperado, con «Reintentar» |
+| Ninguna respuesta | `network_error` | Aviso de falta de conexión: «No se ha podido conectar con el servidor.», con «Reintentar» |
+| Ninguna respuesta en 10 s | `timeout` | Aviso de espera agotada: «El servidor tarda demasiado en responder.», con «Reintentar» |
+
+  *Por qué el `503` tiene su propio aviso*: el `500` dice «fallo nuestro» y
+  el `503`, «no disponible ahora» (índice de specs); al usuario le sirve
+  saber que basta con esperar. *Por qué se tratan el `400`, el `415`, el
+  `405` y el `not_found`*: el frontend no debería provocarlos, y si llegan
+  es un defecto suyo; aun así la pantalla tiene que mostrar algo y dejar
+  una salida, y el `code` recibido queda en el estado de error para que lo
+  vea un test o quien depure. «Reintentar» repite la misma petición. El
+  texto de los avisos es del frontend: el `detail` del backend no decide
+  nada.
+- **El `404` tiene dos códigos** y solo uno es «Cliente no encontrado»:
+  `customer_not_found` es un cliente que no existe; `not_found` es una ruta
+  de la API que no existe, es decir, una URL mal construida por el
+  frontend, y se trata como error inesperado.
 
 ### 2.8 Presentación
 
@@ -262,7 +294,7 @@ SPEC-03, «Operación del backend».
 | E-12 | Cuando se abre el detalle de un cliente existente, el sistema deberá mostrar sus datos y una tarjeta por cada simulación recibida, en el orden de la API. | R-11 |
 | E-13 | Cuando el cliente no tiene simulaciones, el sistema deberá mostrar un mensaje y un enlace al simulador. | R-11 |
 | E-14 | Mientras el cliente tiene más simulaciones de las recibidas, el sistema deberá indicar cuántas se muestran y cuántas hay. | R-11 |
-| E-15 | Si la petición del cliente responde `404`, o `422` por un `id` de ruta no válido, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel, tanto en el detalle como en el simulador. | R-11, R-17 |
+| E-15 | Si la petición del cliente responde `404` con `customer_not_found`, o `422` por un `id` de ruta no válido, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel, tanto en el detalle como en el simulador. | R-11, R-17 |
 | E-16 | El sistema deberá mostrar el detalle sin desplazamiento horizontal a 375 px de ancho. | R-11 |
 
 ### Simulador
@@ -277,10 +309,10 @@ SPEC-03, «Operación del backend».
 | E-21 | Mientras una proyección está en curso, el sistema deberá marcar los importes visibles como no vigentes. | R-17 |
 | E-22 | Si el número de usuarios no es un entero dentro de sus límites, entonces el sistema deberá mostrar el error junto al campo, no llamar a la API y retirar los importes. | A7 |
 | E-36 | Si el almacenamiento o el número de llamadas no es un entero dentro de sus límites, entonces el sistema deberá mostrar el error junto al campo y desactivar el guardado, sin retirar la proyección. | A3 |
-| E-37 | Si una proyección responde `404` con `customer_not_found`, entonces el sistema deberá mostrar la vista «Cliente no encontrado». | R-17 |
+| E-37 | Si una proyección o un guardado responde `404` con `customer_not_found`, entonces el sistema deberá mostrar la vista «Cliente no encontrado». | R-17 |
 | E-23 | Mientras la proyección del valor actual no esté disponible, haya un campo no válido o se esté guardando, el sistema deberá mantener desactivado el botón de guardar. | R-12 |
 | E-24 | Cuando el guardado responde `201`, el sistema deberá navegar al detalle del cliente. | R-05, R-11 |
-| E-25 | Si el guardado falla, entonces el sistema deberá mostrar el error y conservar los valores del formulario. | R-17 |
+| E-25 | Si el guardado falla con un error distinto de `customer_not_found`, entonces el sistema deberá mostrar el error y conservar los valores del formulario. | R-17 |
 
 ### Divisas
 
@@ -300,6 +332,8 @@ SPEC-03, «Operación del backend».
 | E-32 | El sistema deberá mostrar de forma distinguible los estados de carga, error y datos de cada llamada remota. | R-17 |
 | E-33 | Si una llamada al backend no responde en 10 s, entonces el sistema deberá pasar al estado de error. | R-17 |
 | E-34 | Si la ruta no corresponde a ninguna vista, entonces el sistema deberá mostrar la página «no encontrada» con un enlace al panel. | — |
+| E-42 | Si una llamada al backend responde `503` con `service_unavailable`, entonces el sistema deberá mostrar el aviso de servicio no disponible, distinto del de error inesperado, con un botón «Reintentar». | R-17, A14 |
+| E-43 | Si una llamada al backend responde con un error que su vista no trata por su `code` (un `500`, un `400`, un `415`, un `405`, un `404` con `not_found`, un código que el frontend no conoce o un error sin `code`), entonces el sistema deberá mostrar el aviso de error inesperado con un botón «Reintentar» y conservar en el estado de error el `code` recibido, o `unknown_error` si no lo hay. | R-17, A14 |
 
 ## 4. Contratos consumidos
 
@@ -442,7 +476,33 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | Con USD elegido, la fecha del tipo es `2026-11-12` y el navegador está en una zona con desfase negativo | 0 | Se muestra «12/11/2026», no el día anterior |
 | Cambiar la divisa a USD con 15 usuarios | 0 | Total 188,69 USD, con el tipo, su fecha y 169,40 EUR |
 | «Guardar» con respuesta `201` | — | Navega al detalle; la simulación nueva es la primera |
-| «Guardar» con `404` o `500` | — | Aviso; los valores se conservan |
+| «Guardar» con `500` o `503` | — | El aviso que le corresponde (2.7); los valores se conservan |
+| «Guardar» con `404` `customer_not_found` | — | Vista «Cliente no encontrado» |
+
+### 5.6 Errores del backend
+
+Las respuestas se construyen con la forma del ejemplo de error de las
+convenciones comunes (índice de specs) y los códigos de su tabla de errores
+genéricos. Los avisos son los de la tabla de 2.7.
+
+| Llamada | Respuesta | Interfaz |
+|---|---|---|
+| `GET /customers` (panel) | `503` `service_unavailable` | Aviso de servicio no disponible con «Reintentar», en lugar de la lista; al pulsarlo se repite la misma búsqueda |
+| `GET /customers/{id}` (detalle y simulador) | `503` `service_unavailable` | Aviso de servicio no disponible con «Reintentar»; **no** la vista «Cliente no encontrado» |
+| `POST /customers` | `503` `service_unavailable` | Aviso general de servicio no disponible; el formulario conserva lo escrito y no navega |
+| `POST /pricing/quote` | `503` `service_unavailable` | Proyección en estado de error: sin importes, aviso de servicio no disponible con «Reintentar» y «Guardar» desactivado |
+| `POST /simulations` | `503` `service_unavailable` | Aviso de servicio no disponible; los valores se conservan |
+| `GET /meta` responde `200` y `GET /customers`, `503` | — | El panel muestra el aviso de servicio no disponible de su lista; `/meta` no lee la base de datos y no falla con ella |
+| Cualquiera | `500` `internal_error` | Aviso de error inesperado con «Reintentar», distinto del de servicio no disponible |
+| `POST /pricing/quote` o `POST /simulations` | `500` `tax_rate_not_defined` | Aviso de error inesperado; el estado de error lleva `tax_rate_not_defined` |
+| Cualquiera | `400` `malformed_request`, `415` `unsupported_media_type` o `405` `method_not_allowed` | Aviso de error inesperado con «Reintentar»; el estado de error lleva el `code` recibido |
+| `GET /customers/{id}` | `404` `not_found` | Aviso de error inesperado, **no** «Cliente no encontrado» |
+| `GET /customers` | `422` `validation_error` | Aviso de error inesperado con «Reintentar» |
+| Cualquiera | Un `code` que el frontend no conoce (`teapot`) | Aviso de error inesperado; el estado de error lleva `teapot` |
+| Cualquiera | `502` con un cuerpo que no es JSON | Aviso de error inesperado; el estado de error lleva `unknown_error` |
+| Cualquiera | Error de red | Aviso de falta de conexión con «Reintentar»; el estado de error lleva `network_error` |
+| Cualquiera | Sin respuesta en 10 s | Aviso de espera agotada con «Reintentar»; el estado de error lleva `timeout` |
+| Cualquiera | El mismo `503` con otro `detail` | La interfaz no cambia: decide el `code` (E-11) |
 
 ## 6. Criterios de aceptación
 
@@ -463,6 +523,7 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | CA-13 | Una prueba de Playwright comprueba que, a 375 px de ancho, ninguna de las cuatro vistas (panel, alta, detalle y simulador) tiene desplazamiento horizontal. | E-16 |
 | CA-14 | Una prueba de Playwright de principio a fin, contra el backend y el frontend reales en local, da de alta un cliente, abre el simulador, guarda una simulación y comprueba que aparece la primera en el detalle. | E-08, E-12, E-24 |
 | CA-15 | Capturas manuales de las cuatro vistas a 375 px y a 1280 px, guardadas en `04-calidad/` como complemento de CA-13. | E-16 |
+| CA-16 | Tests de los servicios de `core/` y de las cuatro vistas reproducen cada fila de 5.6, comprobando el aviso que se muestra, que hay «Reintentar» y el `code` del estado de error. | E-11, E-42, E-43 |
 
 **Sobre CA-12 a CA-15**: CA-12 es una revisión del evaluador y CA-15 una
 comprobación manual; ninguna de las dos la hace el oráculo. CA-13 y CA-14 se
@@ -540,3 +601,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-12 | Correcciones de la segunda evaluación independiente (`04-calidad/evaluacion-specs-02.md`), decididas por el Tech Lead: esta spec se aprueba aparte, después del bloque backend (N-01); el simulador no pide proyecciones mientras el cliente no se ha cargado, con E-18, E-38 y una fila en 5.5 (N-06); la fila de 20000 usuarios tiene respuesta de origen en SPEC-02 5.1 y CA-08 la cita (N-08); `/meta` se pide una vez al arrancar y, si falla, las cuatro vistas muestran el error con «Reintentar», con E-35, E-39, E-40, D-14 y filas en 5.3 y 5.5 (N-09); la ayuda del navegador mide como el backend, con E-41 y cuatro filas en 5.4 (N-10); remisión a ADR-005 (N-14) |
 | 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A3 pasa a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera y apartado 9 actualizados. El bloque backend (SPEC-01, SPEC-02 y SPEC-03) queda aprobado ese día; esta spec sigue en `borrador`. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A3 (no se tarifican; se registran y se muestran). Cabecera y apartado 9 actualizados; la consulta queda cerrada. Motivo: registrar la fuente del supuesto. Sin cambios en reglas, requisitos, criterios ni casos; la spec sigue en `borrador` |
+| 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-01, DV-02, DV-10 y DV-11), propuesta por la IA y pendiente de la revisión del Tech Lead. **Errores genéricos del backend, por su `code`**: tabla nueva en 2.7 con el aviso de cada uno; el `503` `service_unavailable` tiene un aviso propio, distinto del de error inesperado; el `400`, el `415`, el `405`, el `404` `not_found` y un código desconocido muestran el de error inesperado y dejan su `code` en el estado de error; `tax_rate_not_defined` se trata como `internal_error`. «Cliente no encontrado» se decide por `customer_not_found` y no por el estado `404`, también al guardar (2.4, 2.5, E-15, E-25 y E-37). Requisitos nuevos E-42 y E-43, tabla 5.6, CA-16 y la fila de «Guardar» de 5.5 partida en dos. Motivo: esta spec se escribió el día 12 y el backend fijó el 13 que cualquier endpoint que lee la base de datos responde `503`, que el frontend debe tratar distinto del `500` (índice de specs); la spec no nombraba ninguno de esos errores, y decidía una vista por el estado `404` cuando ese estado tiene dos códigos |
