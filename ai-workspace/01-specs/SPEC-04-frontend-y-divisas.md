@@ -410,6 +410,23 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   `0,92316`. La fecha es la del objeto de esa divisa: cada tipo trae la
   suya. Es una fecha sin hora y se muestra **tal cual**, solo cambiando su
   forma a día/mes/año, sin convertirla de zona horaria.
+- **Dónde se muestra cada cosa** mientras la divisa elegida no es EUR:
+  - El tipo aplicado, con su fecha, y el aviso de que los importes son
+    orientativos van juntos y **una vez por vista**: en el simulador,
+    dentro de la proyección; en el detalle, sobre el historial de
+    simulaciones. El panel no muestra importes y no lleva ninguno de los
+    dos.
+  - El total en EUR va **junto a cada total convertido**, con el rótulo
+    «Total en EUR»: uno en la proyección y uno en cada tarjeta del
+    historial.
+  - **Se convierten todos los importes visibles**, también los del
+    desglose por tramos (el precio por usuario y el subtotal de cada
+    tramo). El único importe que sigue en euros es el «Total en EUR».
+- **El *pipe* de importes admite un argumento** para dar el importe en EUR
+  exacto sea cual sea la divisa elegida; es lo que usa el «Total en EUR».
+  Sigue habiendo un único *pipe* que convierte un importe en texto.
+- **El selector enseña los códigos** de las divisas (EUR, USD, GBP y CHF),
+  no sus nombres, con la etiqueta «Divisa».
 - **Estados**:
 
 | Estado | Qué se ve |
@@ -426,7 +443,15 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   (`AAAA-MM-DD`) y un `rate` numérico mayor que 0. Una divisa ausente o
   repetida, o un objeto que incumpla algo de lo anterior, invalida la
   respuesta entera: una respuesta parcial se trata como error completo. Los
-  objetos de divisas no pedidas se ignoran.
+  objetos de divisas no pedidas se ignoran. Una respuesta que no supera la
+  validación deja el estado de error con el código `invalid_rates`.
+- **El aviso del error vive en la cabecera**, junto al selector, y por eso
+  se ve en todas las vistas, con su botón «Reintentar», que repite la
+  petición de los tipos.
+- **Textos**: «Divisa» (etiqueta del selector); «Cargando tipos…» (mientras
+  se cargan); «No se han podido cargar los tipos de cambio. Los importes se
+  muestran en EUR.» (aviso del error); «Importes orientativos: cada uno se
+  convierte por separado.» (junto al tipo aplicado); y «Total en EUR».
 
 ### 2.7 Estados de carga y de error (R-17)
 
@@ -1046,3 +1071,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 2 del frontend (sesión 07, precisiones Z-01, Z-05 y Z-17): **reglas del alta y del simulador que la IA había puesto en el código sin que la spec las dijera**. «Reintentar» de un formulario envía lo que el formulario tiene en ese momento, pasando otra vez por la ayuda (2.7, una fila en 5.4 y otra en 5.5). **Alta** (2.3 y tres filas en 5.4): la ayuda calla hasta el primer intento de envío; cada desplegable lleva una primera opción desactivada que no se puede elegir; el mensaje del backend junto a un campo se retira cuando ese campo cambia; y «Guardar» sigue desactivado tras el `201`. **Simulador** (2.5 y dos filas en 5.5): la primera proyección y la de «Reintentar» no esperan los 200 ms; durante la espera los importes ya se marcan «actualizando» y «Guardar» está desactivado; la ayuda de los tres campos habla desde el primer carácter, porque la proyección es en vivo; con un texto no válido el deslizante se queda donde estaba; y con `/meta` en error el cliente y la proyección se piden igual. El Tech Lead admite además la regla que la IA había añadido en el cambio de Y-07 y él no había visto: un `422` que no deja nada que mostrar es un error inesperado (2.3). Sin requisitos nuevos: precisan E-05, E-07, E-09, E-18, E-22, E-23, E-25 y E-36. Motivo: una regla no puede estar solo en el código |
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 2 del frontend (sesión 07, precisiones Z-08 y Z-11): **CA-16 cambia de alcance**. Los servicios de `core/` reproducen cada fila de 5.6; cada vista, o el servicio que carga sus datos, una fila por cada aviso distinto. Antes pedía cada fila también en las cuatro vistas. Sin cambios en 5.6, en los requisitos ni en los tests: es lo que los tests ya hacían. Motivo: el reparto de `code` a aviso vive en `core/` y se prueba allí fila a fila |
 | 2026-11-14 | Mejora mandada por el Tech Lead al revisar la parada 2 del frontend (sesión 07): **tras un envío del alta con errores, el foco va al primer campo con error**, en el orden del formulario, tanto si lo impide la ayuda como si el backend responde `422`; sin campo con error, el foco no se mueve (2.3, requisito nuevo E-56, cinco filas en 5.4 y CA-05). Motivo: quien usa el teclado o un lector de pantalla llega directamente a lo que tiene que corregir |
+| 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 3 del frontend (sesión 07, precisión AA-05): **reglas de las divisas que la IA había puesto en el código sin que la spec las dijera** (2.6). El tipo aplicado y el aviso de «orientativos» van una vez por vista: en el simulador, dentro de la proyección, y en el detalle, sobre el historial; el «Total en EUR» va junto a cada total convertido. Se convierten todos los importes visibles, también los del desglose por tramos. El aviso del fallo de la API vive en la cabecera, en todas las vistas, con «Reintentar». El selector enseña los códigos, no nombres. Una respuesta no válida deja el estado de error con el código `invalid_rates`. El *pipe* de importes admite un argumento para dar el EUR exacto. Y los cinco textos de la interfaz de las divisas. Sin requisitos nuevos ni filas nuevas: precisan E-27, E-29 y E-30, y los tests ya lo comprueban. Motivo: una regla no puede estar solo en el código |
