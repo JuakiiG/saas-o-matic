@@ -10,6 +10,8 @@ export const TIMEOUT = 'timeout';
 export const UNKNOWN_ERROR = 'unknown_error';
 /** Generic code of the backend with a notice of its own: waiting is enough. */
 export const SERVICE_UNAVAILABLE = 'service_unavailable';
+/** Code of the backend for a request whose fields are not valid; it brings `errors`. */
+export const VALIDATION_ERROR = 'validation_error';
 
 const NOTICE_UNAVAILABLE =
   'El servicio no está disponible en este momento. Inténtalo de nuevo dentro de unos minutos.';
@@ -83,6 +85,38 @@ export function noticeFor(error: ApiError): string {
     default:
       return NOTICE_UNEXPECTED;
   }
+}
+
+/** The general notice of a form: its texts, and whether sending again can help. */
+export interface FormNoticeView {
+  readonly messages: readonly string[];
+  readonly retryable: boolean;
+}
+
+/** What a form shows of an error: the error of each of its fields and its general notice. */
+export interface FormErrors {
+  readonly byField: Readonly<Record<string, FieldError>>;
+  readonly notice: FormNoticeView | null;
+}
+
+const NO_FORM_ERRORS: FormErrors = { byField: {}, notice: null };
+
+/**
+ * What a form shows of the error of its request (SPEC-04, 2.3), for the sign-up and for the
+ * simulator. A validation error goes to the fields, and what has no field in the form, to a
+ * notice that lists it. Anything else, a validation error that leaves nothing to show included,
+ * is the notice of its code with «Reintentar». The code decides, never the text (E-11).
+ */
+export function formErrors(error: ApiError | null, formFields: readonly string[]): FormErrors {
+  if (error === null) {
+    return NO_FORM_ERRORS;
+  }
+  if (error.code !== VALIDATION_ERROR || error.fieldErrors.length === 0) {
+    return { byField: {}, notice: { messages: [noticeFor(error)], retryable: true } };
+  }
+  const { byField, general } = splitFieldErrors(error.fieldErrors, formFields);
+  const messages = general.map((fieldError) => fieldError.message);
+  return { byField, notice: messages.length > 0 ? { messages, retryable: false } : null };
 }
 
 /**

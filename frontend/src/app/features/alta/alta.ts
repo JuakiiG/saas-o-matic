@@ -11,7 +11,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 
-import { ApiError, FieldError, noticeFor, splitFieldErrors } from '../../core/api-error';
+import { ApiError, FieldError, FormErrors, formErrors } from '../../core/api-error';
 import { BackendApi } from '../../core/backend-api';
 import { MetaStore } from '../../core/meta-store';
 import { Customer, MetaData, NewCustomer } from '../../core/models';
@@ -21,7 +21,6 @@ import { LoadingNotice } from '../../shared/loading-notice';
 import { MetaGate } from '../../shared/meta-gate';
 import { AltaField, altaHelp, hasHelp } from './alta-help';
 
-const VALIDATION_ERROR = 'validation_error';
 const CUSTOMER_ALREADY_EXISTS = 'customer_already_exists';
 const NOTICE_ALREADY_EXISTS = 'Ya existe un cliente con ese identificador fiscal en ese país.';
 const NO_META: MetaData = { countries: [], plans: [] };
@@ -42,12 +41,6 @@ interface Submission {
   readonly state: Remote<Customer>;
 }
 
-/** The general notice of the form: its texts, and whether sending again can help. */
-interface Notice {
-  readonly messages: readonly string[];
-  readonly retryable: boolean;
-}
-
 /** What the template needs to know about one field. */
 interface FieldView {
   readonly error: string;
@@ -55,24 +48,13 @@ interface FieldView {
   readonly errorId: string | null;
 }
 
-/** The field errors of a 422 that brings any; the code decides, never the text (E-11). */
-function fieldErrorsOf(error: ApiError | null): readonly FieldError[] {
-  return error?.code === VALIDATION_ERROR ? error.fieldErrors : [];
-}
-
-function noticeOf(error: ApiError | null, general: readonly FieldError[]): Notice | null {
-  if (error === null) {
-    return null;
+/** What the form shows of the error of a sign-up. The code decides, never the text (E-11). */
+function shownErrors(error: ApiError | null): FormErrors {
+  if (error?.code === CUSTOMER_ALREADY_EXISTS) {
+    // Sending the same again cannot help: no «Reintentar».
+    return { byField: {}, notice: { messages: [NOTICE_ALREADY_EXISTS], retryable: false } };
   }
-  if (error.code === CUSTOMER_ALREADY_EXISTS) {
-    return { messages: [NOTICE_ALREADY_EXISTS], retryable: false };
-  }
-  // A 422 that leaves nothing to show is treated as any other error (SPEC-04, 2.3).
-  if (fieldErrorsOf(error).length === 0) {
-    return { messages: [noticeFor(error)], retryable: true };
-  }
-  const messages = general.map((fieldError) => fieldError.message);
-  return messages.length > 0 ? { messages, retryable: false } : null;
+  return formErrors(error, FIELDS);
 }
 
 /** Sign-up of a customer (SPEC-04, 2.3). The backend decides; the form only helps. */
@@ -114,14 +96,12 @@ export class Alta {
     const state = this.submission()?.state;
     return state?.status === 'error' ? state.error : null;
   });
-  private readonly rejected = computed(() =>
-    splitFieldErrors(fieldErrorsOf(this.failure()), FIELDS),
-  );
+  private readonly rejected = computed(() => shownErrors(this.failure()));
 
   protected readonly countries = computed(() => this.meta().countries);
   protected readonly plans = computed(() => this.meta().plans);
   protected readonly fields = computed(() => this.toFieldViews());
-  protected readonly notice = computed(() => noticeOf(this.failure(), this.rejected().general));
+  protected readonly notice = computed(() => this.rejected().notice);
   protected readonly saving = computed(() => this.submission()?.state.status === 'loading');
   /** No second sign-up while one is on its way, nor once it has been created (E-07). */
   protected readonly busy = computed(() => {

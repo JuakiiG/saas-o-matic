@@ -1,7 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TimeoutError } from 'rxjs';
 
-import { ApiError, FieldError, noticeFor, splitFieldErrors, toApiError } from './api-error';
+import {
+  ApiError,
+  FieldError,
+  formErrors,
+  noticeFor,
+  splitFieldErrors,
+  toApiError,
+} from './api-error';
 
 const UNAVAILABLE =
   'El servicio no está disponible en este momento. Inténtalo de nuevo dentro de unos minutos.';
@@ -134,5 +141,66 @@ describe('splitFieldErrors · SPEC-04/E-09, E-48', () => {
 
   it('should return nothing when there are no errors', () => {
     expect(splitFieldErrors([], FORM)).toEqual({ byField: {}, general: [] });
+  });
+});
+
+describe('formErrors · SPEC-04/E-09, E-48 (2.3)', () => {
+  const FORM = ['active_users', 'storage_gb'];
+
+  it('should show nothing when there is no error', () => {
+    expect(formErrors(null, FORM)).toEqual({ byField: {}, notice: null });
+  });
+
+  it('should give each field its error, with no notice, when every error has its field', () => {
+    const users = fieldError('active_users', 'out_of_range');
+    const error: ApiError = { code: 'validation_error', fieldErrors: [users] };
+
+    expect(formErrors(error, FORM)).toEqual({ byField: { active_users: users }, notice: null });
+  });
+
+  it('should list in a notice without retry the errors of fields the form does not have', () => {
+    const storage = fieldError('storage_gb', 'out_of_range');
+    const customer = fieldError('customer_id', 'out_of_range');
+    const unknown = fieldError('zeta', 'unknown_field');
+    const error: ApiError = { code: 'validation_error', fieldErrors: [storage, customer, unknown] };
+
+    expect(formErrors(error, FORM)).toEqual({
+      byField: { storage_gb: storage },
+      notice: { messages: [customer.message, unknown.message], retryable: false },
+    });
+  });
+
+  it('should treat as unexpected a validation error that leaves nothing to show', () => {
+    const error: ApiError = { code: 'validation_error', fieldErrors: [] };
+
+    expect(formErrors(error, FORM)).toEqual({
+      byField: {},
+      notice: { messages: [UNEXPECTED], retryable: true },
+    });
+  });
+
+  it.each([
+    ['service_unavailable', UNAVAILABLE],
+    ['network_error', OFFLINE],
+    ['timeout', TOO_SLOW],
+    ['internal_error', UNEXPECTED],
+    ['teapot', UNEXPECTED],
+  ])('should give the notice of the code %s, with a retry and no field', (code, expected) => {
+    const error: ApiError = { code, fieldErrors: [] };
+
+    expect(formErrors(error, FORM)).toEqual({
+      byField: {},
+      notice: { messages: [expected], retryable: true },
+    });
+  });
+
+  it('should not read the field errors of an error that is not a validation error', () => {
+    const stray = fieldError('active_users', 'out_of_range');
+    const error: ApiError = { code: 'internal_error', fieldErrors: [stray] };
+
+    expect(formErrors(error, FORM)).toEqual({
+      byField: {},
+      notice: { messages: [UNEXPECTED], retryable: true },
+    });
   });
 });
