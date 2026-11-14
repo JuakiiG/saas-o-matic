@@ -73,8 +73,19 @@ interface Call {
   readonly response: object;
 }
 
-// The five calls to the backend of SPEC-04, 4.1; `GET /meta` has its own service.
+// The six calls to the backend of SPEC-04, 4.1.
 const CALLS: Call[] = [
+  {
+    name: 'getMeta',
+    start: (api) => api.getMeta(),
+    method: 'GET',
+    url: `${BASE}/meta`,
+    body: null,
+    response: {
+      countries: [{ code: 'ES', name: 'España', tax_rate_bp: 2100 }],
+      plans: [{ code: 'starter', name: 'Básico' }],
+    },
+  },
   {
     name: 'searchCustomers',
     start: (api) => api.searchCustomers('eje'),

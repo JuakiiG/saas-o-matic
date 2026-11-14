@@ -8,6 +8,7 @@ import {
   Customer,
   CustomerDetail,
   CustomerList,
+  MetaData,
   NewCustomer,
   NewSimulation,
   Quote,
@@ -29,6 +30,11 @@ import { replaceLoneSurrogates, trimSpaces } from './text';
 export class BackendApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiBaseUrl;
+
+  /** Countries and plans with their names. It does not read the database (SPEC-04, 4.1). */
+  getMeta(): Observable<Remote<MetaData>> {
+    return this.get<MetaData>('/meta', new HttpParams());
+  }
 
   /**
    * Customers matching a text, or the initial list when it is empty. The text goes as written,

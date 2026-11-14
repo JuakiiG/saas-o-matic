@@ -1,5 +1,7 @@
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
+import { environment } from '../environments/environment';
 import { App } from './app';
 import { appConfig } from './app.config';
 
@@ -9,7 +11,8 @@ describe('App · SPEC-04 2.1', () => {
   async function render(): Promise<HTMLElement> {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: appConfig.providers,
+      // The real configuration of the application, with the network replaced: no test goes out.
+      providers: [...appConfig.providers, provideHttpClientTesting()],
     }).compileComponents();
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
@@ -35,5 +38,14 @@ describe('App · SPEC-04 2.1', () => {
 
     expect(page.querySelector('main router-outlet')).not.toBeNull();
     expect(page.querySelectorAll('h1').length).toBe(0);
+  });
+
+  it('should ask for /meta once when the application starts (SPEC-04/E-39)', async () => {
+    await render();
+
+    const requests = TestBed.inject(HttpTestingController).match(() => true);
+    expect(requests.map((request) => request.request.urlWithParams)).toEqual([
+      `${environment.apiBaseUrl}/meta`,
+    ]);
   });
 });

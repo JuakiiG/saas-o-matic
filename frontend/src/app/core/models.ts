@@ -1,6 +1,24 @@
 // Shapes of the backend contract, written by hand from the specs (ADR-001), not generated from
 // the OpenAPI. Field names are the ones of the API. Amounts are integers in euro cents.
 
+/** A country of `GET /meta` (SPEC-01, 4.4). Its tax rate arrives and is not used (ADR-002). */
+export interface Country {
+  readonly code: string;
+  readonly name: string;
+  readonly tax_rate_bp: number;
+}
+
+export interface Plan {
+  readonly code: string;
+  readonly name: string;
+}
+
+/** Response of `GET /meta`: the countries and plans, in the order in which they are offered. */
+export interface MetaData {
+  readonly countries: readonly Country[];
+  readonly plans: readonly Plan[];
+}
+
 /** One result of `GET /customers` (SPEC-01, 4.3). */
 export interface CustomerSummary {
   readonly id: number;

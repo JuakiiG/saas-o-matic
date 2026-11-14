@@ -1,3 +1,4 @@
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 
@@ -8,7 +9,11 @@ import { appConfig } from './app.config';
 // as each view arrives (CA-11).
 describe('Routes · SPEC-04/E-34', () => {
   async function open(url: string): Promise<HTMLElement> {
-    TestBed.configureTestingModule({ imports: [App], providers: appConfig.providers });
+    TestBed.configureTestingModule({
+      imports: [App],
+      // The real configuration of the application, with the network replaced: no test goes out.
+      providers: [...appConfig.providers, provideHttpClientTesting()],
+    });
     const fixture = TestBed.createComponent(App);
     await expect(TestBed.inject(Router).navigateByUrl(url)).resolves.toBe(true);
     await fixture.whenStable();
