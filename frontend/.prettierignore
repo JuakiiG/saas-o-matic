@@ -1,0 +1,8 @@
+# Build and tool output; the root .gitignore is not read from this folder.
+dist/
+coverage/
+.angular/
+test-results/
+playwright-report/
+# Written by npm, never by hand.
+package-lock.json

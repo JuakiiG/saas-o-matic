@@ -95,9 +95,17 @@ Qué comprueba hoy el oráculo y qué no:
   `backend/`, `frontend/` y `scripts/`), las 120 líneas de las plantillas
   `.html` del frontend y, en Python, las 40 líneas por función y los 5
   parámetros (sin contar `self` ni `cls`).
-- **Inactivo hasta que exista el frontend**: las 40 líneas por función y los
-  5 parámetros en TypeScript, que comprobará ESLint.
-- **No comprobado**: una plantilla escrita dentro del `.ts` del componente.
+- **Activo, por ESLint** (`npm run lint`, que el oráculo ejecuta en
+  `frontend/`): en TypeScript, las 40 líneas por función y los 5
+  parámetros; y que una plantilla escrita dentro del `.ts` del componente
+  no pase de 30 líneas.
+- **Excepción en los `.spec.ts`**: no se les aplica el límite de 40 líneas
+  por función; los 5 parámetros, sí. *Por qué: la función de `describe`
+  envuelve todos los tests del fichero, así que el límite acotaría cuántos
+  tests caben en él y no el tamaño de cada uno (decisión P-06 de la sesión
+  06).*
+- **No comprobado**: el tamaño de cada test dentro de un `.spec.ts`. Lo
+  mira quien revisa.
 
 Una regla que el oráculo no comprueba no se anuncia aquí como garantizada.
 Si algo no cabe, se divide por

@@ -1,0 +1,3 @@
+/* Global styles: the custom properties and the base. Everything else lives with its component. */
+@import './styles/tokens.css';
+@import './styles/base.css';
