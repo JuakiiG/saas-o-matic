@@ -95,8 +95,8 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - El frontend no interpreta el texto: `%`, `_`, `\` y las comillas viajan
   como texto y el backend los busca literalmente (SPEC-01, 5.9).
 - Un *surrogate* suelto no se puede codificar en una URL: antes de enviar
-  se sustituye por U+FFFD (`toWellFormed()`), que no coincide con ningún
-  cliente.
+  se sustituye por U+FFFD, que no coincide con ningún cliente. Cómo se
+  detecta está en 2.3.
 - Cada resultado muestra el nombre, el identificador fiscal, el país y el
   plan, y enlaza con el detalle. El país y el plan se muestran **con los
   nombres de `GET /meta`** («España», «Profesional»), no con sus códigos. Si
@@ -127,7 +127,7 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 | `tax_id` | No vacío y de 30 caracteres como máximo, **medidos sin recortar**, como el backend, que mide antes de normalizar | El formato y el carácter de control |
 | `contact_email` | Tras recortar: no vacío, de 254 caracteres como máximo, contiene una `@` y no empieza ni acaba en `@` | El resto de la regla del email (SPEC-01, 2.1): ningún separador Unicode, una sola `@`, un punto en el dominio y los caracteres no admitidos |
 | `country` y `plan` | Elegido uno de la lista de `/meta` | — |
-| Los tres campos de texto | Texto bien formado: sin ningún *surrogate* suelto (`isWellFormed()`) | — |
+| Los tres campos de texto | Texto bien formado: sin ningún *surrogate* suelto | — |
 
 - **La ayuda mide igual que el backend** (SPEC-01, 2.12): las longitudes se
   cuentan en puntos de código (`[...s].length`, no `s.length`, que cuenta
@@ -150,7 +150,12 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   navegador lo serializa como un escape `\ud800` y el backend responde
   `400` `malformed_request` (índice de specs, «El texto del cuerpo»), que
   es un error de la petición y no de un campo: el usuario no sabría qué
-  corregir.
+  corregir. **Cómo se detecta**, aquí y en el buscador (2.2): con una
+  expresión regular en modo Unicode (`/\p{Surrogate}/u`), que no ve como
+  *surrogate* las dos mitades de una pareja bien formada, como un emoji.
+  No con `isWellFormed()` ni `toWellFormed()`: son de ES2024, y la
+  configuración por defecto del CLI compila para ES2022 y no las conoce
+  (`.claude/rules/frontend.md` manda usar esa configuración).
 - **Qué se envía**: el nombre y el email, **recortados** (solo U+0020, el
   mismo recorte con el que la ayuda los ha medido); el identificador, tal
   como está escrito; y los códigos de país y de plan de `/meta`. Nada se
@@ -839,3 +844,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-04, DV-05 y DV-13, y la parte del simulador de DV-03), propuesta por la IA y pendiente de la revisión del Tech Lead. **El `id` de la ruta**: el frontend no lo convierte en número; si no es de 1 a 16 dígitos ASCII sin ceros a la izquierda o pasa de 2^53 − 1, muestra «Cliente no encontrado» sin llamar, y si lo es, pide el cliente con ese mismo texto (2.1, 2.4, 2.5, E-15, E-47 nuevo, tabla 5.7 y CA-17). `/clientes/abc` y `/clientes/01` muestran «Cliente no encontrado». **Detalle**: el aviso del historial dice el número de simulaciones recibidas, no un 50 escrito (2.4 y CA-07). **Simulador**: el `customer_id` es el `id` del cliente cargado, un campo numérico válido es un entero dentro de sus límites que se envía como número JSON, y un `422` de la proyección o del guardado se muestra junto a su campo (2.5, E-48 y E-49 nuevos, cinco filas en 5.5 y CA-08). Motivo: el backend fijó el día 13 que el `id` de la ruta tiene una sola forma (índice de specs), y JavaScript convierte `01`, `+1` y `1.0` en 1 y redondea por encima de 2^53 − 1, así que un frontend que convirtiera el texto daría varias direcciones a un cliente o pediría otro. Deja una limitación, dicha en 2.1 y pendiente de que el Tech Lead la acepte: un `id` entre 2^53 y 2^63 − 1 no puede abrirse desde el frontend |
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencia DV-07), propuesta por la IA y pendiente de la revisión del Tech Lead. **Buscador**: el límite de 100 caracteres se mide como el backend, en puntos de código y sin recortar, y al superarlo no se llama a la API y se avisa junto al campo; el texto se envía tal como está escrito, en un solo parámetro `q` del cliente HTTP y nunca concatenado, y sin `q` si está vacío; un *surrogate* suelto se sustituye por U+FFFD; y el frontend muestra lo que llega, también cuando es el listado inicial. Requisitos nuevos E-50 y E-51, ocho filas en 5.3 y CA-04. Motivo: «el campo admite 100 caracteres» no decía en qué unidad ni sobre qué texto, y el backend mide puntos de código antes de recortar (SPEC-01, 2.12); un texto concatenado en la URL cambia la consulta (`q=a+b` se lee como «a b»), y los casos de SPEC-01 5.9 (`%`, `_`, `\`, la comilla) solo se cumplen si el texto llega literal |
 | 2026-11-14 | Puesta al día con el contrato final del backend y con lo externo (sesión 06, divergencias DV-08, DV-09, DV-12 y DV-14, y el paso 2), propuesta por la IA y pendiente de la revisión del Tech Lead. **Contratos consumidos**: 4.1 gana las respuestas que el OpenAPI declara para cada llamada y los campos que llegan y no se usan; apartado nuevo 4.3 con lo que el frontend envía frente a las limitaciones L-01 a L-05 del backend; 2.9 dice lo que la configuración de CORS del backend exige (origen exacto, solo `GET` y `POST`, ninguna cabecera propia y ninguna cabecera de respuesta legible), con E-52 y CA-18 nuevos. **Corrección de un cambio de este mismo día**: el nombre y el email se envían recortados, no tal como están escritos (2.3, E-46 y dos filas de 5.4), porque al escribir 4.3 se vio que sin recortar se podía enviar un cuerpo de cualquier tamaño (L-01). **Lo externo, comprobado el 2026-11-14**: la API de divisas responde igual que el día 12, también en sábado (4.2); la nota de D-09 dice qué versión de Playwright es elegible con el margen de ADR-007; fila «Depende de» y apartado 9 al día. Motivo: la spec no decía qué respuestas trata de cada llamada ni nombraba las limitaciones del backend, que dependen de lo que un cliente envíe; y los datos de la API de divisas y de las versiones eran del día 12 |
+| 2026-11-14 | Corrección de dos cambios de este mismo día, vista por la IA antes de la evaluación: 2.2 y 2.3 nombraban `isWellFormed()` y `toWellFormed()` para detectar un *surrogate* suelto. Son de ES2024, y el proyecto que crea el CLI 21.2.29 compila para ES2022 sin declarar otra biblioteca (leído en su plantilla de `tsconfig.json`), así que no las conoce; `.claude/rules/frontend.md` manda usar la configuración por defecto del CLI. La spec dice ahora cómo se detecta sin salir de ella: una expresión regular en modo Unicode, comprobada con Node 24. Sin cambios en requisitos, criterios ni casos |
