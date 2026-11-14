@@ -10,7 +10,7 @@ código. No se programa una parte hasta que su spec está `aprobada`.
 | [SPEC-01](SPEC-01-clientes-y-validacion-fiscal.md) | Clientes y validación fiscal | R-03, R-04, R-10, R-11 | A2, A4, A10, A11, A12, A13, A14, A18 | `aprobada` (2026-11-13) |
 | [SPEC-02](SPEC-02-tarificacion-e-impuestos.md) | Tarificación e impuestos | R-06, R-07, R-12 | A2, A3, A4, A5, A6, A7, A9, A13, A14 | `aprobada` (2026-11-13) |
 | [SPEC-03](SPEC-03-simulaciones-y-persistencia.md) | Simulaciones y persistencia | R-05, R-11 | A3, A4, A6, A7, A9, A13, A14, A16, A18 | `aprobada` (2026-11-13) |
-| [SPEC-04](SPEC-04-frontend-y-divisas.md) | Frontend y divisas | R-09 a R-12, R-17 | A3, A6, A7, A8, A9, A12, A13, A14, A16, A17 | `borrador` (2026-11-12) |
+| [SPEC-04](SPEC-04-frontend-y-divisas.md) | Frontend y divisas | R-09 a R-12, R-17 | A3, A6, A7, A8, A9, A12, A13, A14, A16, A17 | `aprobada` (2026-11-14) |
 
 Una spec no puede pasar a `aprobada` mientras dependa de un supuesto que no
 esté `decidido` (ver [`supuestos.md`](../00-analisis/supuestos.md)).
@@ -32,7 +32,7 @@ Las specs se aprueban en dos bloques, decididos por el Tech Lead el
 | Bloque | Specs | Cuándo se aprueba |
 |---|---|---|
 | **Backend** | SPEC-01, SPEC-02 y SPEC-03 | Las tres **a la vez**, antes de escribir código del backend. **Aprobado el 2026-11-13** |
-| **Frontend** | SPEC-04 | Aparte, después del bloque backend y antes de empezar el frontend |
+| **Frontend** | SPEC-04 | Aparte, después del bloque backend y antes de empezar el frontend. **Aprobado el 2026-11-14** |
 
 *Por qué un bloque*: las tres specs del backend se necesitan entre sí.
 SPEC-01 usa la constante de países de SPEC-02 y devuelve en la ficha el

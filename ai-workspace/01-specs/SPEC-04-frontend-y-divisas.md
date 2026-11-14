@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Estado** | `borrador` (2026-11-12) |
+| **Estado** | `aprobada` (2026-11-14) |
 | **Requisitos** | R-09, R-10, R-11, R-12 y R-17 |
 | **Supuestos** | A3, A6, A7, A8, A9, A12, A13, A14, A16 y A17 (`decidido`). A3, confirmado por la respuesta del 2026-11-13 |
 | **Depende de** | SPEC-01, SPEC-02 y SPEC-03 (contratos de la API), las tres aprobadas el 2026-11-13; las convenciones comunes de la API del índice de specs (ADR-006); ADR-001, ADR-002, ADR-003 y ADR-007 |
-| **Bloqueos para aprobarla** | Ninguno ajeno desde el 2026-11-13: A3 decidido y confirmado por la respuesta (apartado 9) y el bloque backend, aprobado. Falta la aprobación del Tech Lead: esta spec se aprueba aparte, después de ese bloque y antes de empezar el frontend (índice de specs) |
+| **Bloqueos para aprobarla** | Ninguno desde el 2026-11-14: A3 decidido y confirmado por la respuesta (apartado 9), el bloque backend cerrado y los hallazgos de la evaluación independiente de esta spec, decididos y aplicados (historial). Aprobación aparte, después de ese bloque y antes de empezar el frontend (índice de specs) |
 
 ## 1. Objetivo
 
@@ -911,8 +911,11 @@ no tiene sentido.
 
 ## 9. Pendiente antes de aprobar
 
-**Queda la aprobación del Tech Lead**, aparte y antes de empezar el
-frontend. A3 no la bloquea: el Tech Lead lo decidió el 2026-11-13 y la
+**Nada pendiente: el Tech Lead dio su aprobación el 2026-11-14**, aparte
+del bloque backend y antes de empezar el frontend, después de decidir los
+hallazgos de la evaluación independiente de esta spec y las propuestas de
+la sesión 06 (historial). A3 no la bloqueaba: el Tech Lead lo decidió el
+2026-11-13 y la
 respuesta a la consulta, que llegó ese mismo día, lo confirma: el
 almacenamiento y las llamadas a la API no se tarifican; basta con
 registrarlos y mostrarlos en la simulación. La consulta está cerrada
@@ -947,3 +950,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-03, H-04 y H-08) y propuestas C-02 y C-03 de la sesión 06, decididas por el Tech Lead. **Buscador**: al superar el límite se cancela la búsqueda en curso y el aviso sale al momento (2.2 y E-50); ya no se afirma que U+FFFD no coincide con ningún cliente, porque el backend lo admite en un nombre (2.2); y la fila del buscador de 4.1 recoge el `422` que declara el OpenAPI. **Panel**: una nota bajo la lista cuando llegan 20 clientes, el máximo de la API (E-53 nuevo), y un mensaje propio, «Todavía no hay clientes», con el acceso al alta, cuando el listado inicial llega vacío (E-54 nuevo). Cinco filas nuevas en 5.3 y CA-04. Motivo: una respuesta que llegara tarde podía pintar la lista retirada; la frase de U+FFFD era falsa (sondeado); la columna de 4.1 decía recoger lo que el OpenAPI declara y omitía un estado; la API no dice cuántos clientes hay; y el listado inicial vacío es lo primero que se ve con la base de datos recién creada, sin que nadie haya buscado nada |
 | 2026-11-14 | Corrección de la evaluación independiente de esta spec (H-10) y propuesta C-04 de la sesión 06, decididas por el Tech Lead. **Un código de país o de plan que `/meta` no trae se muestra tal como llega, sin marca** (2.1, E-35, una fila en 5.3 y CA-07). D-13 recoge la comprobación del *surrogate* suelto, que 2.3 y E-45 ya tenían. Motivo: la spec decía que nunca se muestran códigos y no decía qué hacer con uno que `/meta` no conoce, que es el caso de datos incoherentes de SPEC-02 E-10; y D-13 no nombraba una de las comprobaciones de la ayuda |
 | 2026-11-14 | Corrección de la evaluación independiente de esta spec (H-12) y propuesta C-05 de la sesión 06, decididas por el Tech Lead. **En los tres campos numéricos del simulador decide el texto escrito**: es válido solo si está formado por dígitos ASCII y su valor cabe en los límites; son campos de texto con `inputmode="numeric"`, no controles numéricos del navegador (2.5, E-22, E-36). En 5.5, `15.0` pasa de proyectarse a ser un error, junto con `1e3`, `+15`, `1 5` y `100000.000000000001`; `015` es válido y vale 15. **Aviso tras agotar la espera al guardar**: dice que la simulación puede haberse guardado y enlaza al detalle del cliente (2.5, E-55 nuevo, una fila en 5.5 y CA-08). Motivo: `Number.isInteger` miraba el número, y JavaScript lee `100000.000000000001` como el entero 100000 y `1e3` como 1000 (comprobado con Node), así que se enviaba un valor que el usuario no había escrito; y tras un `timeout` el servidor puede haber guardado, de modo que reintentar a ciegas duplica la simulación |
+| 2026-11-14 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-14), aparte del bloque backend y antes de empezar el frontend, con los doce hallazgos de la evaluación independiente y las propuestas C-01 a C-05 de la sesión 06 decididos y aplicados |
