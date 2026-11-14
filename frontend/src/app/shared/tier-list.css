@@ -1,0 +1,28 @@
+/* Each tier on a line that wraps: its limits, the detail and, pushed to the end, the subtotal. */
+.tiers {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.tier-label {
+  font-weight: 700;
+}
+
+.tier-detail {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.tier-subtotal {
+  margin-left: auto;
+}

@@ -26,14 +26,7 @@
   list-style: none;
 }
 
-.card {
-  min-width: 0;
-  padding: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-}
-
+/* The card itself is in the global styles (`styles/cards.css`). */
 .card-title {
   display: inline-block;
   margin-bottom: var(--space-2);

@@ -1,0 +1,55 @@
+/* Placement only. One column at 375 px; from 48rem the facts of the customer and the cards of
+   the history go in several columns (SPEC-04, 2.4). */
+.customer {
+  margin-bottom: var(--space-6);
+}
+
+.history-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.history-heading h2 {
+  margin: 0;
+}
+
+.history-note {
+  color: var(--color-text-muted);
+}
+
+.history {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.simulation h3 {
+  font-size: var(--font-size-md);
+}
+
+.breakdown {
+  margin-top: var(--space-3);
+}
+
+.breakdown summary {
+  min-height: var(--control-min-height);
+  align-content: center;
+  cursor: pointer;
+}
+
+@media (min-width: 48rem) {
+  .customer-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .history {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}

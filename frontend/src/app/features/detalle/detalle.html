@@ -1,0 +1,101 @@
+@if (notFound()) {
+  <app-customer-not-found />
+} @else {
+  <h1>Detalle del cliente</h1>
+
+  <app-meta-gate>
+    @if (loading()) {
+      <app-loading-notice label="Cargando el cliente…" />
+    }
+    @if (error(); as failure) {
+      <app-error-notice [error]="failure" (retry)="retry()" />
+    }
+    @if (customer(); as card) {
+      <section class="card customer" aria-labelledby="detalle-name">
+        <h2 id="detalle-name">{{ card.name }}</h2>
+        <dl class="facts customer-facts">
+          <div>
+            <dt>Identificador fiscal</dt>
+            <dd>{{ card.taxId }}</dd>
+          </div>
+          <div>
+            <dt>Email de contacto</dt>
+            <dd>{{ card.email }}</dd>
+          </div>
+          <div>
+            <dt>País</dt>
+            <dd>{{ card.country }}</dd>
+          </div>
+          <div>
+            <dt>Plan</dt>
+            <dd>{{ card.plan }}</dd>
+          </div>
+          <div>
+            <dt>Fecha de alta</dt>
+            <dd>
+              <time [attr.datetime]="card.createdAt">{{ card.createdAtText }}</time>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section aria-labelledby="detalle-history">
+        <div class="history-heading">
+          <h2 id="detalle-history">Simulaciones</h2>
+          <a class="button" [routerLink]="card.simulatorLink">Nueva simulación</a>
+        </div>
+
+        @if (shownOfTotal(); as note) {
+          <p class="history-note">{{ note }}</p>
+        }
+
+        @if (hasSimulations()) {
+          <ul class="history">
+            @for (simulation of simulations(); track simulation.id) {
+              <li class="card simulation">
+                <h3>
+                  <time [attr.datetime]="simulation.createdAt">{{ simulation.createdAtText }}</time>
+                </h3>
+                <dl class="facts">
+                  <div>
+                    <dt>Usuarios activos</dt>
+                    <dd>{{ simulation.users }}</dd>
+                  </div>
+                  <div>
+                    <dt>Almacenamiento</dt>
+                    <dd>{{ simulation.storage }}</dd>
+                  </div>
+                  <div>
+                    <dt>Llamadas a la API</dt>
+                    <dd>{{ simulation.apiCalls }}</dd>
+                  </div>
+                  <div>
+                    <dt>Coste base</dt>
+                    <dd>{{ simulation.baseCents | money }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ simulation.taxLabel }}</dt>
+                    <dd>{{ simulation.taxCents | money }}</dd>
+                  </div>
+                  <div class="fact-total">
+                    <dt>Total</dt>
+                    <dd>{{ simulation.totalCents | money }}</dd>
+                  </div>
+                </dl>
+                <details class="breakdown">
+                  <summary>Desglose por tramos</summary>
+                  <app-tier-list [tiers]="simulation.tiers" />
+                </details>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty">
+            <p>Este cliente todavía no tiene simulaciones.</p>
+            <p><a [routerLink]="card.simulatorLink">Crear la primera simulación</a></p>
+          </div>
+        }
+      </section>
+    }
+  </app-meta-gate>
+}

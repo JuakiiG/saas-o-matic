@@ -12,6 +12,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/alta/alta').then((file) => file.Alta),
   },
   {
+    path: 'clientes/:id',
+    loadComponent: () => import('./features/detalle/detalle').then((file) => file.Detalle),
+  },
+  {
     path: '**',
     loadComponent: () => import('./features/not-found/not-found').then((file) => file.NotFound),
   },
