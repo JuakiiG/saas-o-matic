@@ -288,11 +288,26 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   se ajusta: junto a los importes convertidos se indica que son orientativos.
 - **Con EUR no hay conversión**: el importe sale exacto de los céntimos y no
   depende de la API de divisas.
+- **El EUR se formatea solo con enteros.** Los euros son
+  `(céntimos − céntimos % 100) / 100`, una división exacta, y los céntimos,
+  el resto. Se formatean los euros por partes (`formatToParts`) y la parte
+  decimal se sustituye por los céntimos con dos cifras. **El importe no se
+  divide entre 100.** *Por qué*: `céntimos / 100` es una operación en coma
+  flotante sobre dinero, que solo se admite en la conversión de divisa
+  (ADR-002 y `.claude/rules/frontend.md`); y pasar a `format` el importe
+  como texto exacto exige una biblioteca de tipos que la configuración por
+  defecto del CLI no declara. Da el mismo texto que la división
+  (comprobado con Node el 2026-11-14 en 8.645.796 importes, de 0 a
+  60520570), sin hacerla.
 - **Formato**: `Intl.NumberFormat('es-ES')` con el código de la divisa
-  (`169,40 EUR`, `188,69 USD`), a través de un único *pipe*.
+  (`169,40 EUR`, `188,69 USD`), a través de un único *pipe*. Los importes
+  de cuatro cifras salen **sin punto de millar** (`1234,50 EUR`), que es
+  lo que hace `es-ES`; con cinco o más, con él (`12.345,00 EUR`).
 - Mientras la divisa elegida no es EUR se muestran, junto a los importes, el
   tipo aplicado y su fecha («1 EUR = 1,1139 USD · tipo del 12/11/2026») y el
-  total en EUR. La fecha es la del objeto de esa divisa: cada tipo trae la
+  total en EUR. **El tipo se muestra con los decimales que trae, hasta 6**
+  (`Intl.NumberFormat('es-ES', { maximumFractionDigits: 6 })`): `1,1139`,
+  `0,92316`. La fecha es la del objeto de esa divisa: cada tipo trae la
   suya. Es una fecha sin hora y se muestra **tal cual**, solo cambiando su
   forma a día/mes/año, sin convertirla de zona horaria.
 - **Estados**:
@@ -360,6 +375,9 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Textos en español.
 - Los tipos impositivos llegan en puntos básicos y se muestran como
   porcentaje (`2100` → «21 %»).
+- Los tramos se rotulan con sus límites: «del 1 al 10», «del 11 al 50» y
+  «del 51 en adelante». El último llega con `to_users` `null` (SPEC-02, 4),
+  y es el que se rotula «en adelante».
 - Las fechas con hora del backend (`created_at`) llegan en UTC y se muestran
   en la zona horaria del navegador, con formato `es-ES`. La fecha del tipo de
   cambio no tiene hora y queda fuera de esta regla (2.6).
@@ -571,15 +589,30 @@ El separador entre el número y el código es un espacio de no separación.
 |---|---|---|---|---|---|
 | 0 | 0,00 EUR | 0,00 USD | 0,00 GBP | 0,00 CHF | Cero |
 | 1 | 0,01 EUR | 0,01 USD | 0,01 GBP | 0,01 CHF | Un céntimo |
+| 5 | 0,05 EUR | 0,06 USD | 0,04 GBP | 0,05 CHF | Céntimos de una cifra: el EUR lleva el cero delante (`0,05`) |
 | 1000 | 10,00 EUR | 11,14 USD | 8,36 GBP | 9,23 CHF | Redondeo hacia arriba y hacia abajo |
 | 14000 | 140,00 EUR | 155,95 USD | 117,02 GBP | 129,24 CHF | Base del ejemplo del encargo |
 | 2940 | 29,40 EUR | 32,75 USD | 24,57 GBP | 27,14 CHF | Su impuesto |
 | 16940 | 169,40 EUR | 188,69 USD | 141,59 GBP | 156,38 CHF | Su total |
+| 123450 | 1234,50 EUR | 1375,11 USD | 1031,83 GBP | 1139,64 CHF | Cuatro cifras: sin punto de millar, como lo da `es-ES` |
 | 60520570 | 605.205,70 EUR | 674.138,63 USD | 505.849,08 GBP | 558.701,69 CHF | Separador de miles |
 
 **Diferencia de un céntimo**: en USD, 155,95 + 32,75 = 188,70, pero el total
 convertido es 188,69. Es el caso que la interfaz avisa como orientativo. En
 EUR, 140,00 + 29,40 = 169,40 siempre.
+
+**Tipo de cambio** (hasta 6 decimales, con coma). Valores calculados con
+Node 24 el 2026-11-14:
+
+| Tipo recibido | Se muestra | Qué demuestra |
+|---|---|---|
+| `1.1139` | 1,1139 | Cuatro decimales: no se redondea a tres |
+| `0.92316` | 0,92316 | Cinco decimales |
+| `1.12345678` | 1,123457 | Más de seis: se redondea al sexto |
+| `1` | 1 | Sin decimales de relleno |
+
+**Rótulos de los tramos**, con el desglose del ejemplo de SPEC-02 (4): «del
+1 al 10», «del 11 al 50» y «del 51 en adelante».
 
 ### 5.2 API de divisas
 
@@ -740,14 +773,14 @@ en SPEC-01, 5.10.
 
 | Id | Criterio | Requisitos |
 |---|---|---|
-| CA-01 | Un test parametrizado del *pipe* de importes reproduce cada celda de 5.1, incluido el caso del céntimo de diferencia. | E-27, E-28 |
-| CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-30 |
+| CA-01 | Un test parametrizado del *pipe* de importes reproduce cada celda de la tabla de importes de 5.1, incluido el caso del céntimo de diferencia, y otros dos reproducen la tabla del tipo de cambio y los rótulos de los tramos. | E-28, E-29 |
+| CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-27, E-30 |
 | CA-03 | Un test comprueba que, con la API de divisas en error, el panel, el detalle y el simulador muestran sus datos en EUR. | E-28, E-30 |
 | CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones, el parámetro `q` y la URL de cada una, y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40, E-50, E-51 |
 | CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
 | CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas (55 y 50: «Se muestran las 50 últimas de 55»), `404` con `customer_not_found`, país y plan con los nombres de `/meta`, y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
-| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-29, E-35 a E-38, E-40, E-48, E-49 |
+| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-27, E-29, E-35 a E-38, E-40, E-48, E-49 |
 | CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
 | CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
 | CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada». | E-34 |
@@ -845,3 +878,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencia DV-07), propuesta por la IA y pendiente de la revisión del Tech Lead. **Buscador**: el límite de 100 caracteres se mide como el backend, en puntos de código y sin recortar, y al superarlo no se llama a la API y se avisa junto al campo; el texto se envía tal como está escrito, en un solo parámetro `q` del cliente HTTP y nunca concatenado, y sin `q` si está vacío; un *surrogate* suelto se sustituye por U+FFFD; y el frontend muestra lo que llega, también cuando es el listado inicial. Requisitos nuevos E-50 y E-51, ocho filas en 5.3 y CA-04. Motivo: «el campo admite 100 caracteres» no decía en qué unidad ni sobre qué texto, y el backend mide puntos de código antes de recortar (SPEC-01, 2.12); un texto concatenado en la URL cambia la consulta (`q=a+b` se lee como «a b»), y los casos de SPEC-01 5.9 (`%`, `_`, `\`, la comilla) solo se cumplen si el texto llega literal |
 | 2026-11-14 | Puesta al día con el contrato final del backend y con lo externo (sesión 06, divergencias DV-08, DV-09, DV-12 y DV-14, y el paso 2), propuesta por la IA y pendiente de la revisión del Tech Lead. **Contratos consumidos**: 4.1 gana las respuestas que el OpenAPI declara para cada llamada y los campos que llegan y no se usan; apartado nuevo 4.3 con lo que el frontend envía frente a las limitaciones L-01 a L-05 del backend; 2.9 dice lo que la configuración de CORS del backend exige (origen exacto, solo `GET` y `POST`, ninguna cabecera propia y ninguna cabecera de respuesta legible), con E-52 y CA-18 nuevos. **Corrección de un cambio de este mismo día**: el nombre y el email se envían recortados, no tal como están escritos (2.3, E-46 y dos filas de 5.4), porque al escribir 4.3 se vio que sin recortar se podía enviar un cuerpo de cualquier tamaño (L-01). **Lo externo, comprobado el 2026-11-14**: la API de divisas responde igual que el día 12, también en sábado (4.2); la nota de D-09 dice qué versión de Playwright es elegible con el margen de ADR-007; fila «Depende de» y apartado 9 al día. Motivo: la spec no decía qué respuestas trata de cada llamada ni nombraba las limitaciones del backend, que dependen de lo que un cliente envíe; y los datos de la API de divisas y de las versiones eran del día 12 |
 | 2026-11-14 | Corrección de dos cambios de este mismo día, vista por la IA antes de la evaluación: 2.2 y 2.3 nombraban `isWellFormed()` y `toWellFormed()` para detectar un *surrogate* suelto. Son de ES2024, y el proyecto que crea el CLI 21.2.29 compila para ES2022 sin declarar otra biblioteca (leído en su plantilla de `tsconfig.json`), así que no las conoce; `.claude/rules/frontend.md` manda usar la configuración por defecto del CLI. La spec dice ahora cómo se detecta sin salir de ella: una expresión regular en modo Unicode, comprobada con Node 24. Sin cambios en requisitos, criterios ni casos |
+| 2026-11-14 | Correcciones de la evaluación independiente de esta spec (`04-calidad/evaluacion-spec04-01.md`, H-01, H-05 y H-09), decididas por el Tech Lead. **El EUR se formatea solo con enteros** (2.6): los euros y los céntimos se separan con una división exacta y un resto, y el importe no se divide entre 100; la regla del dinero no cambia. **Presentación**: el tipo de cambio se muestra con los decimales que trae, hasta 6; los importes de cuatro cifras, sin punto de millar, como los da `es-ES`; y los tramos se rotulan «del 1 al 10», «del 11 al 50» y «del 51 en adelante» (2.6 y 2.8). Dos filas nuevas en la tabla de importes de 5.1 (5 y 123450 céntimos) y dos tablas más, del tipo de cambio y de los rótulos. CA-01 deja de citar E-27, que un test del *pipe* no demuestra, y pasa a citar E-28 y E-29; E-27 lo citan CA-02 y CA-08, que tienen sus filas. Motivo: 2.6 decía que el importe en EUR «sale exacto de los céntimos» sin decir cómo, y lo directo era dividir entre 100, que es coma flotante sobre dinero; el formato por defecto daba `1,114` para un tipo de `1.1139`; y ninguna fila fijaba un importe de cuatro cifras ni el rótulo del último tramo |
