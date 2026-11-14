@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-14 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | *(sesión en curso; esta fila se escribe al cerrar)* |
+| **Resultado** | SPEC-04 puesta al día con el contrato final del backend y **todavía en `borrador`**; en esta sesión no se ha escrito código. **Paso 1**: 14 divergencias (DV-01 a DV-14) entre SPEC-04 y lo que el backend hace, sondeadas con el cliente de test y contrastadas con su `/openapi.json`; las de más peso, el `503` que la spec no nombraba, un validador de email del framework que rechazaría direcciones que el backend acepta y un `id` de ruta que, convertido en número, daría varias direcciones a un cliente. **Paso 2**: la API de divisas responde `200` con la misma forma y `access-control-allow-origin: *`, también en sábado; Angular CLI 21.2.29 (publicado el 2026-10-28) y los paquetes 21.2.26 cumplen el margen de una semana, y la 21.2.30 queda fuera. **Paso 3**: seis commits de SPEC-04 (52 requisitos, eran 41; 18 criterios, eran 15; tablas nuevas 5.6 y 5.7 y apartado 4.3) y uno aparte para ADR-001, ADR-003 y ADR-007, sin cambiar ninguna decisión; dos rectificaciones de la IA dentro de la sesión (S-03 y S-04). **Paso 4**: pasada del evaluador (Opus 5.5, comprobado en su registro), en solo lectura: **12 hallazgos, ninguno de severidad alta, 2 medios y 10 bajos**; ocho los introdujo la IA hoy. Informe intacto en `04-calidad/evaluacion-spec04-01.md` y respuesta, con una fila por hallazgo y tres casos más, en `04-calidad/respuesta-evaluacion-spec04-01.md`. **No se ha aplicado ninguna corrección.** Oráculo en verde con 20 comprobaciones activas y 4 inactivas. Quedan sin decidir los hallazgos, las propuestas C-01 a C-05 y las precisiones S-01 a S-09 y U-01 a U-05. Sesión parada: el Tech Lead decide cada hallazgo y aprueba SPEC-04 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -80,6 +80,12 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 09:36 | — | Tablas del paso 1 y del paso 2 escritas en el apartado 3, antes de tocar SPEC-04 |
 | 09:58 | `c95d207` a `86b2a96` | Fila escrita a las 09:58. **Paso 3**: seis commits de SPEC-04 y uno de los ADR; el detalle y la hora de cada uno están en la tabla «Paso 3» del apartado 3. Oráculo en verde antes de cada uno |
 | 09:58 | *(este commit)* | Bitácora hasta aquí, para que el evaluador trabaje sobre un árbol limpio |
+| 10:00–10:13 | — | El commit anterior es `8516f5c` (09:59:27 según `git log`). **Paso 4**: pasada del evaluador, en solo lectura, sobre `8516f5c`. La IA no tocó el repositorio mientras trabajaba |
+| 10:15 | — | Informe guardado intacto en `04-calidad/evaluacion-spec04-01.md` y comparado con el mensaje del registro del subagente: ninguna línea distinta (apartado 3) |
+| 10:16 | `e03fc80` | Commit propio del informe (10:16:47 según `git log`). Oráculo en verde antes |
+| 10:18 | — | La IA repite lo que afirma cada hallazgo, sin corregir nada: los doce se reproducen |
+| 10:21 | `5bfa62f` | `04-calidad/respuesta-evaluacion-spec04-01.md`: una fila por hallazgo y la propuesta de la IA, **sin aplicar ninguna** (10:21:22 según `git log`). Oráculo en verde antes |
+| 10:22 | *(este commit)* | Cierre de esta bitácora. **La IA para aquí**: el Tech Lead decide cada hallazgo y aprueba SPEC-04 |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -222,23 +228,106 @@ Precisiones de la IA sobre el paso 3, **sin aprobar**:
 | S-01 | La IA leyó SPEC-01, SPEC-02 y SPEC-03 enteras, no solo su apartado 4 | Las reglas que el encargo manda contrastar (email, buscador, `id`, orden de los errores) están en los apartados 2 y 5 |
 | S-02 | **Todo lo aplicado es una propuesta de la IA**: los textos de los avisos, el código `unknown_error`, el filtro del `id` y lo que comprueba la ayuda no los ha decidido nadie más. La spec lo dice en cada fila de su historial («pendiente de la revisión del Tech Lead») | El encargo manda aplicar los cambios; aprobarlos es del Tech Lead |
 | S-03 | **Rectificación dentro de la sesión.** A las 09:43 la IA escribió que los valores del alta se envían «tal como están escritos» (E-46). A las 09:50, al escribir la fila de L-01 de 4.3, vio que así un nombre válido rodeado de megabytes de espacios se enviaría entero, porque la ayuda mide el texto recortado. E-46 dice ahora que el nombre y el email se envían recortados (solo U+0020, el mismo carácter que recorta el backend); el identificador, tal cual | La afirmación de 4.3 («ningún cuerpo pasa de unos kilobytes») era falsa con la regla anterior. No se enmendó el commit de las 09:43: la corrección está en el de las 09:53 y en el historial de la spec |
-| S-04 | **Error de la IA, visto antes de la evaluación.** Las reglas del *surrogate* suelto nombraban `isWellFormed()` y `toWellFormed()`, y en la bitácora (DV-06 y DV-07) también. Son de ES2024; la plantilla de `tsconfig.json` del CLI 21.2.29, leída a las 09:55, compila para ES2022 sin declarar otra biblioteca. Contradecía la regla de usar la configuración por defecto del CLI. Sustituidas por una expresión regular en modo Unicode, comprobada con Node | La IA las había comprobado con Node 24, que sí las tiene, y no con lo que el proyecto compila |
+| S-04 | **Error de la IA, visto antes de la evaluación.** Las reglas del *surrogate* suelto nombraban `isWellFormed()` y `toWellFormed()`. Son de ES2024; la plantilla de `tsconfig.json` del CLI 21.2.29, leída a las 09:55, compila para ES2022 sin declarar otra biblioteca. Contradecía la regla de usar la configuración por defecto del CLI. Sustituidas por una expresión regular en modo Unicode, comprobada con Node | La IA las había comprobado con Node 24, que sí las tiene, y no con lo que el proyecto compila |
 | S-05 | DV-05: la alternativa al filtro era enviar el texto de la ruta tal cual y dejar que el backend responda `422`. La IA eligió el filtro porque, sin él, un `id` por encima de 2^53 − 1 llegaría redondeado al cuerpo de la proyección y del guardado, y porque evita construir una URL con un texto arbitrario. A cambio, repite en el frontend la forma del `id` | Es la decisión con más alternativas de las aplicadas; si el Tech Lead prefiere la otra, cambian 2.1, E-15, E-47 y 5.7 |
 | S-06 | DV-06: la ayuda del email comprueba el máximo de 254 caracteres, que SPEC-04 no tenía, además de la `@` | Sin él, el email era el único texto del alta sin tope (L-01). El backend rechaza lo mismo con `too_long` (sondeado con 254 y 255) |
 | S-07 | La fila «Depende de» de la cabecera gana las convenciones comunes del índice (ADR-006) y ADR-007 | La spec cita ahora las dos |
 | S-08 | Los tres ADR se tocaron sin que el encargo los nombre: solo con datos comprobados hoy, sin cambiar ninguna decisión, y en commit aparte, como manda el encargo para lo que toque un ADR | ADR-007 decía que la fecha del CLI no estaba comprobada, y ya lo está |
 | S-09 | Dos descuidos corregidos antes de su commit: el historial decía «quince filas» y son catorce, y una edición duplicó el título del apartado 4.2 | Vistos al repasar el cambio |
 
+### Paso 4 · Pasada del evaluador (10:00–10:21)
+
+| Hora | Qué |
+|---|---|
+| 10:00 | Lanzado el subagente `evaluador` con el árbol limpio en `8516f5c`. Encargo: SPEC-04 contra el contrato real del backend (las specs, el código y el `/openapi.json`, que debía obtener él arrancando la aplicación), buscando lo que pide el encargo de la sesión: requisitos que no se pueden cumplir, respuestas que SPEC-04 no contempla, requisitos ambiguos o sin caso de prueba y contradicciones con `.claude/rules/frontend.md`. Restricciones de siempre: solo lectura, no leer `03-proceso/` ni `04-calidad/` ni la historia de git, rutas relativas, decir en la cabecera qué modelo es y nombrar los caracteres invisibles por su código. Dos añadidas: no hacer peticiones a internet y poner la base de datos de sus sondeos fuera del repositorio. **La IA no le dio ninguna conclusión propia**: ni las divergencias, ni lo que cambió hoy, ni las precisiones. Como no puede abrir `limitaciones-conocidas.md`, el encargo le resume L-01 a L-05 en una frase cada una |
+| 10:00–10:13 | La IA no tocó el repositorio |
+| 10:13 | Informe recibido. `git status --short` vacío, `HEAD` en `8516f5c`, ningún `stash` y `backend/data/` sin crear: el evaluador no cambió nada |
+| 10:14 | Informe escrito con `Write`, quitando solo la sangría de dos espacios que añade la herramienta. **Comparado con el mensaje que consta en el registro del subagente** (script de solo lectura fuera del repositorio): 184 líneas y 15.150 caracteres los dos, **ninguna línea distinta**, y el mensaje no trae ningún carácter de control ni separador que no sea el espacio y el salto de línea. En el mismo registro: tipo de agente `evaluador` y modelo `claude-opus-5-5` en sus 66 respuestas |
+| 10:16 | Oráculo en verde. Commit propio del informe: `e03fc80` (10:16:47) |
+| 10:18 | La IA repite lo que afirma cada hallazgo, con el cliente de test, con Node y leyendo el paquete de Angular, sin corregir nada |
+| 10:21 | Respuesta escrita, con una fila por hallazgo. Oráculo en verde. Commit `5bfa62f` (10:21:22) |
+
+**Resultado del informe**: oráculo en verde, ejecutado por el evaluador.
+**12 hallazgos, ninguno de severidad alta**: 2 medios (H-01, formatear un
+importe en EUR obliga a usar coma flotante, contra la regla del dinero; y
+H-02, cinco requisitos sin ningún caso que los demuestre) y 10 bajos.
+Ningún requisito `NO CONFORME`; 5 `AMBIGUO`, 5 `SIN CASO DE PRUEBA` y 1
+`NO COMPROBABLE` (la API de divisas, por encargo). De los criterios, 13
+`CONFORME`, 2 `AMBIGUO` y 3 `SIN CASO DE PRUEBA`.
+
+**De los doce, ocho los introdujo la IA hoy** al poner la spec al día
+(H-03, H-04, H-06, H-07, H-08, H-10, H-11 y H-12) y cuatro estaban desde
+el día 12 (H-01, H-02, H-05 y H-09). La IA está de acuerdo con todos. **No
+ha corregido ninguno.**
+
+Precisiones de la IA sobre el paso 4, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| U-01 | El informe no da veredicto a E-42 ni a E-43: su tabla tiene 50 filas de requisitos y 39 `CONFORME`, y su resumen dice 52 y 41. Además, las filas sin caso de prueba remiten a «H-04» y el hallazgo que las describe es el H-02. El informe se queda como llegó (casos A-02 y A-03 de la respuesta) | Intacto quiere decir también con sus errores |
+| U-02 | El encargo al evaluador lo redactó la IA, incluido el resumen de L-01 a L-05. El texto completo consta en el registro del subagente | Un resumen mal hecho podría haberle orientado |
+| U-03 | La respuesta trae tres casos que no son hallazgos numerados del informe (A-01 a A-03). A-01 (CA-18 no puede comprobarse como está escrito) lo dice el propio evaluador en su apartado 4 | Para que no se pierda por no llevar número |
+| U-04 | Las recomendaciones de H-01 (formatear el EUR por partes, solo con enteros) y de H-12 (decide el texto, no el número) las ha comprobado la IA con Node, no en un navegador ni con TypeScript | Son las dos que más cambian cómo se implementa |
+| U-05 | El evaluador comprobó por su cuenta varias afirmaciones que la IA había escrito hoy en SPEC-04 (el validador de email de Angular, el *target* ES2022 del CLI, la expresión regular del *surrogate* y la codificación de `q`) y las da por ciertas. Una no lo era: que U+FFFD no coincide con ningún cliente (H-03) | La IA la escribió sin sondearla |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
 |---|---|---|
 | Estado del repo al empezar | `git status --short` y `git rev-parse --short HEAD` (09:24) | Limpio, `58da604` |
+| Contrato real del backend | Script fuera del repositorio, con el cliente de test y una base de datos en la carpeta temporal: `/openapi.json` y las sondas de los ocho puntos del encargo (09:29 y 09:35) | Seis operaciones de negocio con los campos de las specs; resultados, en la tabla del paso 1 |
+| Comportamiento de JavaScript | `node -e`, con Node 24.18.0 (09:29, 09:55 y 10:17) | Un *surrogate* suelto sale de `JSON.stringify` como escape y hace fallar `encodeURIComponent`; `Number('01')` vale 1; por encima de 2^53 − 1 se redondea; la expresión regular en modo Unicode distingue un *surrogate* suelto de un emoji |
+| API de divisas | `curl` con la cabecera `Origin`, a la `v2`, a su comprobación previa, a una divisa inexistente y a la `v1` (09:29:55) | `200`, lista de tres objetos y `access-control-allow-origin: *`; tabla del paso 2 |
+| Versiones y fechas de npm | Script de solo lectura contra el registro (09:30 a 09:33) | Tabla del paso 2 |
+| Paquetes publicados de Angular | Descargados a la carpeta temporal y leídos, sin instalar (09:31 y 09:34): plantillas del CLI 21.2.29, `@angular/forms` y `@angular/common` 21.2.26 | Rangos que escribe el CLI, runner por defecto, *target* ES2022, expresión del validador de email y codificación de los parámetros de consulta |
+| Oráculo antes de cada commit | `uv run scripts/check.py`, 11 veces entre las 09:40 y las 10:22 | Siempre código de salida 0: 20 correctas, 0 con fallo y 4 inactivas (las del frontend) |
+| Caracteres invisibles en SPEC-04 | Recorrido del fichero con Python (09:46) | Ninguno. Solo dos caracteres fuera de lo corriente, los dos a propósito y visibles: U+1D538 y U+0661 |
+| Numeración de SPEC-04 | Recuento con `grep` (09:52) | 52 requisitos, de E-01 a E-52, sin repetidos; 18 criterios |
+| Que el evaluador no tocó nada | `git status --short`, `git rev-parse --short HEAD`, `git stash list` y `ls backend/data` (10:13) | Vacío, `8516f5c`, ningún `stash` y la carpeta no existe |
+| Informe, intacto | Comparación con el mensaje del registro del subagente (10:15) | 184 líneas y 15.150 caracteres; ninguna línea distinta |
+| Los doce hallazgos | Cliente de test, Node y lectura del paquete de Angular (10:17 y 10:18) | Se reproducen todos; tabla del apartado 2 de la respuesta |
 
 ## 5. No verificado
 
-*(se rellena durante la sesión)*
+- **Nada del frontend**: no existe. No se ha creado el proyecto, ni
+  instalado ni ejecutado ninguna dependencia. Todo lo que SPEC-04 dice de
+  Angular sale de leer sus paquetes publicados.
+- **Nada en un navegador real**: ni la llamada a la API de divisas, ni CORS
+  contra el backend, ni cómo trata un campo de texto un *surrogate* suelto
+  o un texto muy largo. Lo de JavaScript está visto con Node 24.
+- Nada con un servidor real (`uvicorn`): las sondas de hoy son con el
+  cliente de test. Que N-01 responde `405` con un servidor real lo afirma
+  el Tech Lead en el encargo; la IA no lo ha visto.
+- Que el proyecto que crea Angular CLI 21.2.29 compile y pase sus tests con
+  Node 24.18.0 (ADR-001 lo deja para cuando se cree).
+- Cómo se aplica el margen de una semana con npm: las opciones `before` y
+  `min-release-age` existen en el npm del equipo y no se han probado.
+- Avisos de seguridad de las versiones de la tabla del paso 2: no se han
+  consultado. La tabla solo dice fechas.
+- La API de divisas en festivos, su límite de peticiones y que los tres
+  tipos traigan siempre la misma fecha. En fin de semana, solo se ha visto
+  este sábado.
+- Lo que declaran las bibliotecas de tipos de TypeScript sobre
+  `Intl.NumberFormat` (H-01): lo afirma el evaluador; la IA no lo ha leído.
+- La fila de 5.5 de la fecha del tipo con un desfase horario negativo: ni
+  el evaluador ni la IA la han comprobado.
+- **Ninguna de las doce correcciones propuestas está aplicada**, y por
+  tanto ninguna está comprobada sobre la spec. Las recomendaciones de H-01
+  y de H-12 solo se han probado como fragmentos sueltos, con Node.
+- E-42 y E-43 no tienen veredicto independiente: el informe no les da fila
+  (U-01).
+- Que el hook pidiera confirmación al editar SPEC-04: la IA evitó escribir
+  la palabra que la dispara y no ve el diálogo. Las ediciones se aplicaron.
+- Nada fuera de Windows.
 
 ## 6. Tareas pendientes
 
-*(se rellena al cerrar)*
+| Tarea | Cuándo |
+|---|---|
+| **Decidir cada hallazgo de la evaluación de SPEC-04**: H-01 a H-12 y A-01 a A-03 (`04-calidad/respuesta-evaluacion-spec04-01.md`). Los que piden elegir entre alternativas: H-01, H-06, H-09 y H-12 | A decidir por el Tech Lead |
+| Decidir las propuestas que la IA no aplicó: C-01 (limitación del `id` por encima de 2^53 − 1; si se acepta, fila L-06 en `limitaciones-conocidas.md`), C-02, C-03, C-04 y C-05 | A decidir por el Tech Lead |
+| Aprobar o cambiar las precisiones S-01 a S-09 y U-01 a U-05. La que más pesa es S-05 (el filtro del `id` frente a enviar el texto tal cual) | A decidir por el Tech Lead |
+| Revisar los cambios de hoy en SPEC-04 (seis commits, de `c95d207` a `86b2a96`): todos son propuestas de la IA | Antes de aprobar SPEC-04 |
+| **Aprobar SPEC-04** | Después de decidir los hallazgos; es del Tech Lead |
+| Plan del frontend, con el mecanismo del margen de una semana en npm (ADR-007) y las versiones de la tabla del paso 2 | Después de aprobar SPEC-04 |
+| Pendientes heredados que esta sesión no toca: documentar en el README que `/docs` carga recursos de un servidor externo, llevar las limitaciones al README, el límite de tamaño del cuerpo en el proxy inverso (L-01), `app/domain/customers.py` en 234 líneas de 250 (R-15), la base de datos creada antes de `9ec6866` (P-03) y documentar la estructura del backend en `02-arquitectura/README.md` | A decidir por el Tech Lead |
