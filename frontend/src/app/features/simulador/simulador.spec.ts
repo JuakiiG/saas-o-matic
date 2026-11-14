@@ -880,3 +880,25 @@ describe('Simulador · divisa · SPEC-04/E-27, E-29, E-31 (CA-08)', () => {
     );
   });
 });
+
+// SPEC-04, 2.5: with `/meta` in error the simulator still loads behind the notice.
+describe('Simulador · /meta en error · SPEC-04/E-38, E-40 (2.5)', () => {
+  it('should ask for the customer and its first projection all the same, and appear loaded when /meta comes back', () => {
+    const page = open('7', 'failed');
+
+    const customer = only(customerRequests(page));
+    flush(page, customer, CUSTOMER);
+    const projection = only(quoteRequests(page));
+    flush(page, projection, OF_10);
+    const hiddenForm = page.element.querySelector('form');
+    press(page, 'Reintentar', '[role="alert"]');
+    flush(page, only(page.controller.match(META_URL)), META);
+
+    expect(customer.request.urlWithParams).toBe(`${CUSTOMERS_URL}7`);
+    expect(projection.request.body).toEqual({ customer_id: 7, active_users: 10 });
+    expect(hiddenForm).toBeNull();
+    expect(textOf(page, '.simulator-customer')).toBe('Ejemplo Uno SL · España');
+    expect(amounts(page)['Total']).toBe('121,00 EUR');
+    expect(quoteRequests(page).length).toBe(0);
+  });
+});
