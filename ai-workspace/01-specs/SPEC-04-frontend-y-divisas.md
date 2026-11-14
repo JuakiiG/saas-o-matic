@@ -40,6 +40,30 @@ enlace al panel y el **selector de divisa**. La divisa elegida vale para
 todas las vistas y se conserva al navegar; al recargar la página vuelve a
 EUR.
 
+**El `id` de la ruta (`/clientes/:id`).** El frontend **nunca convierte
+ese texto en número** para pedir el cliente:
+
+1. Comprueba su forma: de 1 a 16 dígitos ASCII (`0` a `9`), sin ceros a la
+   izquierda, y un valor que no pase de 9007199254740991 (2^53 − 1, el
+   mayor entero que JavaScript representa exacto).
+2. Si no la cumple, muestra «Cliente no encontrado» **sin llamar a la
+   API**.
+3. Si la cumple, pide `GET /customers/` seguido de ese mismo texto, y la
+   respuesta del backend decide (2.4).
+
+*Por qué no se convierte*: en la API un cliente tiene una sola dirección
+(índice de specs, «Identificadores»), y JavaScript convierte `01`, `+1`,
+`1.0` o un `1` con un espacio en el número 1: el cliente 1 tendría varias
+direcciones en el frontend. *Por qué el filtro*: salvo la limitación que
+sigue, todo lo que rechaza lo rechaza también el backend (`not_an_integer`
+u `out_of_range`), así que no cambia lo que ve el usuario; evita construir
+una URL con un texto arbitrario y garantiza que el `id` que después viaja
+en el cuerpo de la proyección y del guardado es exacto. **Limitación**: un
+cliente con un `id` entre 2^53 y 2^63 − 1, que el backend admite, no puede
+abrirse desde el frontend. Solo puede existir si se inserta a mano en la
+base de datos. Está propuesta como limitación conocida y **pendiente de
+que el Tech Lead la acepte**.
+
 **Nombres de país y de plan (`GET /meta`).** `/meta` se pide **una vez, al
 arrancar la aplicación**, y se guarda en memoria durante la sesión. Las
 cuatro vistas que muestran un país o un plan (panel, alta, detalle y
@@ -144,12 +168,17 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   tipo y total. El desglose por tramos va en un bloque desplegable.
 - Los importes se muestran en la divisa elegida (2.6).
 - Si `simulation_count` es mayor que el número de simulaciones recibidas, se
-  indica: «Se muestran las 50 últimas de *N*».
+  indica: «Se muestran las *M* últimas de *N*», donde *M* es el número de
+  simulaciones recibidas y *N*, `simulation_count`. *Por qué no un 50
+  escrito*: el límite de 50 es del backend (SPEC-03, 2.4), que devuelve las
+  de `id` más alto, la última guardada primero; el frontend cuenta lo que
+  recibe.
 - Sin simulaciones: mensaje y enlace al simulador.
-- Si `GET /customers/{id}` responde `404` con `customer_not_found`, o `422`
-  porque el `id` de la ruta no es válido (`/clientes/abc`, `/clientes/0`):
-  vista «Cliente no encontrado», con enlace al panel. Cualquier otro error
-  se muestra como dice 2.7, no con esa vista.
+- Vista «Cliente no encontrado», con enlace al panel, en tres casos: el
+  `id` de la ruta no tiene la forma de 2.1 (`/clientes/abc`,
+  `/clientes/01`, `/clientes/0`), y entonces no se llama a la API;
+  `GET /customers/{id}` responde `404` con `customer_not_found`; o responde
+  `422`. Cualquier otro error se muestra como dice 2.7, no con esa vista.
 - **Responsive**: a 375 px, una columna y sin desplazamiento horizontal; en
   escritorio, las tarjetas del historial en varias columnas.
 
@@ -160,10 +189,17 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Al abrir el simulador se pide el cliente. **Mientras el cliente no se ha
   cargado no se pide ninguna proyección**, aunque el valor inicial de
   usuarios sea válido y hayan pasado los 200 ms; la primera se pide cuando
-  llega el cliente. Si responde `404` con `customer_not_found`, o `422` por
-  un `id` no válido, se muestra la vista «Cliente no encontrado» y no se
-  pide ninguna proyección. Lo mismo si una proyección o un guardado
+  llega el cliente. Si el `id` de la ruta no tiene la forma de 2.1 (y
+  entonces el cliente no se pide), o el cliente responde `404` con
+  `customer_not_found` o `422`, se muestra la vista «Cliente no encontrado»
+  y no se pide ninguna proyección. Lo mismo si una proyección o un guardado
   responde `404` `customer_not_found`.
+- **El `customer_id` de la proyección y del guardado es el `id` del cliente
+  cargado**, el que devolvió `GET /customers/{id}`, no el texto de la ruta.
+- **Qué es un valor válido en los tres campos numéricos**: un número entero
+  (`Number.isInteger`) dentro de los límites del campo; el campo vacío no
+  es válido. Se envía como número JSON sin decimales, que es lo único que
+  el backend admite (SPEC-02, 4; SPEC-03, 4.1).
 - El simulador muestra el nombre de la empresa y el **nombre del país** del
   cliente, tomado de `/meta` («España»), no su código. Si `/meta` falla,
   muestra el error con «Reintentar» (2.1).
@@ -191,6 +227,12 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Tras un `201` se navega al detalle, donde la simulación nueva aparece la
   primera. Lo que se muestra de ella es lo que devolvió el servidor, no la
   proyección.
+- **Un `422` de la proyección o del guardado** se muestra como el del alta
+  (2.3): cada error junto a su campo si el campo está en el formulario
+  (`active_users`, `storage_gb`, `estimated_api_calls`) y en el aviso
+  general si no lo está (`customer_id` o un `unknown_field`). No debería
+  llegar, porque la ayuda usa los mismos límites; si llega, los valores se
+  conservan y, en la proyección, se retiran los importes.
 - Cualquier otro error al guardar se muestra, con el aviso que le
   corresponde por su `code` (2.7), sin perder los valores del formulario.
 
@@ -335,7 +377,8 @@ SPEC-03, «Operación del backend».
 | E-12 | Cuando se abre el detalle de un cliente existente, el sistema deberá mostrar sus datos y una tarjeta por cada simulación recibida, en el orden de la API. | R-11 |
 | E-13 | Cuando el cliente no tiene simulaciones, el sistema deberá mostrar un mensaje y un enlace al simulador. | R-11 |
 | E-14 | Mientras el cliente tiene más simulaciones de las recibidas, el sistema deberá indicar cuántas se muestran y cuántas hay. | R-11 |
-| E-15 | Si la petición del cliente responde `404` con `customer_not_found`, o `422` por un `id` de ruta no válido, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel, tanto en el detalle como en el simulador. | R-11, R-17 |
+| E-15 | Si el `id` de la ruta no tiene la forma de 2.1, o la petición del cliente responde `404` con `customer_not_found` o `422`, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel, tanto en el detalle como en el simulador. | R-11, R-17 |
+| E-47 | El sistema deberá pedir el cliente con el texto del `id` de la ruta, sin convertirlo en número, y no deberá pedirlo cuando ese texto no tiene la forma de 2.1. | R-11, A14 |
 | E-16 | El sistema deberá mostrar el detalle sin desplazamiento horizontal a 375 px de ancho. | R-11 |
 
 ### Simulador
@@ -354,6 +397,8 @@ SPEC-03, «Operación del backend».
 | E-23 | Mientras la proyección del valor actual no esté disponible, haya un campo no válido o se esté guardando, el sistema deberá mantener desactivado el botón de guardar. | R-12 |
 | E-24 | Cuando el guardado responde `201`, el sistema deberá navegar al detalle del cliente. | R-05, R-11 |
 | E-25 | Si el guardado falla con un error distinto de `customer_not_found`, entonces el sistema deberá mostrar el error y conservar los valores del formulario. | R-17 |
+| E-48 | Si la proyección o el guardado responde `422`, entonces el sistema deberá mostrar cada error junto a su campo cuando el campo está en el formulario, y en el aviso general cuando no lo está. | A14, R-17 |
+| E-49 | El sistema deberá enviar como `customer_id` de la proyección y del guardado el `id` del cliente cargado, y los valores de los campos numéricos como números JSON enteros. | R-12, A14 |
 
 ### Divisas
 
@@ -526,7 +571,11 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | Cambiar almacenamiento o llamadas | 0 | La proyección no cambia |
 | Escribir `-1` o `1,5` en almacenamiento, con una proyección visible | 0 | Error junto al campo; la proyección sigue a la vista; «Guardar» desactivado |
 | Abrir `/clientes/999/simulacion` (el cliente responde `404`) | 0 | Vista «Cliente no encontrado» |
-| Abrir `/clientes/abc/simulacion` (el cliente responde `422`) | 0 | Vista «Cliente no encontrado» |
+| Abrir `/clientes/abc/simulacion` (el `id` no tiene la forma de 2.1) | 0, y tampoco se pide el cliente | Vista «Cliente no encontrado» |
+| Abrir `/clientes/7/simulacion` y proyectar | 1, con `customer_id` 7 (el `id` del cliente cargado) y `active_users` 10, los dos como números JSON | Total 121,00 EUR |
+| Escribir `15.0` en el campo de usuarios | 1, con `active_users` 15, sin decimales en el cuerpo | Total 169,40 EUR |
+| Una proyección responde `422` con `active_users` · `out_of_range` | — | El mensaje del backend junto al campo de usuarios; sin importes; «Guardar» desactivado |
+| «Guardar» con `422`: `storage_gb` · `out_of_range` y `customer_id` · `out_of_range` | — | El primero, junto al campo de almacenamiento; el segundo, en el aviso general; los valores se conservan |
 | Una proyección responde `404` `customer_not_found` | — | Vista «Cliente no encontrado» |
 | Con USD elegido, la fecha del tipo es `2026-11-12` y el navegador está en una zona con desfase negativo | 0 | Se muestra «12/11/2026», no el día anterior |
 | Cambiar la divisa a USD con 15 usuarios | 0 | Total 188,69 USD, con el tipo, su fecha y 169,40 EUR |
@@ -559,6 +608,28 @@ genéricos. Los avisos son los de la tabla de 2.7.
 | Cualquiera | Sin respuesta en 10 s | Aviso de espera agotada con «Reintentar»; el estado de error lleva `timeout` |
 | Cualquiera | El mismo `503` con otro `detail` | La interfaz no cambia: decide el `code` (E-11) |
 
+### 5.7 El `id` de la ruta
+
+Cada fila vale para el detalle (`/clientes/…`) y para el simulador
+(`/clientes/…/simulacion`). En el simulador, además, solo la primera fila
+llega a pedir una proyección. Lo que responde el backend a cada texto está
+en SPEC-01, 5.10.
+
+| Ruta | Peticiones del cliente | Interfaz |
+|---|---|---|
+| `/clientes/1` (existe) | 1, a `/customers/1` | El detalle del cliente 1 |
+| `/clientes/999` (el backend responde `404` `customer_not_found`) | 1, a `/customers/999` | «Cliente no encontrado» |
+| `/clientes/abc` | 0 | «Cliente no encontrado» |
+| `/clientes/01` | 0 | «Cliente no encontrado»: el cliente 1 solo tiene una dirección, `/clientes/1` |
+| `/clientes/+1`, `/clientes/1.0`, `/clientes/1e0`, `/clientes/1_0` y `/clientes/1%20` (un espacio detrás) | 0 | «Cliente no encontrado» |
+| `/clientes/0` y `/clientes/-1` | 0 | «Cliente no encontrado» |
+| `/clientes/١` (un dígito que no es ASCII, U+0661) | 0 | «Cliente no encontrado» |
+| `/clientes/9007199254740991` (2^53 − 1; el backend responde `404`) | 1, a `/customers/9007199254740991`, con ese texto exacto | «Cliente no encontrado» |
+| `/clientes/9007199254740993` (16 dígitos, por encima de 2^53 − 1) | 0 | «Cliente no encontrado»: JavaScript no lo representa exacto (limitación de 2.1) |
+| `/clientes/99999999999999999` (17 dígitos) | 0 | «Cliente no encontrado» |
+| `/clientes/7`, y el backend responde `422` | 1 | «Cliente no encontrado» |
+| `/clientes/7`, y el backend responde `404` `not_found` | 1 | Aviso de error inesperado (2.7), **no** «Cliente no encontrado» |
+
 ## 6. Criterios de aceptación
 
 | Id | Criterio | Requisitos |
@@ -569,8 +640,8 @@ genéricos. Los avisos son los de la tabla de 2.7.
 | CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40 |
 | CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
-| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas, `404` y `422` por `id` no válido, país y plan con los nombres de `/meta`, y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
-| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. | E-15, E-17, E-18, E-20 a E-25, E-29, E-35 a E-38, E-40 |
+| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas (55 y 50: «Se muestran las 50 últimas de 55»), `404` con `customer_not_found`, país y plan con los nombres de `/meta`, y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
+| CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-29, E-35 a E-38, E-40, E-48, E-49 |
 | CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
 | CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
 | CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada». | E-34 |
@@ -579,6 +650,7 @@ genéricos. Los avisos son los de la tabla de 2.7.
 | CA-14 | Una prueba de Playwright de principio a fin, contra el backend y el frontend reales en local, da de alta un cliente, abre el simulador, guarda una simulación y comprueba que aparece la primera en el detalle. | E-08, E-12, E-24 |
 | CA-15 | Capturas manuales de las cuatro vistas a 375 px y a 1280 px, guardadas en `04-calidad/` como complemento de CA-13. | E-16 |
 | CA-16 | Tests de los servicios de `core/` y de las cuatro vistas reproducen cada fila de 5.6, comprobando el aviso que se muestra, que hay «Reintentar» y el `code` del estado de error. | E-11, E-42, E-43 |
+| CA-17 | Tests del detalle y del simulador reproducen cada fila de 5.7, comprobando el número de peticiones del cliente y la URL exacta de cada una. | E-15, E-47 |
 
 **Sobre CA-12 a CA-15**: CA-12 es una revisión del evaluador y CA-15 una
 comprobación manual; ninguna de las dos la hace el oráculo. CA-13 y CA-14 se
@@ -658,3 +730,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A3 (no se tarifican; se registran y se muestran). Cabecera y apartado 9 actualizados; la consulta queda cerrada. Motivo: registrar la fuente del supuesto. Sin cambios en reglas, requisitos, criterios ni casos; la spec sigue en `borrador` |
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-01, DV-02, DV-10 y DV-11), propuesta por la IA y pendiente de la revisión del Tech Lead. **Errores genéricos del backend, por su `code`**: tabla nueva en 2.7 con el aviso de cada uno; el `503` `service_unavailable` tiene un aviso propio, distinto del de error inesperado; el `400`, el `415`, el `405`, el `404` `not_found` y un código desconocido muestran el de error inesperado y dejan su `code` en el estado de error; `tax_rate_not_defined` se trata como `internal_error`. «Cliente no encontrado» se decide por `customer_not_found` y no por el estado `404`, también al guardar (2.4, 2.5, E-15, E-25 y E-37). Requisitos nuevos E-42 y E-43, tabla 5.6, CA-16 y la fila de «Guardar» de 5.5 partida en dos. Motivo: esta spec se escribió el día 12 y el backend fijó el 13 que cualquier endpoint que lee la base de datos responde `503`, que el frontend debe tratar distinto del `500` (índice de specs); la spec no nombraba ninguno de esos errores, y decidía una vista por el estado `404` cuando ese estado tiene dos códigos |
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-03, DV-06 y DV-09, y la parte del alta de DV-02 y DV-08), propuesta por la IA y pendiente de la revisión del Tech Lead. **Alta**: tabla en 2.3 con lo que la ayuda comprueba de cada campo y lo que deja al backend; del email, solo que no esté vacío, que no pase de 254 caracteres y que tenga una `@` que no esté en un extremo, sin el validador de email del framework ni el del navegador; el identificador se mide sin recortar; ningún campo lleva `maxlength`; un texto con un *surrogate* suelto no se envía; los valores se envían como están escritos; el `id` del cliente creado sale del cuerpo del `201`; y la forma de `errors` (un error por campo, en el orden del contrato). Requisitos nuevos E-44, E-45 y E-46, catorce filas en 5.4, CA-05 y D-13. Motivo: «forma básica del email» no decía qué se comprueba, y el validador de Angular 21.2.26 rechaza direcciones que el backend acepta desde la regla nueva del email del día 13 (SPEC-01, 2.1); el backend mide el identificador antes de normalizar; un *surrogate* suelto responde `400` desde el día 13; y CORS no expone la cabecera `Location` |
+| 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-04, DV-05 y DV-13, y la parte del simulador de DV-03), propuesta por la IA y pendiente de la revisión del Tech Lead. **El `id` de la ruta**: el frontend no lo convierte en número; si no es de 1 a 16 dígitos ASCII sin ceros a la izquierda o pasa de 2^53 − 1, muestra «Cliente no encontrado» sin llamar, y si lo es, pide el cliente con ese mismo texto (2.1, 2.4, 2.5, E-15, E-47 nuevo, tabla 5.7 y CA-17). `/clientes/abc` y `/clientes/01` muestran «Cliente no encontrado». **Detalle**: el aviso del historial dice el número de simulaciones recibidas, no un 50 escrito (2.4 y CA-07). **Simulador**: el `customer_id` es el `id` del cliente cargado, un campo numérico válido es un entero dentro de sus límites que se envía como número JSON, y un `422` de la proyección o del guardado se muestra junto a su campo (2.5, E-48 y E-49 nuevos, cinco filas en 5.5 y CA-08). Motivo: el backend fijó el día 13 que el `id` de la ruta tiene una sola forma (índice de specs), y JavaScript convierte `01`, `+1` y `1.0` en 1 y redondea por encima de 2^53 − 1, así que un frontend que convirtiera el texto daría varias direcciones a un cliente o pediría otro. Deja una limitación, dicha en 2.1 y pendiente de que el Tech Lead la acepte: un `id` entre 2^53 y 2^63 − 1 no puede abrirse desde el frontend |
