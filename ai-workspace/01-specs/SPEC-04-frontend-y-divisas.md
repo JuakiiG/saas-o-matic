@@ -43,9 +43,10 @@ EUR.
 **El `id` de la ruta (`/clientes/:id`).** El frontend **nunca convierte
 ese texto en número** para pedir el cliente:
 
-1. Comprueba su forma: de 1 a 16 dígitos ASCII (`0` a `9`), sin ceros a la
-   izquierda, y un valor que no pase de 9007199254740991 (2^53 − 1, el
-   mayor entero que JavaScript representa exacto).
+1. Comprueba su forma: de 1 a 16 dígitos ASCII (`0` a `9`), **el primero
+   distinto de `0`**, y un valor que no pase de 9007199254740991 (2^53 − 1,
+   el mayor entero que JavaScript representa exacto). Así quedan fuera
+   tanto `01` como el `0` solo.
 2. Si no la cumple, muestra «Cliente no encontrado» **sin llamar a la
    API**.
 3. Si la cumple, pide `GET /customers/` seguido de ese mismo texto, y la
@@ -208,11 +209,14 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   de `id` más alto, la última guardada primero; el frontend cuenta lo que
   recibe.
 - Sin simulaciones: mensaje y enlace al simulador.
-- Vista «Cliente no encontrado», con enlace al panel, en tres casos: el
+- Vista «Cliente no encontrado», con enlace al panel, en dos casos: el
   `id` de la ruta no tiene la forma de 2.1 (`/clientes/abc`,
-  `/clientes/01`, `/clientes/0`), y entonces no se llama a la API;
-  `GET /customers/{id}` responde `404` con `customer_not_found`; o responde
-  `422`. Cualquier otro error se muestra como dice 2.7, no con esa vista.
+  `/clientes/01`, `/clientes/0`), y entonces no se llama a la API; o
+  `GET /customers/{id}` responde `404` con `customer_not_found`. Cualquier
+  otro error se muestra como dice 2.7, no con esa vista. **También un
+  `422`**: todo `id` que pasa el filtro es válido para el backend, así que
+  un `422` en esta llamada solo puede venir de un defecto del frontend (un
+  parámetro de consulta de más, por ejemplo) y es un error inesperado.
 - **Responsive**: a 375 px, una columna y sin desplazamiento horizontal; en
   escritorio, las tarjetas del historial en varias columnas.
 
@@ -225,7 +229,7 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   usuarios sea válido y hayan pasado los 200 ms; la primera se pide cuando
   llega el cliente. Si el `id` de la ruta no tiene la forma de 2.1 (y
   entonces el cliente no se pide), o el cliente responde `404` con
-  `customer_not_found` o `422`, se muestra la vista «Cliente no encontrado»
+  `customer_not_found`, se muestra la vista «Cliente no encontrado»
   y no se pide ninguna proyección. Lo mismo si una proyección o un guardado
   responde `404` `customer_not_found`.
 - **El `customer_id` de la proyección y del guardado es el `id` del cliente
@@ -352,7 +356,7 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 |---|---|---|
 | `503` `service_unavailable` | `service_unavailable` | Aviso de servicio no disponible: «El servicio no está disponible en este momento. Inténtalo de nuevo dentro de unos minutos.», con «Reintentar» |
 | `500` `internal_error` o `tax_rate_not_defined` | El recibido | Aviso de error inesperado: «Se ha producido un error inesperado.», con «Reintentar» |
-| `400` `malformed_request`, `415` `unsupported_media_type`, `405` `method_not_allowed`, `404` `not_found` o un `422` `validation_error` en el buscador | El recibido | El aviso de error inesperado, con «Reintentar» |
+| `400` `malformed_request`, `415` `unsupported_media_type`, `405` `method_not_allowed`, `404` `not_found` o un `422` `validation_error` en el buscador o en la petición del cliente | El recibido | El aviso de error inesperado, con «Reintentar» |
 | Un `code` que el frontend no conoce | El recibido | El aviso de error inesperado, con «Reintentar» |
 | Una respuesta de error sin `code` (su cuerpo no es el de la API) | `unknown_error` | El aviso de error inesperado, con «Reintentar» |
 | Ninguna respuesta | `network_error` | Aviso de falta de conexión: «No se ha podido conectar con el servidor.», con «Reintentar» |
@@ -448,7 +452,7 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | E-12 | Cuando se abre el detalle de un cliente existente, el sistema deberá mostrar sus datos y una tarjeta por cada simulación recibida, en el orden de la API. | R-11 |
 | E-13 | Cuando el cliente no tiene simulaciones, el sistema deberá mostrar un mensaje y un enlace al simulador. | R-11 |
 | E-14 | Mientras el cliente tiene más simulaciones de las recibidas, el sistema deberá indicar cuántas se muestran y cuántas hay. | R-11 |
-| E-15 | Si el `id` de la ruta no tiene la forma de 2.1, o la petición del cliente responde `404` con `customer_not_found` o `422`, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel, tanto en el detalle como en el simulador. | R-11, R-17 |
+| E-15 | Si el `id` de la ruta no tiene la forma de 2.1, o la petición del cliente responde `404` con `customer_not_found`, entonces el sistema deberá mostrar la vista «Cliente no encontrado» con un enlace al panel, tanto en el detalle como en el simulador. | R-11, R-17 |
 | E-47 | El sistema deberá pedir el cliente con el texto del `id` de la ruta, sin convertirlo en número, y no deberá pedirlo cuando ese texto no tiene la forma de 2.1. | R-11, A14 |
 | E-16 | El sistema deberá mostrar el detalle sin desplazamiento horizontal a 375 px de ancho. | R-11 |
 
@@ -502,7 +506,7 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | `GET /meta` | Al arrancar la aplicación. La usan el panel, el detalle y el simulador (nombres de país y plan) y el alta (desplegables) | SPEC-01, 4.4 | `200`. No lee la base de datos y no responde `503` |
 | `GET /customers?q=` | Panel | SPEC-01, 4.3 | `200` con `items`; `503` |
 | `POST /customers` | Alta | SPEC-01, 4.1 | `201`; `422` con `errors`; `409` `customer_already_exists`; `503` |
-| `GET /customers/{id}` | Detalle, simulador (nombre y país del cliente) | SPEC-01, 4.2, y SPEC-03, 4.2 | `200`; `404` `customer_not_found`; `422`; `503` |
+| `GET /customers/{id}` | Detalle, simulador (nombre y país del cliente) | SPEC-01, 4.2, y SPEC-03, 4.2 | `200`; `404` `customer_not_found`; `422` (el frontend no debería provocarlo: 2.1); `503` |
 | `POST /pricing/quote` | Simulador | SPEC-02, 4 | `200`; `404` `customer_not_found`; `422`; `500` `tax_rate_not_defined`; `503` |
 | `POST /simulations` | Simulador | SPEC-03, 4.1 | `201`; `404` `customer_not_found`; `422`; `500` `tax_rate_not_defined`; `503` |
 
@@ -749,7 +753,7 @@ genéricos. Los avisos son los de la tabla de 2.7.
 | `POST /pricing/quote` o `POST /simulations` | `500` `tax_rate_not_defined` | Aviso de error inesperado; el estado de error lleva `tax_rate_not_defined` |
 | Cualquiera | `400` `malformed_request`, `415` `unsupported_media_type` o `405` `method_not_allowed` | Aviso de error inesperado con «Reintentar»; el estado de error lleva el `code` recibido |
 | `GET /customers/{id}` | `404` `not_found` | Aviso de error inesperado, **no** «Cliente no encontrado» |
-| `GET /customers` | `422` `validation_error` | Aviso de error inesperado con «Reintentar» |
+| `GET /customers` o `GET /customers/{id}` | `422` `validation_error` | Aviso de error inesperado con «Reintentar»; en la del cliente, **no** «Cliente no encontrado» |
 | Cualquiera | Un `code` que el frontend no conoce (`teapot`) | Aviso de error inesperado; el estado de error lleva `teapot` |
 | Cualquiera | `502` con un cuerpo que no es JSON | Aviso de error inesperado; el estado de error lleva `unknown_error` |
 | Cualquiera | Error de red | Aviso de falta de conexión con «Reintentar»; el estado de error lleva `network_error` |
@@ -760,8 +764,15 @@ genéricos. Los avisos son los de la tabla de 2.7.
 
 Cada fila vale para el detalle (`/clientes/…`) y para el simulador
 (`/clientes/…/simulacion`). En el simulador, además, solo la primera fila
-llega a pedir una proyección. Lo que responde el backend a cada texto está
-en SPEC-01, 5.10.
+llega a pedir una proyección.
+
+Lo que responde el backend a `1`, `999`, `abc`, `01`, `+1`, `1.0`, `1_0`,
+el `1` con un espacio, `0` y `-1` está en SPEC-01, 5.10. Los demás textos
+de esta tabla no tienen fila allí y se sondearon el 2026-11-14 con el
+cliente de test: `1e0` y el dígito U+0661 responden `422` con
+`not_an_integer`; 9007199254740991, 9007199254740993 y el de 17 dígitos,
+`404` con `customer_not_found`, porque para el backend son `id` válidos de
+clientes que no existen.
 
 | Ruta | Peticiones del cliente | Interfaz |
 |---|---|---|
@@ -775,7 +786,7 @@ en SPEC-01, 5.10.
 | `/clientes/9007199254740991` (2^53 − 1; el backend responde `404`) | 1, a `/customers/9007199254740991`, con ese texto exacto | «Cliente no encontrado» |
 | `/clientes/9007199254740993` (16 dígitos, por encima de 2^53 − 1) | 0 | «Cliente no encontrado»: JavaScript no lo representa exacto (limitación L-06) |
 | `/clientes/99999999999999999` (17 dígitos) | 0 | «Cliente no encontrado» |
-| `/clientes/7`, y el backend responde `422` | 1 | «Cliente no encontrado» |
+| `/clientes/7`, y el backend responde `422` | 1 | Aviso de error inesperado (2.7), **no** «Cliente no encontrado» |
 | `/clientes/7`, y el backend responde `404` `not_found` | 1 | Aviso de error inesperado (2.7), **no** «Cliente no encontrado» |
 
 ## 6. Criterios de aceptación
@@ -890,3 +901,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (`04-calidad/evaluacion-spec04-01.md`, H-01, H-05 y H-09), decididas por el Tech Lead. **El EUR se formatea solo con enteros** (2.6): los euros y los céntimos se separan con una división exacta y un resto, y el importe no se divide entre 100; la regla del dinero no cambia. **Presentación**: el tipo de cambio se muestra con los decimales que trae, hasta 6; los importes de cuatro cifras, sin punto de millar, como los da `es-ES`; y los tramos se rotulan «del 1 al 10», «del 11 al 50» y «del 51 en adelante» (2.6 y 2.8). Dos filas nuevas en la tabla de importes de 5.1 (5 y 123450 céntimos) y dos tablas más, del tipo de cambio y de los rótulos. CA-01 deja de citar E-27, que un test del *pipe* no demuestra, y pasa a citar E-28 y E-29; E-27 lo citan CA-02 y CA-08, que tienen sus filas. Motivo: 2.6 decía que el importe en EUR «sale exacto de los céntimos» sin decir cómo, y lo directo era dividir entre 100, que es coma flotante sobre dinero; el formato por defecto daba `1,114` para un tipo de `1.1139`; y ninguna fila fijaba un importe de cuatro cifras ni el rótulo del último tramo |
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-02 y el caso A-01 de su respuesta), decididas por el Tech Lead. **Casos que faltaban**, sin cambiar ningún requisito: una fila en 5.3 para el orden de la API (E-03), una en 5.4 para los desplegables del alta (E-05 y E-35) y dos en 5.5, para los importes marcados como «actualizando» y para «Guardar» desactivado mientras se proyecta y mientras se guarda (E-21 y E-23). **CA-18 se parte**: el test de `core/` comprueba que la petición no lleva ninguna cabecera puesta por la aplicación, y CA-14, la prueba de principio a fin, que las peticiones reales pasan el CORS del backend; CA-14 cita E-52. Motivo: CA-04, CA-05 y CA-08 dicen reproducir «cada fila» y esos cinco requisitos no tenían ninguna; y CA-18 pedía mirar unas cabeceras que Angular añade al enviar y que un test con sus utilidades no ve |
 | 2026-11-14 | Decisión del Tech Lead sobre la propuesta C-01 de la sesión 06: la limitación del `id` por encima de 2^53 − 1 queda aceptada como **limitación conocida L-06**, con fila en `04-calidad/limitaciones-conocidas.md`. 2.1 la cita en lugar de darla por pendiente; también la fila de 5.7, una frase en 4.3 y el apartado 9. Sin cambios en reglas, requisitos ni casos. Motivo: JavaScript no representa exactos los enteros por encima de 2^53 − 1, y un cliente con un `id` mayor solo existiría insertado a mano |
+| 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-06, H-07 y H-11), decididas por el Tech Lead. **Se quita la rama del `422` del cliente**: con el filtro del `id`, un `422` de `GET /customers/{id}` solo puede venir de un defecto del frontend y se muestra como error inesperado; «Cliente no encontrado» queda para dos casos, el `id` que no pasa el filtro y el `404` con `customer_not_found` (2.4, 2.5, 2.7, 4.1, E-15 y una fila de 5.6 y otra de 5.7). **La forma del `id`** dice «el primero distinto de `0`», que excluye el `0` solo (2.1). **La remisión de 5.7 a SPEC-01 5.10** dice qué textos están allí y cuáles se sondearon aparte, con su resultado. Motivo: la rama del `422` venía de antes del filtro y contradecía la tabla de 2.7; «sin ceros a la izquierda» no descartaba el `0`, y los casos esperan que no se pida; y cinco textos de 5.7 no tienen fila en SPEC-01 5.10 |
