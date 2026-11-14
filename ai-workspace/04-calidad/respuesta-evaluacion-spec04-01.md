@@ -4,9 +4,9 @@
 |---|---|
 | **Fecha** | 2026-11-14 |
 | **Responde a** | [`evaluacion-spec04-01.md`](evaluacion-spec04-01.md), que queda intacto (commit `e03fc80`) |
-| **Decide** | Tech Lead. **Ningún hallazgo está decidido**: la columna «Qué propone la IA» es una propuesta y **no se ha aplicado ninguna** |
+| **Decide** | Tech Lead. **Decididos el 2026-11-14 (sesión 06): apartado 4.** Los apartados 1 a 3 quedan como se escribieron antes de decidir; la columna «Qué propone la IA» es la propuesta, no lo que se hizo |
 | **Escribe** | IA (Claude Code) |
-| **Estado de la spec** | SPEC-04 está como la evaluó el informe (`86b2a96`, dentro de `8516f5c`), en `borrador` y sin ninguna corrección posterior |
+| **Estado de la spec** | El informe evaluó SPEC-04 en `86b2a96` (dentro de `8516f5c`). Las correcciones decididas están aplicadas en los commits del apartado 4, el último `066bcc8` |
 
 Procedimiento: el informe del evaluador no se modifica; se responde a cada
 hallazgo. Antes de responder, la IA ha repetido por su cuenta lo que cada
@@ -77,12 +77,32 @@ por la presencia de `code`, no por el tipo de contenido.
 
 ## 4. Decisión del Tech Lead
 
-Pendiente. Se rellena cuando el Tech Lead decida cada fila.
+Decidido por el Tech Lead el 2026-11-14, a las 10:34, al revisar la sesión
+06. Ningún hallazgo se rechaza. Todos los commits son de SPEC-04 y llevan
+su fila de historial; cada uno se hizo con el oráculo en verde (20
+comprobaciones correctas, 0 con fallo y 4 inactivas, las del frontend).
 
 | Hallazgo | Decisión | Commit |
 |---|---|---|
-| H-01 a H-12 | — | — |
-| A-01 a A-03 | — | — |
+| H-01 | La recomendada: el EUR se formatea solo con enteros; la regla del dinero no cambia | `5830543` |
+| H-02 | De acuerdo con la propuesta: cuatro filas nuevas en 5.3, 5.4 y 5.5 | `c682749` |
+| H-03 | De acuerdo: se quita la frase sobre U+FFFD | `bba612c` |
+| H-04 | De acuerdo: la fila del buscador de 4.1 recoge el `422` | `bba612c` |
+| H-05 | De acuerdo: CA-01 deja de citar E-27; lo citan CA-02 y CA-08 | `5830543` |
+| H-06 | La recomendada: se quita la rama del `422` del cliente, que pasa a error inesperado. Tocó 2.4, 2.5, 2.7, 4.1, E-15 y una fila de 5.6 y otra de 5.7; CA-17 no hizo falta tocarlo, porque remite a las filas de 5.7 | `a7e00e5` |
+| H-07 | De acuerdo: «de 1 a 16 dígitos ASCII, el primero distinto de `0`» | `a7e00e5` |
+| H-08 | De acuerdo: al superar el límite se cancela la búsqueda en curso y el aviso sale al momento | `bba612c` |
+| H-09 | (1) El tipo de cambio, con los decimales que trae, hasta 6. (2) Los importes de cuatro cifras, como los da `es-ES`, con fila en 5.1. (3) Los rótulos de tramo propuestos | `5830543` |
+| H-10 | De acuerdo: D-13 recoge el *surrogate* suelto | `32393b1` |
+| H-11 | De acuerdo: la remisión de 5.7 dice qué textos están en SPEC-01 5.10 y cuáles se sondearon aparte. SPEC-01 no se toca | `a7e00e5` |
+| H-12 | Decide el texto. **Lo que añade el Tech Lead a la propuesta**: el campo es de texto con `inputmode="numeric"`, no un control numérico del navegador | `066bcc8` |
+| A-01 | Se parte el criterio: CA-18 comprueba que la petición no lleva cabeceras de la aplicación, y CA-14, que las peticiones reales pasan el CORS | `c682749` |
+| A-02 | Vale con CA-16. No se pide nada más al evaluador | Sin cambios |
+| A-03 | Nada que tocar | Sin cambios |
+
+Las propuestas C-01 a C-05, que no salen de esta evaluación sino de la
+bitácora de la sesión 06, se decidieron a la vez y están en esa bitácora
+con sus commits.
 
 ## 5. Lo que esta respuesta no demuestra
 
