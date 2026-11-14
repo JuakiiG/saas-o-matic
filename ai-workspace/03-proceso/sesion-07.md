@@ -97,6 +97,11 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 18:54 | `5b40374` | **Cambio 1 (AA-01)**, 18:53:47: test de «con `/meta` en error, el cliente y la primera proyección se piden igual» (E-38, E-40; SPEC-04, 2.5). **Nació en verde a las 18:50:58** (78 de 78 en su fichero). **Mutación** en `simulador.ts`: el `customerId` que arranca la proyección se dejó en `null` mientras `/meta` no estuviera en datos. A las 18:51:27 falla **solo el test nuevo**, por aserción (`expected +0 to be 1`: ninguna petición de proyección), y los otros 77 pasan: nada más vigilaba la regla. Mutación deshecha (`git diff` vacío en `simulador.ts`) y oráculo con código de salida 0 antes del commit |
 | 18:58 | `dc8abf6` | **Cambio 2 (AA-03)**, 18:55:59: la regla 7 de `CLAUDE.md` dice ya que el commit depende del código de salida del oráculo, nunca de un filtro de su salida, con su porqué. Oráculo con código de salida 0 antes |
 | 18:58 | *(este commit)* | **Cambio 3 (AA-04)**: los tres recorridos, rotos a propósito uno a uno entre las 18:56:20 y las 18:58:00 (tabla en el apartado 3). **Los tres fallan por aserción con su mutación y solo ellos**; las mutaciones están deshechas (`git status` sin ningún fichero de `frontend/`) y los tres vuelven a verde a las 18:58:30. No hay código que cambie: el commit es el de esta anotación |
+| 19:08 | `b19a028` | El commit de la fila anterior, 19:00:34. Oráculo con código de salida 0 antes |
+| 19:08 | `c4fea53` | **Cambio 4 (AA-05)**, 19:03:12: (a) a (g) escritas en SPEC-04, 2.6, con su fila de historial. Sin requisitos ni filas nuevas: precisan E-27, E-29 y E-30. Oráculo con código de salida 0 antes |
+| 19:08 | `f8eba25` | **Cambio 5 (AA-07)**, 19:05:06: la fila de 5.2 del cuerpo que no es JSON dice que el estado es de error y que el `code` puede ser `invalid_rates` o `unknown_error`, con una nota bajo la tabla e historial. **El test no se ha tocado**: sigue afirmando `invalid_rates`, que es lo que ocurre con las utilidades de test y cabe en la fila. Oráculo con código de salida 0 antes |
+| 19:08 | `a8f9be9` | **Cambio 7 (aspecto)**, 19:07:57: el aviso del fallo de los tipos, compacto. Solo `currency-selector.css` (detalle y lo no comprobado, en el apartado 3). Oráculo con código de salida 0 antes. **No se ha visto en un navegador** |
+| 19:08 | *(este commit)* | **Cambio 6 (AA-06)**: anotado para la fase de QA el caso de Playwright con una zona horaria de desfase negativo (apartado 6). Es la lectura de la IA de una frase que llegó cortada |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -382,6 +387,27 @@ contra los recorridos, no contra toda la batería: es de esperar que
 primer intento de la segunda mutación de CA-03 (18:57:46) no compilaba
 (`TS2367`) y no cuenta: un fallo de compilación no es un rojo.
 
+**Cambio 7 (aspecto): qué se hizo.** Solo `currency-selector.css`; ni la
+plantilla ni ningún test cambian. Tres cosas: (1) el elemento del selector
+deja de tener caja propia (`display: contents`), de modo que la cabecera
+coloca por separado el selector y el aviso: el selector se queda en la
+línea del nombre y el aviso baja a una fila suya, a todo el ancho; (2) el
+aviso es una fila con el texto y «Reintentar» lado a lado, y donde el texto
+no cabe en una línea se parte junto al botón en vez de mandarlo debajo;
+(3) menos relleno, el párrafo sin margen y en letra pequeña. El botón
+conserva su altura mínima de 44 px, que es la de todo lo que se pulsa.
+
+**La IA no ha visto nada de esto**: no abre el navegador y jsdom no calcula
+la disposición. Sus cuentas, hechas a mano y **sin comprobar**, dicen que a
+375 px la cabecera con el aviso pasaría de 232 px a unos 150 px (el texto
+en tres líneas de letra pequeña junto al botón) y que en escritorio el
+aviso queda en una sola línea. Lo que tiene que mirar el Tech Lead: la
+altura real a 375 px; que el selector sigue en la primera línea, con y sin
+aviso, y también mientras dice «Cargando tipos…»; que nada desborda a lo
+ancho; el aviso a todo el ancho en escritorio, que es un cambio respecto a
+antes; y que `display: contents` no cambia lo que anuncia un lector de
+pantalla.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -516,6 +542,7 @@ De la parada 1:
 | Aprobar o cambiar las precisiones AA-01 a AA-09. Las que más pesan: AA-03 (el commit en rojo, enmendado), AA-02 (un test admitido que cambió), AA-04 (tests de recorrido que nacieron en verde) y AA-05 (lo que la spec no dice de las divisas; lo admitido habría que escribirlo en SPEC-04). Siguen sin aprobar U-01 a U-05 de la sesión 06 | A decidir por el Tech Lead |
 | **Fase de QA, Playwright**: necesita los puertos 8000 y 4200 libres, porque el frontend llama al backend en `127.0.0.1:8000` y el backend solo admite por CORS el origen `http://localhost:4200`; o una configuración propia, con otros dos puertos, otra URL del backend para el frontend, otro origen admitido en el backend y su propia base de datos. Hoy los dos puertos los ocupan los servidores del Tech Lead, y la IA no puede usarlos (regla de las 17:36) | Fase de QA; a decidir por el Tech Lead cuál de las dos |
 | Fase de QA, Playwright: el caso de frontera de L-09 (un valor en el límite se guarda y uno un paso más allá se rechaza), además de CA-13 y CA-14 | Fase de QA |
+| **Fase de QA, Playwright: un caso con una zona horaria de desfase negativo** (AA-06, mandado por el Tech Lead a las 18:48; la frase llegó cortada y esta es la lectura de la IA). El navegador del test se abre en una zona al oeste de UTC (por ejemplo `America/Los_Angeles`, con la opción de zona horaria de Playwright), se elige otra divisa y se comprueba que la fecha del tipo que se ve es la misma que trae la respuesta, sin pasar al día anterior: con `2026-11-12`, «tipo del 12/11/2026». Es la fila de 5.5 que los tests de Vitest no reproducen cambiando la zona | Fase de QA |
 | Fase de QA: evaluador independiente del frontend (CA-12), capturas a 375 px y 1280 px (CA-15) y README | Fase de QA |
 | **Para el README de la raíz**: los 27 avisos moderados de `npm audit` que verá quien instale el frontend (L-07), con las demás limitaciones; y que el frontend se abre en `http://localhost:4200`, no en `127.0.0.1:4200` | Cuando se escriba el README |
 | L-07: volver a mirar los avisos al adelantar la fecha de corte de `frontend/.npmrc` (ESLint 10.15.0 cumple la semana el 2026-11-20) y, como muy tarde, antes de cerrar la fase de QA | Fase de QA |
