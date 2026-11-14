@@ -59,7 +59,12 @@ al tocar esa parte del repo.
    nombre. *Por qué: parar por nombre mata también procesos ajenos.*
 9. **Edición del código**: los ficheros de `backend/` y `frontend/` se editan
    con las herramientas de edición, no con `sed` ni con scripts. *Por qué:
-   el hook del control de specs solo ve esas herramientas.*
+   el hook del control de specs solo ve esas herramientas.* **Excepción,
+   solo en `frontend/` y solo estas órdenes**: `ng new`, `ng generate`,
+   `npm install`, `npm ci` y `prettier --write` escriben desde la terminal.
+   *Por qué: son los generadores del CLI, el gestor de paquetes y un
+   formateador; no escriben lógica de la aplicación (decisión P-05 de la
+   sesión 06).*
 
 ## Arquitectura
 
