@@ -8,6 +8,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/panel/panel').then((file) => file.Panel),
   },
   {
+    path: 'clientes/nuevo',
+    loadComponent: () => import('./features/alta/alta').then((file) => file.Alta),
+  },
+  {
     path: '**',
     loadComponent: () => import('./features/not-found/not-found').then((file) => file.NotFound),
   },

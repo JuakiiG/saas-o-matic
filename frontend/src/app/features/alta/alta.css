@@ -1,0 +1,6 @@
+/* Placement only. One column at every width; the form does not stretch past a readable line. */
+.alta-form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 32rem;
+}

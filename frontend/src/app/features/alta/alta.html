@@ -1,0 +1,107 @@
+<h1>Nuevo cliente</h1>
+
+<app-meta-gate>
+  <form class="alta-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="alta-name">Nombre de la empresa</label>
+      <input
+        id="alta-name"
+        type="text"
+        autocomplete="organization"
+        spellcheck="false"
+        formControlName="company_name"
+        [attr.aria-invalid]="fields().company_name.invalid"
+        [attr.aria-describedby]="fields().company_name.errorId"
+      />
+      @if (fields().company_name.error; as message) {
+        <p id="alta-name-error" class="field-error" role="alert">{{ message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="alta-tax-id">Identificador fiscal</label>
+      <input
+        id="alta-tax-id"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        formControlName="tax_id"
+        [attr.aria-invalid]="fields().tax_id.invalid"
+        [attr.aria-describedby]="fields().tax_id.errorId"
+      />
+      @if (fields().tax_id.error; as message) {
+        <p id="alta-tax-id-error" class="field-error" role="alert">{{ message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="alta-email">Email de contacto</label>
+      <input
+        id="alta-email"
+        type="text"
+        inputmode="email"
+        autocomplete="email"
+        autocapitalize="none"
+        spellcheck="false"
+        formControlName="contact_email"
+        [attr.aria-invalid]="fields().contact_email.invalid"
+        [attr.aria-describedby]="fields().contact_email.errorId"
+      />
+      @if (fields().contact_email.error; as message) {
+        <p id="alta-email-error" class="field-error" role="alert">{{ message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="alta-country">País</label>
+      <select
+        id="alta-country"
+        formControlName="country"
+        [attr.aria-invalid]="fields().country.invalid"
+        [attr.aria-describedby]="fields().country.errorId"
+      >
+        <option value="" disabled>Elige un país</option>
+        @for (country of countries(); track country.code) {
+          <option [value]="country.code">{{ country.name }}</option>
+        }
+      </select>
+      @if (fields().country.error; as message) {
+        <p id="alta-country-error" class="field-error" role="alert">{{ message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="alta-plan">Plan</label>
+      <select
+        id="alta-plan"
+        formControlName="plan"
+        [attr.aria-invalid]="fields().plan.invalid"
+        [attr.aria-describedby]="fields().plan.errorId"
+      >
+        <option value="" disabled>Elige un plan</option>
+        @for (plan of plans(); track plan.code) {
+          <option [value]="plan.code">{{ plan.name }}</option>
+        }
+      </select>
+      @if (fields().plan.error; as message) {
+        <p id="alta-plan-error" class="field-error" role="alert">{{ message }}</p>
+      }
+    </div>
+
+    @if (notice(); as current) {
+      <app-form-notice
+        [messages]="current.messages"
+        [retryable]="current.retryable"
+        (retry)="submit()"
+      />
+    }
+    @if (saving()) {
+      <app-loading-notice label="Guardando el cliente…" />
+    }
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="busy()">Guardar</button>
+      <a routerLink="/">Cancelar</a>
+    </div>
+  </form>
+</app-meta-gate>

@@ -26,6 +26,12 @@ describe('Routes · SPEC-04/E-34', () => {
     expect(page.querySelector('main h1')?.textContent?.trim()).toBe('Clientes');
   });
 
+  it('should show the sign-up when the route is /clientes/nuevo (SPEC-04 2.1)', async () => {
+    const page = await open('/clientes/nuevo');
+
+    expect(page.querySelector('main h1')?.textContent?.trim()).toBe('Nuevo cliente');
+  });
+
   it('should show the not found page when the route matches no view', async () => {
     const page = await open('/esta-ruta-no-existe');
 

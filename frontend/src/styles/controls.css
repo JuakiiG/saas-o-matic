@@ -21,8 +21,22 @@ select {
   background: var(--color-surface);
 }
 
-input[aria-invalid='true'] {
+input[aria-invalid='true'],
+select[aria-invalid='true'] {
   border-color: var(--color-danger);
+}
+
+/* A control of a form with its label above and its error below. */
+.field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
 }
 
 button,

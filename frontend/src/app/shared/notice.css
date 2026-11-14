@@ -16,3 +16,8 @@
   margin-bottom: var(--space-3);
   color: var(--color-danger);
 }
+
+/* A notice without a button after its texts ends flush. */
+.notice-error p:last-child {
+  margin-bottom: 0;
+}
