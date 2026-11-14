@@ -579,3 +579,62 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     }
   });
 });
+
+// The rows of the focus of SPEC-04, 5.4.
+describe('Alta · el foco tras un envío con errores · SPEC-04/E-56 (CA-05)', () => {
+  function focused(): string {
+    return document.activeElement?.id ?? '';
+  }
+
+  it.each<[string, Partial<Values>, keyof Values]>([
+    ['neither a name nor an email', { name: '', email: '' }, 'name'],
+    ['only the email wrong', { email: 'sin-arroba.example' }, 'email'],
+    ['no plan', { plan: '' }, 'plan'],
+  ])(
+    'should move the focus to the first field with help when the form has %s',
+    (_case, values, field) => {
+      const page = open();
+
+      send(page, values);
+
+      expect(posts(page).length).toBe(0);
+      expect(focused()).toBe(CONTROL_IDS[field]);
+    },
+  );
+
+  it.each<[string, FieldErrorBody[], keyof Values]>([
+    ['the name and the email', [SHORT_NAME, BAD_EMAIL], 'name'],
+    ['the email and the name, in that order', [BAD_EMAIL, SHORT_NAME], 'name'],
+    ['the tax id', [BAD_FORMAT], 'taxId'],
+    ['the plan', [BAD_PLAN], 'plan'],
+  ])(
+    'should move the focus to the first field of the form with an error when a 422 rejects %s',
+    (_case, errors, field) => {
+      const page = open();
+      send(page);
+
+      reject(page, 422, invalid(errors));
+
+      expect(focused()).toBe(CONTROL_IDS[field]);
+    },
+  );
+
+  it.each<[string, number, object]>([
+    ['409 customer_already_exists', 409, CONFLICT],
+    ['500 internal_error', 500, { code: 'internal_error' }],
+    [
+      'a 422 with only an unknown field',
+      422,
+      invalid([fieldError('zeta', 'unknown_field', 'Campo no reconocido.')]),
+    ],
+  ])('should leave the focus where it was when it answers %s', (_case, status, body) => {
+    const page = open();
+    send(page);
+    const before = document.activeElement;
+
+    reject(page, status, body);
+
+    expect(notice(page)).not.toBe('');
+    expect(document.activeElement).toBe(before);
+  });
+});

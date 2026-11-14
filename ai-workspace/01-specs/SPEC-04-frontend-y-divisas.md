@@ -207,6 +207,15 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   abrir el formulario. Las opciones que se pueden elegir son exactamente
   las de `/meta`. *Por qué*: sin ella el desplegable enseñaría el primer
   país como si alguien lo hubiera elegido.
+- **Tras un envío con errores, el foco va al primer campo con error**, en
+  el orden del formulario (nombre, identificador, email, país y plan):
+  tanto si la ayuda ha impedido el envío como si el backend responde `422`
+  con errores de campo. El foco llega cuando el mensaje ya está en
+  pantalla, para que el lector de pantalla lo lea con el campo. Si el
+  error no tiene campo en el formulario (el `409`, un error general o un
+  `422` cuyos errores van todos al aviso general), el foco no se mueve.
+  *Por qué*: quien usa el teclado o un lector de pantalla llega
+  directamente a lo que tiene que corregir.
 - **El mensaje del backend junto a un campo se retira cuando ese campo
   cambia**, aquí y en el simulador. *Por qué*: lo que el backend juzgó ya
   no es lo que está escrito.
@@ -543,6 +552,7 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | E-44 | El sistema deberá comprobar del email, en la validación de ayuda, únicamente que tras recortarlo no está vacío, no supera los 254 caracteres y contiene una `@` que no está en un extremo, sin usar el validador de email del framework ni el del navegador. | A17 |
 | E-45 | Si un campo de texto del alta contiene un *surrogate* suelto, entonces el sistema deberá mostrar el error junto al campo y no enviar el alta. | A14 |
 | E-46 | El sistema deberá enviar el nombre y el email del alta recortados (solo U+0020) y el identificador tal como está escrito, sin normalizar ninguno, y tomar el `id` del cliente creado del cuerpo del `201`. | A17 |
+| E-56 | Si un envío del alta termina con errores en algún campo del formulario, porque la ayuda lo impide o porque el backend responde `422`, entonces el sistema deberá llevar el foco al primer campo con error, en el orden del formulario. | A14, R-17 |
 ### Detalle
 
 | Id | Requisito | Cubre |
@@ -793,6 +803,11 @@ funcionando.
 | Escribir un nombre de un solo carácter sin haber pulsado «Guardar» | Ningún mensaje de ayuda: calla hasta el primer intento de envío |
 | `422` en el identificador y, después, se cambia el identificador | El mensaje del backend se retira |
 | `500`, se cambia el nombre y se pulsa «Reintentar» | Se envía el nombre nuevo: «Reintentar» envía lo que el formulario tiene en ese momento |
+| «Guardar» sin nombre y sin email | No se envía; el foco va al nombre, el primer campo con error |
+| «Guardar» con solo el email mal | No se envía; el foco va al email |
+| `422` con errores en `company_name` y `contact_email` | El foco va al nombre |
+| `422` con un error en `plan` | El foco va al desplegable del plan |
+| `409`, `500` o un `422` con solo un `unknown_field` | El foco no se mueve: ningún campo tiene error |
 | Nombre de 61 caracteres `𝔸` (U+1D538; 61 puntos de código, 122 unidades UTF-16) | La ayuda no lo rechaza: se envía |
 | Nombre de 121 caracteres `ñ` | Error de ayuda junto al campo; no se envía |
 | Nombre `A` rodeado de espacios U+0020 | Error de ayuda: un carácter tras recortar; no se envía |
@@ -914,7 +929,7 @@ clientes que no existen.
 | CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-27, E-30 |
 | CA-03 | Un test comprueba que, con la API de divisas en error, el panel, el detalle y el simulador muestran sus datos en EUR. | E-28, E-30 |
 | CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones, el parámetro `q` y la URL de cada una, y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40, E-50, E-51, E-53, E-54 |
-| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46 |
+| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46, E-56 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
 | CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas (55 y 50: «Se muestran las 50 últimas de 55»), `404` con `customer_not_found`, país y plan con los nombres de `/meta`, un país que `/meta` no trae (se muestra su código), y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
 | CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-27, E-29, E-35 a E-38, E-40, E-48, E-49, E-55 |
@@ -1030,3 +1045,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 1 del frontend en el navegador (sesión 07): **el corrector ortográfico del navegador se desactiva** en el campo de búsqueda y en el nombre, el identificador fiscal y el email del alta (2.8). Sin requisitos nuevos. Motivo: el corrector subrayaba el texto del buscador como si fuera una falta |
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 2 del frontend (sesión 07, precisiones Z-01, Z-05 y Z-17): **reglas del alta y del simulador que la IA había puesto en el código sin que la spec las dijera**. «Reintentar» de un formulario envía lo que el formulario tiene en ese momento, pasando otra vez por la ayuda (2.7, una fila en 5.4 y otra en 5.5). **Alta** (2.3 y tres filas en 5.4): la ayuda calla hasta el primer intento de envío; cada desplegable lleva una primera opción desactivada que no se puede elegir; el mensaje del backend junto a un campo se retira cuando ese campo cambia; y «Guardar» sigue desactivado tras el `201`. **Simulador** (2.5 y dos filas en 5.5): la primera proyección y la de «Reintentar» no esperan los 200 ms; durante la espera los importes ya se marcan «actualizando» y «Guardar» está desactivado; la ayuda de los tres campos habla desde el primer carácter, porque la proyección es en vivo; con un texto no válido el deslizante se queda donde estaba; y con `/meta` en error el cliente y la proyección se piden igual. El Tech Lead admite además la regla que la IA había añadido en el cambio de Y-07 y él no había visto: un `422` que no deja nada que mostrar es un error inesperado (2.3). Sin requisitos nuevos: precisan E-05, E-07, E-09, E-18, E-22, E-23, E-25 y E-36. Motivo: una regla no puede estar solo en el código |
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 2 del frontend (sesión 07, precisiones Z-08 y Z-11): **CA-16 cambia de alcance**. Los servicios de `core/` reproducen cada fila de 5.6; cada vista, o el servicio que carga sus datos, una fila por cada aviso distinto. Antes pedía cada fila también en las cuatro vistas. Sin cambios en 5.6, en los requisitos ni en los tests: es lo que los tests ya hacían. Motivo: el reparto de `code` a aviso vive en `core/` y se prueba allí fila a fila |
+| 2026-11-14 | Mejora mandada por el Tech Lead al revisar la parada 2 del frontend (sesión 07): **tras un envío del alta con errores, el foco va al primer campo con error**, en el orden del formulario, tanto si lo impide la ayuda como si el backend responde `422`; sin campo con error, el foco no se mueve (2.3, requisito nuevo E-56, cinco filas en 5.4 y CA-05). Motivo: quien usa el teclado o un lector de pantalla llega directamente a lo que tiene que corregir |

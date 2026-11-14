@@ -2,6 +2,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   inject,
   signal,
@@ -25,15 +28,15 @@ const CUSTOMER_ALREADY_EXISTS = 'customer_already_exists';
 const NOTICE_ALREADY_EXISTS = 'Ya existe un cliente con ese identificador fiscal en ese país.';
 const NO_META: MetaData = { countries: [], plans: [] };
 
-/** Where the template shows the error of each field: the `id` its control points to. */
-const ERROR_IDS: Readonly<Record<AltaField, string>> = {
-  company_name: 'alta-name-error',
-  tax_id: 'alta-tax-id-error',
-  contact_email: 'alta-email-error',
-  country: 'alta-country-error',
-  plan: 'alta-plan-error',
+/** The `id` of the control of each field in the template, in the order of the form. */
+const CONTROL_IDS: Readonly<Record<AltaField, string>> = {
+  company_name: 'alta-name',
+  tax_id: 'alta-tax-id',
+  contact_email: 'alta-email',
+  country: 'alta-country',
+  plan: 'alta-plan',
 };
-const FIELDS = Object.keys(ERROR_IDS) as AltaField[];
+const FIELDS = Object.keys(CONTROL_IDS) as AltaField[];
 
 /** A sign-up that has been sent: what the form held then and the state of its request. */
 interface Submission {
@@ -70,6 +73,8 @@ export class Alta {
   private readonly metaStore = inject(MetaStore);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
+  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
 
   // The controls are named after the fields of the contract, so an error of the backend finds
   // its control by its `field`.
@@ -117,6 +122,7 @@ export class Alta {
     this.attempted.set(true);
     const written = this.form.getRawValue();
     if (hasHelp(altaHelp(written, this.meta()))) {
+      this.focusFirstError();
       return;
     }
     this.api
@@ -131,7 +137,27 @@ export class Alta {
       // The id is the one of the body: CORS does not expose `Location` (E-46). A navigation
       // that fails is not swallowed: the rejection reaches the error handler of the application.
       void this.router.navigateByUrl(`/clientes/${submission.state.data.id}`);
+    } else if (submission.state.status === 'error') {
+      this.focusFirstError();
     }
+  }
+
+  /**
+   * After an attempt that ended in errors, the focus goes to the first field with one, in the
+   * order of the form (E-56). It waits for the next render, so that the message is already on
+   * screen and a screen reader reads it with its field. An error with no field moves nothing.
+   */
+  private focusFirstError(): void {
+    afterNextRender(
+      () => {
+        const field = FIELDS.find((candidate) => this.fields()[candidate].invalid);
+        if (field !== undefined) {
+          const control = this.host.nativeElement.querySelector(`#${CONTROL_IDS[field]}`);
+          (control as HTMLElement | null)?.focus();
+        }
+      },
+      { injector: this.injector },
+    );
   }
 
   private toFieldViews(): Readonly<Record<AltaField, FieldView>> {
@@ -147,7 +173,7 @@ export class Alta {
   private toFieldView(field: AltaField): FieldView {
     const error = this.shownHelp(field) ?? this.backendMessage(field) ?? '';
     const invalid = error !== '';
-    return { error, invalid, errorId: invalid ? ERROR_IDS[field] : null };
+    return { error, invalid, errorId: invalid ? `${CONTROL_IDS[field]}-error` : null };
   }
 
   /** The help stays quiet until the first attempt to send: an empty form is not a mistake. */
