@@ -13,6 +13,7 @@ import { Remote } from '../../core/remote';
 import { codePointLength } from '../../core/text';
 import { ErrorNotice } from '../../shared/error-notice';
 import { LoadingNotice } from '../../shared/loading-notice';
+import { MetaGate } from '../../shared/meta-gate';
 
 /** A search is sent this long after the last change of the text (SPEC-04/E-02). */
 const DEBOUNCE_MS = 300;
@@ -65,7 +66,7 @@ function listViewOf(search: Search | null): ListView {
 /** Panel: the customer search and the way into the sign-up (SPEC-04, 2.2). */
 @Component({
   selector: 'app-panel',
-  imports: [ReactiveFormsModule, RouterLink, ErrorNotice, LoadingNotice],
+  imports: [ReactiveFormsModule, RouterLink, ErrorNotice, LoadingNotice, MetaGate],
   templateUrl: './panel.html',
   styleUrl: './panel.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,8 +80,6 @@ export class Panel {
   private readonly requests = new Subject<SearchRequest>();
   private readonly search = signal<Search | null>(null);
 
-  protected readonly metaError = computed(() => errorOf(this.meta.state()));
-  protected readonly metaLoading = computed(() => this.meta.state().status === 'loading');
   protected readonly tooLong = computed(() => isTooLong(this.text()));
   protected readonly searchErrorId = computed(() => (this.tooLong() ? 'panel-search-error' : null));
   protected readonly listView = computed(() => listViewOf(this.search()));
@@ -101,10 +100,6 @@ export class Panel {
       .pipe(takeUntilDestroyed())
       .subscribe((text) => this.requests.next({ text, waitMs: DEBOUNCE_MS }));
     this.requests.next({ text: '', waitMs: 0 });
-  }
-
-  protected retryMeta(): void {
-    this.meta.retry();
   }
 
   /** Repeats the search that failed, with the same text and without waiting. */

@@ -3,11 +3,7 @@
   <a class="button" routerLink="/clientes/nuevo">Nuevo cliente</a>
 </div>
 
-@if (metaError(); as error) {
-  <app-error-notice [error]="error" (retry)="retryMeta()" />
-} @else if (metaLoading()) {
-  <app-loading-notice label="Cargando…" />
-} @else {
+<app-meta-gate>
   <div class="search" role="search">
     <label for="panel-search">Buscar cliente</label>
     <input
@@ -75,4 +71,4 @@
       }
     }
   </section>
-}
+</app-meta-gate>
