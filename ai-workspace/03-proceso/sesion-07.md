@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-14 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | **Parada 3 alcanzada (18:07): divisas y cierre; el frontend de la spec está completo, a falta de la fase de QA.** Antes, los cuatro cambios de la revisión de la parada 2, un commit cada uno (`f86aea0` a `7695a79`). Después, la pieza 7 en tres commits (`ecfc5dd`, `4fa0f2c` y `bd835f3`) y la 8 en uno (`7f094ec`). 534 tests en 19 ficheros, 99,32 % de líneas; oráculo con 23 correctas y 1 inactiva (Playwright). **Dos cosas que el Tech Lead tiene que conocer**: un commit se hizo con el oráculo en rojo por un fallo de formato y se enmendó tres minutos después (AA-03), y un test ya admitido cambió porque E-26 añade una petición al arranque (AA-02). **Nada de la pieza 7 se ha visto en un navegador.** Quedan sin aprobar las precisiones AA-01 a AA-09. · **Antes, parada 2 (17:01), aprobada a las 17:36: alta, detalle y simulador en EUR**, en siete commits de código de una tarea cada uno (`e33c800` a `35a2a2f`), todos con el oráculo en verde antes y, los que traen comportamiento nuevo, con su test visto en rojo antes. 458 tests en 15 ficheros, 99,18 % de líneas. Las cuatro rutas de la spec existen. **Un error de la IA que el Tech Lead tiene que conocer (Z-14)**: al comprobar el recorrido con `curl`, la IA escribió en la base de datos local del Tech Lead un cliente y una simulación, porque su backend de prueba no arrancó y las peticiones fueron al que el Tech Lead tenía abierto. **Nada se ha visto en un navegador.** Quedan sin aprobar las precisiones Z-01 a Z-20. · **Antes, parada 1 (15:27), aprobada a las 16:03**: el frontend existe, con el armazón, lo común de `core/`, `/meta` y el panel**, en nueve commits de una tarea cada uno (`0e9966e` a `29d1e11`), todos con su test visto en rojo antes y el oráculo en verde. 221 tests, 98,83 % de líneas. Antes, un commit de documentación (`6b66622`: el margen de npm en ADR-007, las versiones en ADR-001 y la limitación L-07). **Un imprevisto**: al activarse las comprobaciones del frontend, el oráculo no podía ejecutar `npm` en Windows con Python 3.12.0; la IA paró sin tocar `scripts/`, el Tech Lead decidió que lo corrigiera y se hizo con test en rojo y commit propio (`6859f61`). El oráculo queda con 23 comprobaciones correctas y 1 inactiva (Playwright). El fichero de bloqueo tiene 650 versiones, ninguna posterior a la fecha de corte. **Nada se ha visto en un navegador**: eso es la parada. Quedan sin aprobar las precisiones Y-01 a Y-13 |
+| **Resultado** | **Sesión cerrada (19:13). El frontend de SPEC-04 está completo y las tres paradas, aprobadas por el Tech Lead tras probarlas en Chrome; falta la fase de QA, que va en una sesión nueva.** Tras aprobar la parada 3 (18:48), sus ocho cambios, un commit cada uno y cada commit dependiendo del código de salida del oráculo (`5b40374` a `2cdc3e8`): un test más con su mutación (AA-01), la regla del código de salida en `CLAUDE.md` (AA-03), los tres recorridos rotos a propósito (AA-04), dos cambios de SPEC-04 (AA-05 y AA-07), el aviso de la cabecera compacto y dos anotaciones para la fase de QA. 535 tests en 19 ficheros, 99,32 % de líneas; oráculo con 23 correctas y 1 inactiva (Playwright). **Lo que el Tech Lead tiene que mirar**: el CSS del aviso no se ha visto en un navegador, y dos de los ocho cambios se han leído de frases que llegaron cortadas. · **Antes, parada 3 alcanzada (18:07) y aprobada a las 18:48: divisas y cierre.** Antes, los cuatro cambios de la revisión de la parada 2, un commit cada uno (`f86aea0` a `7695a79`). Después, la pieza 7 en tres commits (`ecfc5dd`, `4fa0f2c` y `bd835f3`) y la 8 en uno (`7f094ec`). 534 tests en 19 ficheros, 99,32 % de líneas; oráculo con 23 correctas y 1 inactiva (Playwright). **Dos cosas que el Tech Lead tiene que conocer**: un commit se hizo con el oráculo en rojo por un fallo de formato y se enmendó tres minutos después (AA-03), y un test ya admitido cambió porque E-26 añade una petición al arranque (AA-02). **Nada de la pieza 7 se ha visto en un navegador.** Quedan sin aprobar las precisiones AA-01 a AA-09. · **Antes, parada 2 (17:01), aprobada a las 17:36: alta, detalle y simulador en EUR**, en siete commits de código de una tarea cada uno (`e33c800` a `35a2a2f`), todos con el oráculo en verde antes y, los que traen comportamiento nuevo, con su test visto en rojo antes. 458 tests en 15 ficheros, 99,18 % de líneas. Las cuatro rutas de la spec existen. **Un error de la IA que el Tech Lead tiene que conocer (Z-14)**: al comprobar el recorrido con `curl`, la IA escribió en la base de datos local del Tech Lead un cliente y una simulación, porque su backend de prueba no arrancó y las peticiones fueron al que el Tech Lead tenía abierto. **Nada se ha visto en un navegador.** Quedan sin aprobar las precisiones Z-01 a Z-20. · **Antes, parada 1 (15:27), aprobada a las 16:03**: el frontend existe, con el armazón, lo común de `core/`, `/meta` y el panel**, en nueve commits de una tarea cada uno (`0e9966e` a `29d1e11`), todos con su test visto en rojo antes y el oráculo en verde. 221 tests, 98,83 % de líneas. Antes, un commit de documentación (`6b66622`: el margen de npm en ADR-007, las versiones en ADR-001 y la limitación L-07). **Un imprevisto**: al activarse las comprobaciones del frontend, el oráculo no podía ejecutar `npm` en Windows con Python 3.12.0; la IA paró sin tocar `scripts/`, el Tech Lead decidió que lo corrigiera y se hizo con test en rojo y commit propio (`6859f61`). El oráculo queda con 23 comprobaciones correctas y 1 inactiva (Playwright). El fichero de bloqueo tiene 650 versiones, ninguna posterior a la fecha de corte. **Nada se ha visto en un navegador**: eso es la parada. Quedan sin aprobar las precisiones Y-01 a Y-13 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -104,6 +104,8 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 19:08 | *(este commit)* | **Cambio 6 (AA-06)**: anotado para la fase de QA el caso de Playwright con una zona horaria de desfase negativo (apartado 6). Es la lectura de la IA de una frase que llegó cortada |
 | 19:11 | `5b6a2a4` | El commit de la fila anterior, 19:10:44. Oráculo con código de salida 0 antes |
 | 19:11 | *(este commit)* | **Cambio 8 (Playwright)**: anotada para la fase de QA la configuración propia que ha decidido el Tech Lead (apartado 6), con tres cosas que quedan por decidir antes de montarla. **No se ha montado nada**: ni puertos, ni ficheros de entorno, ni Playwright |
+| 19:13 | `2cdc3e8` | El commit de la fila anterior, 19:13:05. Oráculo con código de salida 0 antes |
+| 19:13 | *(este commit)* | **Cierre de la sesión 07.** Totales a las 19:13: 535 tests en 19 ficheros y 99,32 % de líneas. La IA para aquí; la fase de QA va en una sesión nueva. La hora de este commit no puede estar en el propio commit: se ve con `git log` |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -369,6 +371,35 @@ de QA va en una sesión nueva.
 
 ### Cambios de la revisión de la parada 3 · lo hecho (desde las 18:50)
 
+Un commit por cambio. En todos, la salida del oráculo se guardó en un
+fichero y el commit solo se hizo con su código de salida en 0.
+
+| # | Cambio | Commit | Qué toca |
+|---|---|---|---|
+| 1 | AA-01, test con su mutación | `5b40374` | `simulador.spec.ts` |
+| 2 | AA-03, regla del código de salida | `dc8abf6` | `CLAUDE.md`, regla 7 |
+| 3 | AA-04, recorridos rotos a propósito | `b19a028` | Solo esta bitácora: no cambia código |
+| 4 | AA-05, reglas de las divisas | `c4fea53` | SPEC-04, 2.6 e historial |
+| 5 | AA-07, cuerpo que no es JSON | `f8eba25` | SPEC-04, 5.2 e historial |
+| 6 | AA-06, caso de zona horaria para QA | `5b6a2a4` | Esta bitácora, apartado 6 |
+| 7 | Aviso de la cabecera, compacto | `a8f9be9` | `currency-selector.css` |
+| 8 | Configuración propia de Playwright, anotada | `2cdc3e8` | Esta bitácora, apartado 6 |
+
+Los commits van en el orden en que se hicieron, no en el de la lista del
+Tech Lead: el 7 salió antes que el 6.
+
+Precisiones de la IA sobre estos cambios, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| AB-01 | El test de AA-01 afirma más que la regla: además de que el cliente y la proyección se piden con `/meta` en error, que al reintentar `/meta` el simulador aparece ya cargado y **sin pedir otra proyección** | Es lo que hace el código y lo que da sentido a pedir antes; la spec dice lo primero, no lo segundo |
+| AB-02 | En el cambio 3 se hicieron **cuatro** mutaciones, no tres: CA-03 vigila dos cosas (el selector limitado a EUR y el aviso) y se rompió cada una | Con una sola, la mitad del recorrido quedaba sin demostrar. La parte de «importes en EUR» sigue sin mutación (dicho debajo) |
+| AB-03 | En el cambio 4, la IA añadió a lo mandado dos frases que no estaban en (a) a (g): que **el panel no lleva ni el tipo ni el aviso de orientativos**, y que «Reintentar» **repite la petición de los tipos** | Las dos son lo que hace el código; sin la primera, «una vez por vista» dejaba el panel sin decir |
+| AB-04 | En el cambio 5, además de la fila, hay **una nota bajo la tabla de 5.2** que dice que se exige el estado de error y no un `code` | La fila sola no decía de qué depende cuál de los dos códigos sale |
+| AB-05 | El cambio 7 usa `display: contents` en el elemento del selector, y el aviso pasa a ocupar **todo el ancho de la cabecera también en escritorio** | Sin ello el selector bajaba a la segunda línea con el aviso. Es una decisión de aspecto que el Tech Lead no ha visto |
+| AB-06 | Los cambios 3, 6 y 8 no tienen código: su commit es el de la anotación en esta bitácora, así que **esta bitácora tiene cuatro commits en esta ronda** en lugar de uno al cerrar | «Un commit por cambio», leído al pie de la letra |
+| AB-07 | La regla del cambio 2 se ha puesto en la regla 7 (commits), no en la 4 (oráculo) | Habla de cuándo se hace un commit |
+
 **Cambio 3 (AA-04): qué se rompió y qué falló.** Cada mutación se aplicó
 sola, se ejecutó `app.journeys.spec.ts` (3 tests) y se deshizo antes de la
 siguiente. En las cuatro falla un test y pasan los otros dos.
@@ -458,7 +489,41 @@ Cambios de la revisión de la parada 2 y piezas 7 y 8:
 | Qué importes se verán con esos tipos | `node -e`, sin escribir nada (18:07) | 10 usuarios: 134,09 USD, 101,11 GBP y 111,93 CHF. 15 usuarios: 187,73 USD, 141,55 GBP y 156,70 CHF; en USD, base 155,15 e impuesto 32,58, que suman 187,73 (hoy no hay céntimo de diferencia) |
 | Ningún servidor de la IA | `netstat` (17:01 y después) | La IA no ha arrancado nada desde las 17:01. El 8000 y el 4200 son del Tech Lead |
 
+Cambios de la revisión de la parada 3:
+
+| Qué | Cómo | Resultado |
+|---|---|---|
+| El test de AA-01 nace en verde | `ng test --no-watch --include` sobre `simulador.spec.ts` (18:50:58) | 78 de 78 |
+| El test de AA-01 muerde | El mismo, con la mutación en `simulador.ts` (18:51:27) | 1 fallo, el nuevo, por aserción (`expected +0 to be 1`); 77 correctos. Mutación deshecha después |
+| Los tres recorridos muerden | `ng test --no-watch --include` sobre `app.journeys.spec.ts`, con cada una de las cuatro mutaciones (18:56:20 a 18:58:00) | En las cuatro, 1 fallo por aserción, el del recorrido que vigila lo roto, y 2 correctos (tabla del apartado 3) |
+| Las mutaciones están deshechas | `git status --short` y los recorridos otra vez (18:58:30) | Ningún fichero de `frontend/` modificado; 3 de 3 |
+| Oráculo antes de cada commit | `uv run scripts/check.py` con la salida a un fichero y su código de salida, antes de los ocho commits de las 18:53 a las 19:13 y del de este cierre | Código 0 en todos: 23 correctas, 0 con fallo y 1 inactiva (Playwright) |
+| Caracteres invisibles en `frontend/src` | Recorrido con Python de los `.ts`, `.html` y `.css` (18:52, tras el test nuevo) | Ninguno |
+| La palabra que hace saltar el hook de las specs | `grep -c` en SPEC-04 tras editarla (19:01) | Las mismas 4 apariciones de antes: ninguna edición la añade |
+| Totales al cerrar | `npm run test:ci` y `npm run build` (19:13) | 535 tests en 19 ficheros, correctos; 99,32 % de líneas (587 de 591); 296,74 kB iniciales, 0,18 kB más por el CSS del aviso |
+| Ningún servidor de la IA | — | La IA no ha arrancado ningún proceso que escuche en un puerto en esta ronda, ni ha tocado los del Tech Lead ni `backend/data/` |
+
 ## 5. No verificado
+
+Al cerrar la sesión (19:13). De lo de las paradas, que sigue debajo tal
+como se escribió, el Tech Lead dice haber visto en Chrome los recorridos de
+las tres, también a 375 px y con la API de divisas real y caída; la IA no
+ha visto nada de eso.
+
+- **El aviso compacto de la cabecera (cambio 7)**: nada. Ni su altura a
+  375 px, ni que el texto y «Reintentar» queden en una línea, ni la
+  cabecera en escritorio, ni «Cargando tipos…» junto al selector, ni el
+  lector de pantalla con `display: contents`. Las cuentas del apartado 3
+  son a mano.
+- **Que las mutaciones de CA-18 y CA-09 las detecte también el resto de la
+  batería**: solo se ejecutó el fichero de los recorridos.
+- **La parte de «importes en EUR» del recorrido de CA-03** no se ha roto a
+  propósito.
+- **La lectura de las dos frases cortadas** de los cambios 6 y 7.
+- **Nada de Playwright**: ni la configuración propia, ni el caso de la
+  zona horaria, ni el de frontera de L-09. La comprobación del oráculo
+  sigue inactiva.
+- Ningún evaluador ha mirado el frontend (CA-12).
 
 Al cerrar la parada 3 (18:07), además de lo de las paradas 1 y 2, que sigue
 debajo:
@@ -540,8 +605,10 @@ De la parada 1:
 |---|---|
 | ~~Parada 1~~ | Hecha y aprobada a las 16:03, con Y-01 a Y-13 admitidas y sus cuatro cambios aplicados |
 | ~~Parada 2~~ | Hecha y aprobada a las 17:36, con Z-01 a Z-20 admitidas y sus cuatro cambios aplicados. Los dos registros de Z-14 se quedan en la base local del Tech Lead |
-| **Parada 3**: revisar las piezas 7 y 8 y probar el selector de divisa en el navegador, también con la API pública bloqueada | Ahora; es del Tech Lead |
-| Aprobar o cambiar las precisiones AA-01 a AA-09. Las que más pesan: AA-03 (el commit en rojo, enmendado), AA-02 (un test admitido que cambió), AA-04 (tests de recorrido que nacieron en verde) y AA-05 (lo que la spec no dice de las divisas; lo admitido habría que escribirlo en SPEC-04). Siguen sin aprobar U-01 a U-05 de la sesión 06 | A decidir por el Tech Lead |
+| ~~Parada 3~~ | Hecha y aprobada a las 18:48, con AA-01 a AA-09 y U-01 a U-05 admitidas y sus ocho cambios aplicados |
+| **Mirar en el navegador el aviso compacto de la cabecera** (cambio 7), a 375 px y en escritorio, con la API de divisas bloqueada | Del Tech Lead; la IA no lo ha visto |
+| Aprobar o cambiar las precisiones AB-01 a AB-07 y confirmar la lectura de las dos frases cortadas (cambios 6 y 7) | A decidir por el Tech Lead |
+| **Fase de QA, en una sesión nueva**: lo que sigue en esta tabla | Mañana, según el Tech Lead |
 | **Fase de QA, Playwright: configuración propia** (decidido por el Tech Lead a las 18:48; **hoy no se monta, queda anotado**). (1) **Otros dos puertos**, ni el 8000 ni el 4200, **comprobados libres** con `netstat` antes de arrancar, y la espera comprueba el PID que escucha (regla de las 17:36). (2) **Una configuración de compilación del frontend** con la URL del backend en ese puerto: un fichero de entorno más y su entrada en `angular.json`, junto a las dos que hay (`production` y `development`). (3) **En el backend, `CORS_ORIGINS` y `DATABASE_PATH` propios**: el origen del frontend en su puerto de prueba y una base de datos temporal, fuera de `backend/data/`, que se crea y se borra con la prueba. (4) **La API de divisas, interceptada** por Playwright con la respuesta de SPEC-04, 4.2: un test no llama a un servicio externo. *Por qué*: el 8000 y el 4200 son los del Tech Lead, y una prueba que escribe no puede ir contra su base (Z-14). Sustituye a la fila anterior, que dejaba dos opciones | Fase de QA |
 | Fase de QA, **a decidir antes de montarlo**, porque lo anterior lo toca: la configuración nueva del frontend y su fichero de entorno son código de `frontend/` que SPEC-04 no nombra (2.9 dice que las URL están en los ficheros de entorno y que el frontend se sirve desde `http://localhost:4200`, no desde otro puerto); qué dos puertos; y si el oráculo arranca y para los dos servidores con `--e2e` o lo hace Playwright (`webServer`), que es tocar `scripts/` o no | A decidir por el Tech Lead al empezar la fase de QA |
 | Fase de QA, Playwright: el caso de frontera de L-09 (un valor en el límite se guarda y uno un paso más allá se rechaza), además de CA-13 y CA-14 | Fase de QA |
