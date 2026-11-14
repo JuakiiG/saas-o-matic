@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-14 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | SPEC-04 puesta al día con el contrato final del backend y **aprobada por el Tech Lead** (a las 10:22, al cerrar la primera parte, seguía en `borrador`); en esta sesión no se ha escrito código. **Paso 1**: 14 divergencias (DV-01 a DV-14) entre SPEC-04 y lo que el backend hace, sondeadas con el cliente de test y contrastadas con su `/openapi.json`; las de más peso, el `503` que la spec no nombraba, un validador de email del framework que rechazaría direcciones que el backend acepta y un `id` de ruta que, convertido en número, daría varias direcciones a un cliente. **Paso 2**: la API de divisas responde `200` con la misma forma y `access-control-allow-origin: *`, también en sábado; Angular CLI 21.2.29 (publicado el 2026-10-28) y los paquetes 21.2.26 cumplen el margen de una semana, y la 21.2.30 queda fuera. **Paso 3**: seis commits de SPEC-04 (52 requisitos, eran 41; 18 criterios, eran 15; tablas nuevas 5.6 y 5.7 y apartado 4.3) y uno aparte para ADR-001, ADR-003 y ADR-007, sin cambiar ninguna decisión; dos rectificaciones de la IA dentro de la sesión (S-03 y S-04). **Paso 4**: pasada del evaluador (Opus 5.5, comprobado en su registro), en solo lectura: **12 hallazgos, ninguno de severidad alta, 2 medios y 10 bajos**; ocho los introdujo la IA hoy. Informe intacto en `04-calidad/evaluacion-spec04-01.md` y respuesta, con una fila por hallazgo y tres casos más, en `04-calidad/respuesta-evaluacion-spec04-01.md`. **Segunda parte, desde las 10:34**: el Tech Lead revisa la sesión y decide los doce hallazgos, los casos A-01 a A-03 y las propuestas C-01 a C-05 (cambia una, C-04). Aplicado en siete commits con historial (`5830543` a `066bcc8`; SPEC-04 queda con 55 requisitos y 18 criterios, y `limitaciones-conocidas.md` gana L-06), más el apartado 4 de la respuesta (`22a6578`). **SPEC-04 pasa a `aprobada` a las 11:06** (`0ef98be`), en la spec y en el índice; el bloque del frontend deja de estar cerrado por el control de specs. **Plan del frontend presentado, sin escribir código ni crear el proyecto** (apartado 3): para darlo con evidencia la IA ensayó en una carpeta temporal fuera del repositorio las dos opciones de npm, la orden de creación y los umbrales del oráculo. Lo que más pesa del ensayo: ninguna de las dos opciones de npm revisa un fichero de bloqueo ya escrito; el CLI escribe los ficheros con CRLF en Windows, que el oráculo rechaza; y `npm audit` da 27 avisos moderados en herramientas de desarrollo, con una corrección (ESLint 10.15.0) que queda fuera del margen (regla 3 de ADR-007, a decidir). Oráculo en verde con 20 comprobaciones activas y 4 inactivas. Quedan sin aprobar las precisiones U-01 a U-05 y X-01 a X-10. **Sesión parada: el Tech Lead aprueba el plan antes de crear nada** |
+| **Resultado** | SPEC-04 puesta al día con el contrato final del backend y **aprobada por el Tech Lead** (a las 10:22, al cerrar la primera parte, seguía en `borrador`); en esta sesión no se ha escrito código. **Paso 1**: 14 divergencias (DV-01 a DV-14) entre SPEC-04 y lo que el backend hace, sondeadas con el cliente de test y contrastadas con su `/openapi.json`; las de más peso, el `503` que la spec no nombraba, un validador de email del framework que rechazaría direcciones que el backend acepta y un `id` de ruta que, convertido en número, daría varias direcciones a un cliente. **Paso 2**: la API de divisas responde `200` con la misma forma y `access-control-allow-origin: *`, también en sábado; Angular CLI 21.2.29 (publicado el 2026-10-28) y los paquetes 21.2.26 cumplen el margen de una semana, y la 21.2.30 queda fuera. **Paso 3**: seis commits de SPEC-04 (52 requisitos, eran 41; 18 criterios, eran 15; tablas nuevas 5.6 y 5.7 y apartado 4.3) y uno aparte para ADR-001, ADR-003 y ADR-007, sin cambiar ninguna decisión; dos rectificaciones de la IA dentro de la sesión (S-03 y S-04). **Paso 4**: pasada del evaluador (Opus 5.5, comprobado en su registro), en solo lectura: **12 hallazgos, ninguno de severidad alta, 2 medios y 10 bajos**; ocho los introdujo la IA hoy. Informe intacto en `04-calidad/evaluacion-spec04-01.md` y respuesta, con una fila por hallazgo y tres casos más, en `04-calidad/respuesta-evaluacion-spec04-01.md`. **Segunda parte, desde las 10:34**: el Tech Lead revisa la sesión y decide los doce hallazgos, los casos A-01 a A-03 y las propuestas C-01 a C-05 (cambia una, C-04). Aplicado en siete commits con historial (`5830543` a `066bcc8`; SPEC-04 queda con 55 requisitos y 18 criterios, y `limitaciones-conocidas.md` gana L-06), más el apartado 4 de la respuesta (`22a6578`). **SPEC-04 pasa a `aprobada` a las 11:06** (`0ef98be`), en la spec y en el índice; el bloque del frontend deja de estar cerrado por el control de specs. **Plan del frontend presentado, sin escribir código ni crear el proyecto** (apartado 3): para darlo con evidencia la IA ensayó en una carpeta temporal fuera del repositorio las dos opciones de npm, la orden de creación y los umbrales del oráculo. Lo que más pesa del ensayo: ninguna de las dos opciones de npm revisa un fichero de bloqueo ya escrito; el CLI escribe los ficheros con CRLF en Windows, que el oráculo rechaza; y `npm audit` da 27 avisos moderados en herramientas de desarrollo, con una corrección (ESLint 10.15.0) que queda fuera del margen (regla 3 de ADR-007, a decidir). Oráculo en verde con 20 comprobaciones activas y 4 inactivas. **Cierre, a las 14:18**: el Tech Lead aprueba el plan, decide P-01 a P-09 (amplía dos: en P-03 los avisos entran como limitación conocida L-07 y quedan apuntados para el README; en P-05 añade `npm ci`) y admite X-01 a X-10, con `015` válido. Su mensaje no nombra U-01 a U-05, que siguen sin aprobar. **Sesión cerrada sin código y sin proyecto**: el frontend se hace en la sesión 07 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -120,6 +120,7 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 11:30 | `0ef98be` | Fila escrita a las 11:30. **SPEC-04 pasa a `aprobada` (2026-11-14)**, en la spec y en el índice (11:06:58 según `git log`). El oráculo, a las 11:06, en verde, con sus tres comprobaciones de specs correctas |
 | 11:08–11:29 | — | Fila escrita a las 11:30. Lectura de los módulos del oráculo que ejecutan las comprobaciones del frontend (`checks_stack.py`, `checks_code.py`, `checks_trace.py`, `repo.py`). **Ensayo en una carpeta temporal fuera del repositorio**: las dos opciones de npm, la orden de creación con el CLI 21.2.29, la instalación con versiones exactas, la compilación, los tests con cobertura, ESLint y los finales de línea (apartado 3). Una orden de la IA fue denegada a las 11:12 y se rehízo sin borrar nada (X-07). `git status` del repositorio: solo esta bitácora |
 | 11:30 | *(este commit)* | Plan del frontend escrito en el apartado 3 y cierre de esta bitácora. **La IA para aquí**: el Tech Lead aprueba el plan antes de crear nada |
+| 14:18 | *(este commit)* | El cierre anterior es `d01f7ff` (11:34:55 según `git log`). **El Tech Lead aprueba el plan del frontend** y decide P-01 a P-09; admite X-01 a X-10 (apartado 3). Manda cerrar esta bitácora con su commit, abrir la de la sesión 07 y, antes de crear nada, llevar a ADR-007, ADR-001 y `limitaciones-conocidas.md` el mecanismo, las versiones y la fila L-07. Eso ya es de la sesión 07. **Cierre de la sesión 06** |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -634,6 +635,33 @@ Precisiones de la IA sobre la segunda parte de la sesión, **sin aprobar**:
 | X-09 | El primer patrón de ESLint de la IA para «una feature no importa de otra» no detectaba el caso. Corregido en el ensayo con una expresión regular | Sin el caso de prueba habría llegado al plan una regla que no comprueba nada |
 | X-10 | Los avisos de seguridad no se han leído enteros: título, rango afectado, gravedad y fecha, de `npm audit` y de la base de avisos de GitHub | Para decidir P-03 puede hacer falta leerlos |
 
+### Aprobación del plan por el Tech Lead (14:18)
+
+**Plan del frontend aprobado. Admitidas X-01 a X-10**; en X-01, `015` es
+válido y vale 15, así que SPEC-04 no cambia. El mensaje no nombra U-01 a
+U-05.
+
+| # | Decisión del Tech Lead | Frente a la recomendación de la IA |
+|---|---|---|
+| P-01 | `before` con fecha fija en `frontend/.npmrc`, con `save-exact=true` | Aprobada |
+| P-02 | Aprobadas las dependencias nuevas. `@playwright/test`, en la fase de QA | Aprobada |
+| P-03 | Dentro del margen, sin excepción. **Los 27 avisos de `npm audit` entran como limitación conocida (L-07)**, con su motivo y con cuándo se vuelven a mirar, y quedan apuntados para el README. Por qué: quien instale el proyecto los verá en pantalla | **Ampliada.** La IA proponía dejarlos anotados, sin decir dónde ni pensar en quien instala |
+| P-04 | Como está en la tabla | Aprobada |
+| P-05 | Admitidos desde la terminal `ng new`, `ng generate`, `npm install`, **`npm ci`** y `prettier --write`, y nada más | **Ampliada**: la IA no había puesto `npm ci` en la lista |
+| P-06 | La regla de 40 líneas se desactiva solo en los `.spec.ts`, con su motivo en la configuración y en `CLAUDE.md` | Aprobada |
+| P-07 | Sí: `prettier --check` dentro de `npm run lint` | Aprobada |
+| P-08 | Sí: `features/` sin subcarpetas | Aprobada |
+| P-09 | Las tres paradas como se proponen | Aprobada |
+
+Lo que manda para la sesión 07: abrir su bitácora (la conversación sigue
+sin `/clear`, porque el ensayo está en el contexto de la IA, y hay que
+decirlo en ella); un commit de documentación con el mecanismo y las
+versiones en ADR-007 y ADR-001 y la fila L-07; después, las piezas 0 a 3,
+una tarea, un test en rojo visto antes del código, un commit, con el
+oráculo en verde. El commit del armazón trae los tres scripts pasando, la
+comprobación del fichero de bloqueo anotada en la bitácora y `CLAUDE.md`
+al día. **Parada 1 después del panel.**
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -709,7 +737,7 @@ Actualizado a las 11:30, al cerrar la segunda parte. Lo que el cierre de las
 | Tarea | Cuándo |
 |---|---|
 | ~~Decidir cada hallazgo de la evaluación de SPEC-04 y las propuestas C-01 a C-05, admitir S-01 a S-09 y aprobar SPEC-04~~ | Hecho por el Tech Lead a las 10:34 y a las 11:06 |
-| **Aprobar o cambiar el plan del frontend** (apartado 3): las decisiones P-01 a P-09. Las que más pesan: P-01 (mecanismo del margen en npm), P-03 (los 27 avisos de `npm audit` y la regla 3 de ADR-007), P-05 (qué puede escribir en `frontend/` desde la terminal) y P-06 (la regla de 40 líneas en los `.spec.ts`) | A decidir por el Tech Lead, **antes de crear nada** |
+| *Hecho a las 14:18: plan aprobado, P-01 a P-09 decididas y X-01 a X-10 admitidas. Quedan sin aprobar U-01 a U-05. Lo que sigue en esta tabla pasa a la sesión 07.* ~~Aprobar o cambiar el plan del frontend~~ (apartado 3): las decisiones P-01 a P-09. Las que más pesan: P-01 (mecanismo del margen en npm), P-03 (los 27 avisos de `npm audit` y la regla 3 de ADR-007), P-05 (qué puede escribir en `frontend/` desde la terminal) y P-06 (la regla de 40 líneas en los `.spec.ts`) | A decidir por el Tech Lead, **antes de crear nada** |
 | Aprobar o cambiar las precisiones U-01 a U-05 y X-01 a X-10. La que más pesa es X-01 (`015` válido en el simulador): si no vale, cambia SPEC-04, que ya está aprobada | A decidir por el Tech Lead |
 | Llevar a ADR-007 y a ADR-001 el mecanismo de npm y las versiones exactas, y poner al día en `CLAUDE.md` «Qué comprueba hoy el oráculo» | Con el plan aprobado; lo primero, en commit de documentación; lo segundo, con el armazón |
 | El oráculo no comprueba las fechas del fichero de bloqueo de npm ni la trazabilidad de los tests del frontend. Cambiarlo es tocar `scripts/` | A decidir por el Tech Lead |
