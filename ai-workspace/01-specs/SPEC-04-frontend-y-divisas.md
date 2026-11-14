@@ -86,7 +86,10 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   backend** (SPEC-01, 2.12 y 4.3): en puntos de código y sobre el texto tal
   como está escrito, sin recortar. Si el texto lo supera, no se llama a la
   API, se muestra junto al campo «El texto de búsqueda admite 100
-  caracteres como máximo» y se retira la lista anterior. El campo no lleva
+  caracteres como máximo» y se retira la lista anterior. **Se cancela
+  además la búsqueda que esté en curso**, para que su respuesta no vuelva a
+  pintar la lista que se acaba de retirar, y **el aviso sale al momento**,
+  sin esperar los 300 ms: no hay petición que agrupar. El campo no lleva
   `maxlength`, que cuenta unidades UTF-16 y cortaría antes un texto que el
   backend admite.
 - **Qué se envía**: el texto tal como está escrito, sin recortar (recorta
@@ -98,17 +101,27 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - El frontend no interpreta el texto: `%`, `_`, `\` y las comillas viajan
   como texto y el backend los busca literalmente (SPEC-01, 5.9).
 - Un *surrogate* suelto no se puede codificar en una URL: antes de enviar
-  se sustituye por U+FFFD, que no coincide con ningún cliente. Cómo se
-  detecta está en 2.3.
+  se sustituye por U+FFFD, y se muestra lo que devuelva la API para ese
+  texto. Cómo se detecta está en 2.3.
 - Cada resultado muestra el nombre, el identificador fiscal, el país y el
   plan, y enlaza con el detalle. El país y el plan se muestran **con los
   nombres de `GET /meta`** («España», «Profesional»), no con sus códigos. Si
   `/meta` falla, el panel muestra el error con «Reintentar» en lugar del
   buscador y de la lista (2.1).
 - Cuatro estados visibles de la petición: cargando, error con botón
-  «Reintentar», sin resultados («No hay clientes que coincidan») y lista.
-  El aviso del límite del texto no es un estado de la petición: con él no
-  hay petición.
+  «Reintentar», sin resultados y lista. El aviso del límite del texto no es
+  un estado de la petición: con él no hay petición.
+- **Sin resultados tiene dos mensajes**, según lo que se pidió. Si la
+  petición llevaba `q`: «No hay clientes que coincidan». Si era el listado
+  inicial, sin `q`: «Todavía no hay clientes», con el acceso al alta. *Por
+  qué*: el listado inicial vacío es lo primero que se ve con la base de
+  datos recién creada, y nadie ha buscado nada.
+- **Si la lista trae 20 clientes**, se indica bajo ella: «Se muestran como
+  máximo 20 clientes. Escribe más texto para afinar la búsqueda.» *Por
+  qué*: 20 es el máximo que devuelve la API, que no dice cuántos hay
+  (SPEC-01, E-26 y 4.3), así que con 20 a la vista puede haber más. Ese 20
+  es una constante de `core/`, con la cita de SPEC-01 E-26: es el único
+  límite del backend que el frontend lleva escrito para mostrar un aviso.
 - El frontend no filtra ni ordena: muestra lo que devuelve la API, en su
   orden. También cuando, para un texto que no está vacío, el backend
   devuelve el listado inicial: es lo que hace con un texto de solo espacios
@@ -424,8 +437,10 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | E-02 | Cuando el texto del buscador lleva 300 ms sin cambiar, el sistema deberá pedir la búsqueda y cancelar la petición anterior si sigue en curso. | R-10 |
 | E-03 | El sistema deberá mostrar los resultados en el orden en que los devuelve la API, sin filtrarlos ni reordenarlos. | R-10 |
 | E-04 | Cuando la búsqueda no devuelve clientes, el sistema deberá mostrar un mensaje de «sin resultados» distinto del estado de carga y del de error. | R-10, R-17 |
-| E-50 | Si el texto del buscador supera los 100 caracteres, medidos en puntos de código y sin recortarlo, entonces el sistema deberá mostrar un aviso junto al campo, no llamar a la API y retirar la lista. | R-10, A14 |
+| E-50 | Si el texto del buscador supera los 100 caracteres, medidos en puntos de código y sin recortarlo, entonces el sistema deberá mostrar al momento un aviso junto al campo, cancelar la búsqueda que esté en curso, no llamar a la API y retirar la lista. | R-10, A14 |
 | E-51 | El sistema deberá enviar el texto del buscador tal como está escrito, en un único parámetro `q` codificado por el cliente HTTP, y sin `q` cuando el texto está vacío. | R-10 |
+| E-53 | Cuando la lista del panel trae 20 clientes, el sistema deberá indicar bajo ella que se muestran como máximo 20. | R-10, A13 |
+| E-54 | Cuando el listado inicial, pedido sin `q`, llega vacío, el sistema deberá mostrar «Todavía no hay clientes» con un acceso al alta, en lugar del mensaje de «sin resultados» de una búsqueda. | R-10, R-17 |
 | E-35 | El sistema deberá mostrar el país y el plan con los nombres que devuelve `GET /meta`, no con sus códigos, en el panel, el alta, el detalle y el simulador. | R-10, R-11, R-12 |
 | E-39 | Cuando arranca la aplicación, el sistema deberá pedir `GET /meta` una sola vez y conservar la respuesta en memoria durante la sesión. | A13 |
 | E-40 | Si `GET /meta` falla, entonces el sistema deberá mostrar en el panel, el alta, el detalle y el simulador el error con un botón «Reintentar» en lugar de su contenido, sin mostrar ningún código de país o de plan. | R-17 |
@@ -504,7 +519,7 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | Llamada | Desde | Spec | Respuestas propias |
 |---|---|---|---|
 | `GET /meta` | Al arrancar la aplicación. La usan el panel, el detalle y el simulador (nombres de país y plan) y el alta (desplegables) | SPEC-01, 4.4 | `200`. No lee la base de datos y no responde `503` |
-| `GET /customers?q=` | Panel | SPEC-01, 4.3 | `200` con `items`; `503` |
+| `GET /customers?q=` | Panel | SPEC-01, 4.3 | `200` con `items`; `422` (el frontend no debería provocarlo: 2.2); `503` |
 | `POST /customers` | Alta | SPEC-01, 4.1 | `201`; `422` con `errors`; `409` `customer_already_exists`; `503` |
 | `GET /customers/{id}` | Detalle, simulador (nombre y país del cliente) | SPEC-01, 4.2, y SPEC-03, 4.2 | `200`; `404` `customer_not_found`; `422` (el frontend no debería provocarlo: 2.1); `503` |
 | `POST /pricing/quote` | Simulador | SPEC-02, 4 | `200`; `404` `customer_not_found`; `422`; `500` `tax_rate_not_defined`; `503` |
@@ -517,8 +532,9 @@ La columna «Respuestas propias» recoge los estados que el OpenAPI del
 backend declara para cada operación (`/openapi.json`, leído el 2026-11-14
 con la aplicación arrancada). Además, cualquier llamada puede recibir los
 errores genéricos de las convenciones comunes; qué muestra el frontend con
-cada uno está en 2.7. El `422` del buscador no es una respuesta que el
-frontend deba provocar (2.2) y se trata como error genérico.
+cada uno está en 2.7. El `422` del buscador y el del cliente no son
+respuestas que el frontend deba provocar (2.2 y 2.1) y se tratan como
+error genérico.
 
 **Las interfaces de `core/` se escriben a mano a partir de las specs**
 (ADR-001), no se generan del OpenAPI. Campos que llegan y el frontend no
@@ -654,7 +670,10 @@ funcionando.
 | Abrir el panel | 1, sin `q` | Listado inicial |
 | Escribir `eje` deprisa (tres pulsaciones en menos de 300 ms) | 1, con `q=eje` | Lista |
 | Escribir `eje`, esperar, añadir `m` antes de que responda | 2; la primera se cancela | Solo se muestra la respuesta de `ejem` |
-| La respuesta trae `items: []` | — | «No hay clientes que coincidan» |
+| La respuesta a una búsqueda con texto (`q=noexiste`) trae `items: []` | — | «No hay clientes que coincidan» |
+| Abrir el panel con la base de datos recién creada: el listado inicial, sin `q`, trae `items: []` | 1, sin `q` | «Todavía no hay clientes», con el acceso al alta; no «No hay clientes que coincidan» |
+| La respuesta trae 20 clientes | — | La lista y, bajo ella, «Se muestran como máximo 20 clientes. Escribe más texto para afinar la búsqueda.» |
+| La respuesta trae 19 clientes | — | La lista, sin esa nota |
 | La respuesta trae tres clientes en este orden: `Zeta Datos SL`, `alfa Ejemplo SA` y `Ñandú Pruebas SL` | — | Se muestran en ese mismo orden, que no es el alfabético: el frontend no reordena |
 | Un resultado con `country` `ES` y `plan` `professional` | — | Se muestra «España» y «Profesional» |
 | `/meta` falla | — | Error con «Reintentar» en lugar del buscador y de la lista; no se muestra ningún código |
@@ -669,6 +688,7 @@ funcionando.
 | Escribir 100 caracteres `x` y un espacio | 0 | Aviso del límite: se mide sin recortar, como el backend |
 | Con el aviso del límite a la vista, borrar hasta 100 caracteres | 1 | Desaparece el aviso; lo que devuelve la API |
 | Escribir `a`, un *surrogate* suelto (U+D800) y `b` | 1, con `q` igual a `a`, U+FFFD y `b` | Lo que devuelve la API |
+| Escribir `eje`, esperar a que salga su petición y, antes de que responda, pegar un texto de 101 caracteres | La de `eje` se cancela; ninguna nueva | El aviso del límite sale al momento, sin esperar 300 ms; sin lista, y la respuesta de `eje` no llega a pintarse |
 
 ### 5.4 Alta: respuesta → interfaz
 
@@ -796,7 +816,7 @@ clientes que no existen.
 | CA-01 | Un test parametrizado del *pipe* de importes reproduce cada celda de la tabla de importes de 5.1, incluido el caso del céntimo de diferencia, y otros dos reproducen la tabla del tipo de cambio y los rótulos de los tramos. | E-28, E-29 |
 | CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-27, E-30 |
 | CA-03 | Un test comprueba que, con la API de divisas en error, el panel, el detalle y el simulador muestran sus datos en EUR. | E-28, E-30 |
-| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones, el parámetro `q` y la URL de cada una, y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40, E-50, E-51 |
+| CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones, el parámetro `q` y la URL de cada una, y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40, E-50, E-51, E-53, E-54 |
 | CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
 | CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas (55 y 50: «Se muestran las 50 últimas de 55»), `404` con `customer_not_found`, país y plan con los nombres de `/meta`, y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
@@ -902,3 +922,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-02 y el caso A-01 de su respuesta), decididas por el Tech Lead. **Casos que faltaban**, sin cambiar ningún requisito: una fila en 5.3 para el orden de la API (E-03), una en 5.4 para los desplegables del alta (E-05 y E-35) y dos en 5.5, para los importes marcados como «actualizando» y para «Guardar» desactivado mientras se proyecta y mientras se guarda (E-21 y E-23). **CA-18 se parte**: el test de `core/` comprueba que la petición no lleva ninguna cabecera puesta por la aplicación, y CA-14, la prueba de principio a fin, que las peticiones reales pasan el CORS del backend; CA-14 cita E-52. Motivo: CA-04, CA-05 y CA-08 dicen reproducir «cada fila» y esos cinco requisitos no tenían ninguna; y CA-18 pedía mirar unas cabeceras que Angular añade al enviar y que un test con sus utilidades no ve |
 | 2026-11-14 | Decisión del Tech Lead sobre la propuesta C-01 de la sesión 06: la limitación del `id` por encima de 2^53 − 1 queda aceptada como **limitación conocida L-06**, con fila en `04-calidad/limitaciones-conocidas.md`. 2.1 la cita en lugar de darla por pendiente; también la fila de 5.7, una frase en 4.3 y el apartado 9. Sin cambios en reglas, requisitos ni casos. Motivo: JavaScript no representa exactos los enteros por encima de 2^53 − 1, y un cliente con un `id` mayor solo existiría insertado a mano |
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-06, H-07 y H-11), decididas por el Tech Lead. **Se quita la rama del `422` del cliente**: con el filtro del `id`, un `422` de `GET /customers/{id}` solo puede venir de un defecto del frontend y se muestra como error inesperado; «Cliente no encontrado» queda para dos casos, el `id` que no pasa el filtro y el `404` con `customer_not_found` (2.4, 2.5, 2.7, 4.1, E-15 y una fila de 5.6 y otra de 5.7). **La forma del `id`** dice «el primero distinto de `0`», que excluye el `0` solo (2.1). **La remisión de 5.7 a SPEC-01 5.10** dice qué textos están allí y cuáles se sondearon aparte, con su resultado. Motivo: la rama del `422` venía de antes del filtro y contradecía la tabla de 2.7; «sin ceros a la izquierda» no descartaba el `0`, y los casos esperan que no se pida; y cinco textos de 5.7 no tienen fila en SPEC-01 5.10 |
+| 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-03, H-04 y H-08) y propuestas C-02 y C-03 de la sesión 06, decididas por el Tech Lead. **Buscador**: al superar el límite se cancela la búsqueda en curso y el aviso sale al momento (2.2 y E-50); ya no se afirma que U+FFFD no coincide con ningún cliente, porque el backend lo admite en un nombre (2.2); y la fila del buscador de 4.1 recoge el `422` que declara el OpenAPI. **Panel**: una nota bajo la lista cuando llegan 20 clientes, el máximo de la API (E-53 nuevo), y un mensaje propio, «Todavía no hay clientes», con el acceso al alta, cuando el listado inicial llega vacío (E-54 nuevo). Cinco filas nuevas en 5.3 y CA-04. Motivo: una respuesta que llegara tarde podía pintar la lista retirada; la frase de U+FFFD era falsa (sondeado); la columna de 4.1 decía recoger lo que el OpenAPI declara y omitía un estado; la API no dice cuántos clientes hay; y el listado inicial vacío es lo primero que se ve con la base de datos recién creada, sin que nadie haya buscado nada |
