@@ -77,7 +77,58 @@ nota de las versiones saltadas menciona seguridad.
   ADR-001). El mecanismo **sigue sin decidir**: el npm del equipo
   (11.16.0) tiene dos opciones de configuración que podrían servir,
   `before` y `min-release-age`, vistas en su lista de opciones y sin
-  probar.
+  probar. **Decidido el 2026-11-14**: apartado «El mecanismo en npm».
+
+## El mecanismo en npm (2026-11-14)
+
+Decisión del Tech Lead al aprobar el plan del frontend (sesión 06, P-01 y
+P-03), después de probar las dos opciones en una carpeta temporal fuera
+del repositorio, con npm 11.16.0.
+
+| | Opción | A favor | En contra |
+|---|---|---|---|
+| **A** | **`before` con una fecha fija**, en `frontend/.npmrc` | Es el equivalente de `exclude-newer`: la fecha queda escrita en el repositorio, resolver dos veces da lo mismo y adelantarla se ve en un diff | La fecha hay que moverla a mano |
+| B | `min-release-age=7`, en `frontend/.npmrc` | Nada que mover | Es una ventana que avanza sola: la misma orden da un árbol distinto según el día y no deja escrito con qué corte se resolvió |
+
+**Decisión: opción A.** `frontend/.npmrc`, versionado, lleva dos líneas:
+
+```
+before=2026-11-07T00:00:00Z
+save-exact=true
+```
+
+Lo que se probó, con las dos opciones salvo donde se dice:
+
+| Caso | Resultado |
+|---|---|
+| Un rango (`prettier@3`) | Resuelve a la última versión anterior al corte (3.9.10; sin la opción, 3.10.1) |
+| Una versión exacta posterior al corte | Falla con `ETARGET`, sin instalar |
+| `npm exec` de un paquete posterior al corte (solo con `before`) | Falla con `ETARGET` |
+| El árbol entero de un proyecto de Angular con sus herramientas (solo con `before`) | 652 versiones de 620 paquetes, ninguna posterior al corte |
+| **Un fichero de bloqueo que ya trae una versión posterior al corte**, con `npm ci` y con `npm install` | **La instalan sin avisar** |
+
+**Lo que npm no hace, y cómo se trata.** El margen actúa al resolver: ni
+`before` ni `min-release-age` revisan un `package-lock.json` ya escrito, y
+la fecha no queda dentro de él. Por eso, en el frontend:
+
+1. `package.json` lleva versiones exactas, sin rangos (`save-exact=true`).
+2. `package-lock.json` está versionado y las instalaciones se hacen con
+   `npm ci`, que falla si no corresponde a `package.json`. Es el
+   equivalente de la regla 4.
+3. Cada vez que el fichero de bloqueo cambia, se consulta en el registro la
+   fecha de publicación de cada una de sus entradas y el resultado se anota
+   en la bitácora. **El oráculo no lo comprueba.**
+4. El CLI se ejecuta con el mismo corte
+   (`npm exec --before=… --package=@angular/cli@21.2.29`), para que el
+   margen alcance también a lo que arrastra al crear el proyecto.
+
+**La regla 3, aplicada el 2026-11-14.** `npm audit` da avisos de gravedad
+moderada en `minimatch` y `glob`, que llegan por ESLint, `typescript-eslint`
+y el CLI. ESLint 10.15.0 corrige su parte y se publicó el 2026-11-13, fuera
+del margen. La IA lo dijo y el Tech Lead decidió **no hacer la excepción**:
+el fallo afecta solo a herramientas de desarrollo, la excepción no quitaba
+los avisos de las otras dos y la versión tenía un día. Queda como
+limitación conocida L-07, con la fecha en que se vuelve a mirar.
 
 ## Consecuencias
 

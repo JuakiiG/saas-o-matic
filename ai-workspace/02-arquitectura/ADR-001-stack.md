@@ -120,6 +120,40 @@ tabla completa, con ESLint y Playwright, está en la bitácora de la sesión
 06. **Sigue sin verificar** lo mismo que arriba: que el proyecto se cree,
 compile y pase sus tests.
 
+**Versiones exactas del frontend, decididas el 2026-11-14** con el plan
+(sesión 06, decisiones P-01 y P-02). Son las que resuelve npm con la fecha
+de corte `2026-11-07T00:00:00Z` (ADR-007), y se escriben en `package.json`
+sin rangos.
+
+| Dependencia directa | Versión | Publicada | De dónde sale |
+|---|---|---|---|
+| `@angular/common`, `compiler`, `core`, `forms`, `platform-browser` y `router` | 21.2.26 | 2026-11-02 | El CLI, que escribe `^21.2.0` |
+| `rxjs` | 7.8.2 | 2025-02-22 | El CLI (`~7.8.0`) |
+| `tslib` | 2.9.1 | 2026-10-30 | El CLI (`^2.3.0`) |
+| `@angular/cli` y `@angular/build` (desarrollo) | 21.2.29 | 2026-10-28 | El CLI |
+| `@angular/compiler-cli` (desarrollo) | 21.2.26 | 2026-11-02 | El CLI |
+| `typescript` (desarrollo) | 5.9.3 | 2025-09-30 | El CLI (`~5.9.2`) |
+| `vitest` (desarrollo) | 4.1.12 | 2026-10-15 | El CLI (`^4.0.8`) |
+| `jsdom` (desarrollo) | 28.1.0 | 2026-02-15 | El CLI (`^28.0.0`) |
+| `prettier` (desarrollo) | 3.9.10 | 2026-10-10 | El CLI (`^3.8.1`) |
+| `@vitest/coverage-v8` (desarrollo) | 4.1.12 | 2026-10-15 | **Nueva**: la cobertura del 80 % de líneas que exige el oráculo |
+| `eslint` (desarrollo) | 10.14.0 | 2026-10-30 | **Nueva**: la decisión de este ADR |
+| `@eslint/js` (desarrollo) | 10.0.1 | 2026-02-06 | **Nueva**: las reglas recomendadas de ESLint, que ESLint 10 ya no trae consigo |
+| `angular-eslint` (desarrollo) | 21.4.0 | 2026-05-13 | **Nueva**: las reglas de Angular y de sus plantillas |
+| `typescript-eslint` (desarrollo) | 8.72.1 | 2026-10-26 | **Nueva**: ESLint sobre TypeScript |
+| `@playwright/test` (desarrollo) | 1.65.0 | 2026-11-05 | **Nueva, y todavía no instalada**: entra en la fase de QA |
+
+**Comprobado el 2026-11-14 en un ensayo fuera del repositorio**, con Node
+24.18.0 y npm 11.16.0: el proyecto que crea el CLI 21.2.29 se instala con
+estas versiones sin conflictos, compila y pasa los dos tests que trae.
+**No verificado todavía**: lo mismo dentro del repositorio, con la
+aplicación.
+
+Dos consecuencias de quedarse en estas versiones, aceptadas: las
+correcciones posteriores a la fecha de corte no entran (ADR-007), y
+`npm audit` da avisos de gravedad moderada en herramientas de desarrollo
+(limitación conocida L-07).
+
 ## Acceso a SQLite
 
 | Opción | A favor | En contra |
