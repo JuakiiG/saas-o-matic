@@ -71,23 +71,53 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Los desplegables de país y plan se rellenan con `GET /meta`. Si `/meta`
   falla, se muestra el error con «Reintentar» en lugar del formulario
   (2.1), que por tanto no se puede enviar.
-- **Validación en el navegador, solo de ayuda**: campos obligatorios, nombre
-  de 2 a 120 caracteres tras recortar, forma básica del email e
-  identificador no vacío y de 30 caracteres como máximo. **El control del
-  identificador fiscal no se calcula en el frontend**: lo decide el backend.
+- **Validación en el navegador, solo de ayuda.** La ayuda rechaza
+  **únicamente lo que el backend rechazaría seguro**; todo lo demás se
+  envía, lo decide el backend y su error se muestra junto al campo. **El
+  control del identificador fiscal no se calcula en el frontend.**
+
+| Campo | Qué comprueba la ayuda | Qué deja al backend |
+|---|---|---|
+| `company_name` | De 2 a 120 caracteres tras recortar | Los caracteres no admitidos (`invalid_characters`) |
+| `tax_id` | No vacío y de 30 caracteres como máximo, **medidos sin recortar**, como el backend, que mide antes de normalizar | El formato y el carácter de control |
+| `contact_email` | Tras recortar: no vacío, de 254 caracteres como máximo, contiene una `@` y no empieza ni acaba en `@` | El resto de la regla del email (SPEC-01, 2.1): ningún separador Unicode, una sola `@`, un punto en el dominio y los caracteres no admitidos |
+| `country` y `plan` | Elegido uno de la lista de `/meta` | — |
+| Los tres campos de texto | Texto bien formado: sin ningún *surrogate* suelto (`isWellFormed()`) | — |
+
 - **La ayuda mide igual que el backend** (SPEC-01, 2.12): las longitudes se
   cuentan en puntos de código (`[...s].length`, no `s.length`, que cuenta
   unidades UTF-16) y recortar es quitar de los extremos solo el carácter
   U+0020 (no `trim()`, que quita también tabuladores y saltos de línea).
   *Por qué*: una ayuda que mide distinto bloquearía altas que el backend
   acepta.
+- **La ayuda del email no usa el validador de email del framework
+  (`Validators.email`) ni el del navegador (`type="email"`).** *Por qué*:
+  el backend acepta direcciones que esos validadores rechazan. El de
+  Angular 21.2.26 solo admite letras ASCII, 64 caracteres antes de la `@` y
+  63 por etiqueta del dominio (expresión leída el 2026-11-14 en el paquete
+  publicado): rechazaría `josé@empresa.example`, que el backend guarda. Y
+  copiar entera la regla del backend sería tener dos implementaciones.
+- **Ningún campo lleva el atributo `maxlength`.** *Por qué*: cuenta
+  unidades UTF-16 y no puntos de código, así que impediría escribir un
+  nombre que el backend acepta (la fila de los 61 caracteres `𝔸` de 5.4).
+  El exceso lo dice la ayuda, con su mensaje.
+- **Un texto con un *surrogate* suelto no se envía.** *Por qué*: el
+  navegador lo serializa como un escape `\ud800` y el backend responde
+  `400` `malformed_request` (índice de specs, «El texto del cuerpo»), que
+  es un error de la petición y no de un campo: el usuario no sabría qué
+  corregir.
+- **Qué se envía**: el valor de cada campo tal como está escrito, sin
+  recortarlo ni normalizarlo; recorta y normaliza el backend, y el detalle
+  muestra lo que el backend devuelve (el identificador, normalizado). El
+  cuerpo se construye siempre a partir de un objeto con los cinco campos
+  del contrato y nada más.
 - Al enviar, el botón se desactiva hasta que llega la respuesta, para que no
   haya dos altas.
 - Respuestas:
 
 | Respuesta | Comportamiento |
 |---|---|
-| `201` | Navega al detalle del cliente creado |
+| `201` | Navega al detalle del cliente creado, con el `id` **del cuerpo** de la respuesta. La cabecera `Location` no se lee: CORS no la expone al navegador (2.9) |
 | `422` con `errors` | Cada error se muestra junto a su campo (`field`), con el `message` del backend. El formulario conserva lo escrito |
 | `409` `customer_already_exists` | Aviso en el formulario: ya existe un cliente con ese identificador en ese país. Conserva lo escrito |
 | Otro error o sin conexión | Aviso general con «Reintentar», con el texto que le corresponde por su `code` (tabla de 2.7). Conserva lo escrito |
@@ -95,6 +125,14 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - El frontend decide **por el código**, nunca por el texto. Un código de
   campo que no conoce se muestra igualmente junto a su campo; un `field` que
   no existe en el formulario se muestra en el aviso general.
+- **Forma de `errors`** (índice de specs, «Errores de validación»; SPEC-01,
+  2.12): el backend envía **un solo error por campo**, en el orden de los
+  campos del contrato, y después un `unknown_field` por cada campo que el
+  contrato no tiene. Así, cada campo muestra como mucho un mensaje, y el
+  aviso general lista los errores sin campo en el orden en que llegan. Un
+  `unknown_field` significa que el frontend envió un campo de más: es un
+  defecto suyo, y se muestra en el aviso general como cualquier `field`
+  que no está en el formulario.
 
 ### 2.4 Detalle del cliente
 
@@ -286,6 +324,9 @@ SPEC-03, «Operación del backend».
 | E-10 | Si el alta responde `409` con `customer_already_exists`, entonces el sistema deberá avisar de que el cliente ya existe y conservar los valores escritos. | A12 |
 | E-11 | El sistema deberá decidir el tratamiento de un error de la API por su `code`, nunca por su texto. | A14 |
 | E-41 | El sistema deberá medir en la validación de ayuda del navegador las longitudes en puntos de código y recortar solo el carácter U+0020, igual que el backend. | A17 |
+| E-44 | El sistema deberá comprobar del email, en la validación de ayuda, únicamente que tras recortarlo no está vacío, no supera los 254 caracteres y contiene una `@` que no está en un extremo, sin usar el validador de email del framework ni el del navegador. | A17 |
+| E-45 | Si un campo de texto del alta contiene un *surrogate* suelto, entonces el sistema deberá mostrar el error junto al campo y no enviar el alta. | A14 |
+| E-46 | El sistema deberá enviar los valores del alta tal como están escritos, sin recortarlos ni normalizarlos, y tomar el `id` del cliente creado del cuerpo del `201`. | A17 |
 
 ### Detalle
 
@@ -453,6 +494,20 @@ funcionando.
 | Nombre de 121 caracteres `ñ` | Error de ayuda junto al campo; no se envía |
 | Nombre `A` rodeado de espacios U+0020 | Error de ayuda: un carácter tras recortar; no se envía |
 | Nombre `AB` precedido de un tabulador | La ayuda no recorta el tabulador ni lo rechaza: se envía, y el `422` `invalid_characters` del backend se muestra junto al campo |
+| Nombre `  Ejemplo Uno SL ` (con espacios U+0020 en los extremos) | Se envía tal cual, sin recortar; el detalle muestra el nombre que devuelve el backend |
+| Nombre `AB` seguido de un *surrogate* suelto (U+D800) | Error de ayuda junto al campo; no se envía |
+| Email `josé@empresa.example` | La ayuda no lo rechaza: se envía (el backend lo acepta) |
+| Email `a@b` | La ayuda no lo rechaza: se envía, y el `422` `invalid_email` del backend se muestra junto al campo |
+| Email `a`, U+00A0 y `b@c.example` | La ayuda no lo rechaza: se envía, y el `422` `invalid_email` del backend se muestra junto al campo |
+| Email `sin-arroba.example`, `@b.example` o `a@` | Error de ayuda junto al campo; no se envía |
+| Email de 255 caracteres tras recortar | Error de ayuda junto al campo; no se envía |
+| Email de 254 caracteres rodeado de espacios U+0020 | La ayuda no lo rechaza: se envía |
+| Identificador `12345678Z` seguido de 21 espacios (30 caracteres) | La ayuda no lo rechaza: se envía |
+| Identificador `12345678Z` seguido de 22 espacios (31 caracteres) | Error de ayuda junto al campo; no se envía |
+| Identificador de solo espacios | La ayuda no lo rechaza (no está vacío): se envía, y el `422` `invalid_tax_id_format` del backend se muestra junto al campo |
+| `422` con un error en `plan` y un `unknown_field` en `zeta` | El de `plan`, junto a su campo; el de `zeta`, en el aviso general |
+| `503` `service_unavailable` | Aviso general de servicio no disponible, con «Reintentar»; el formulario conserva lo escrito |
+| `201` sin cabecera `Location` legible, con `id` 7 en el cuerpo | Navega a `/clientes/7` |
 
 ### 5.5 Simulador
 
@@ -512,7 +567,7 @@ genéricos. Los avisos son los de la tabla de 2.7.
 | CA-02 | Tests del servicio de divisas, con las utilidades de test de `HttpClient`, reproducen cada fila de 5.2 y comprueban que solo hay una petición por sesión salvo reintento. | E-26, E-30 |
 | CA-03 | Un test comprueba que, con la API de divisas en error, el panel, el detalle y el simulador muestran sus datos en EUR. | E-28, E-30 |
 | CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40 |
-| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. | E-05, E-07 a E-11, E-40, E-41 |
+| CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
 | CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas, `404` y `422` por `id` no válido, país y plan con los nombres de `/meta`, y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
 | CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. | E-15, E-17, E-18, E-20 a E-25, E-29, E-35 a E-38, E-40 |
@@ -551,7 +606,7 @@ dice si aprobó la propuesta de la IA o la cambió.
 | D-10 | **Tiempos**: 300 ms en el buscador, 200 ms en el simulador, 10 s de espera al backend y 5 s a la API de divisas | Aprobada |
 | D-11 | **La divisa elegida no se recuerda al recargar**: vuelve a EUR | Aprobada |
 | D-12 | **Mensajes de error de campo**: se muestra el `message` del backend; la lógica solo mira el `code` | Aprobada |
-| D-13 | **Validación de ayuda en el navegador** limitada a obligatorios, longitudes y forma del email. Mide como el backend: puntos de código y recorte solo de U+0020 | Aprobada; la medida, fijada por el Tech Lead tras la segunda evaluación (N-10) |
+| D-13 | **Validación de ayuda en el navegador** limitada a obligatorios, longitudes y lo mínimo del email (una `@` que no está en un extremo). Mide como el backend: puntos de código y recorte solo de U+0020. Solo rechaza lo que el backend rechazaría seguro: sin el validador de email del framework ni del navegador y sin `maxlength` (2.3) | Aprobada; la medida, fijada por el Tech Lead tras la segunda evaluación (N-10) |
 | D-14 | **`/meta` se pide una vez al arrancar.** Si falla, el panel, el alta, el detalle y el simulador muestran el error con «Reintentar», sin códigos sueltos; el simulador muestra el nombre del país | Decidida por el Tech Lead tras la segunda evaluación (N-09) |
 
 D-01 y D-02 se registran además como ADR-003, con las alternativas y la
@@ -602,3 +657,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-13 | Decisión del Tech Lead al vencer la fecha límite sin respuesta externa: A3 pasa a `decidido (sin confirmación externa)` con la hipótesis ya documentada, sin cambios en las reglas; cabecera y apartado 9 actualizados. El bloque backend (SPEC-01, SPEC-02 y SPEC-03) queda aprobado ese día; esta spec sigue en `borrador`. La consulta sigue abierta: si la respuesta llega, se aplica como cambio de esta spec |
 | 2026-11-13 | Llega la respuesta a la consulta: confirma A3 (no se tarifican; se registran y se muestran). Cabecera y apartado 9 actualizados; la consulta queda cerrada. Motivo: registrar la fuente del supuesto. Sin cambios en reglas, requisitos, criterios ni casos; la spec sigue en `borrador` |
 | 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-01, DV-02, DV-10 y DV-11), propuesta por la IA y pendiente de la revisión del Tech Lead. **Errores genéricos del backend, por su `code`**: tabla nueva en 2.7 con el aviso de cada uno; el `503` `service_unavailable` tiene un aviso propio, distinto del de error inesperado; el `400`, el `415`, el `405`, el `404` `not_found` y un código desconocido muestran el de error inesperado y dejan su `code` en el estado de error; `tax_rate_not_defined` se trata como `internal_error`. «Cliente no encontrado» se decide por `customer_not_found` y no por el estado `404`, también al guardar (2.4, 2.5, E-15, E-25 y E-37). Requisitos nuevos E-42 y E-43, tabla 5.6, CA-16 y la fila de «Guardar» de 5.5 partida en dos. Motivo: esta spec se escribió el día 12 y el backend fijó el 13 que cualquier endpoint que lee la base de datos responde `503`, que el frontend debe tratar distinto del `500` (índice de specs); la spec no nombraba ninguno de esos errores, y decidía una vista por el estado `404` cuando ese estado tiene dos códigos |
+| 2026-11-14 | Puesta al día con el contrato final del backend (sesión 06, divergencias DV-03, DV-06 y DV-09, y la parte del alta de DV-02 y DV-08), propuesta por la IA y pendiente de la revisión del Tech Lead. **Alta**: tabla en 2.3 con lo que la ayuda comprueba de cada campo y lo que deja al backend; del email, solo que no esté vacío, que no pase de 254 caracteres y que tenga una `@` que no esté en un extremo, sin el validador de email del framework ni el del navegador; el identificador se mide sin recortar; ningún campo lleva `maxlength`; un texto con un *surrogate* suelto no se envía; los valores se envían como están escritos; el `id` del cliente creado sale del cuerpo del `201`; y la forma de `errors` (un error por campo, en el orden del contrato). Requisitos nuevos E-44, E-45 y E-46, catorce filas en 5.4, CA-05 y D-13. Motivo: «forma básica del email» no decía qué se comprueba, y el validador de Angular 21.2.26 rechaza direcciones que el backend acepta desde la regla nueva del email del día 13 (SPEC-01, 2.1); el backend mide el identificador antes de normalizar; un *surrogate* suelto responde `400` desde el día 13; y CORS no expone la cabecera `Location` |
