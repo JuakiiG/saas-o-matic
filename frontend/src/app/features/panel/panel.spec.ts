@@ -267,6 +267,19 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     expect(text(page)).not.toContain('ES');
   });
 
+  it('should ask for the list without waiting for /meta and show it when /meta arrives', () => {
+    const page = open('pending');
+    answer(page, [customer(7, 'Ejemplo Uno SL', 'ES', 'professional')]);
+    expect(page.element.querySelector('.results')).toBeNull();
+
+    page.controller.match(META_URL).forEach((request) => request.flush(META));
+    page.fixture.detectChanges();
+
+    expect(names(page)).toEqual(['Ejemplo Uno SL']);
+    expect(text(page)).toContain('España');
+    expect(searches(page).length).toBe(0);
+  });
+
   it('should ask for /meta once more and show the list with names when the retry succeeds', () => {
     const page = open('failed');
     answer(page, [customer(7, 'Ejemplo Uno SL', 'ES', 'professional')]);

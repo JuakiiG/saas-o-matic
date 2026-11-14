@@ -126,6 +126,13 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   (SPEC-01, E-26 y 4.3), así que con 20 a la vista puede haber más. Ese 20
   es una constante de `core/`, con la cita de SPEC-01 E-26: es el único
   límite del backend que el frontend lleva escrito para mostrar un aviso.
+- **La lista no espera a `/meta`.** El panel pide su listado al abrirse,
+  aunque `/meta` todavía se esté cargando o haya fallado, y lo enseña
+  cuando `/meta` llega; hasta entonces se ve el estado de carga o el error
+  de `/meta` (2.1), nunca la lista con códigos. *Por qué*: las dos
+  peticiones son independientes, y lanzar una al acabar la otra alargaría
+  la espera sin evitar nada. Cuando `/meta` llega, o se reintenta con
+  éxito, la lista ya está y no hace falta pedirla otra vez.
 - El frontend no filtra ni ordena: muestra lo que devuelve la API, en su
   orden. También cuando, para un texto que no está vacío, el backend
   devuelve el listado inicial: es lo que hace con un texto de solo espacios
@@ -209,6 +216,20 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   `unknown_field` significa que el frontend envió un campo de más: es un
   defecto suyo, y se muestra en el aviso general como cualquier `field`
   que no está en el formulario.
+- **Lo que llegue fuera de esa forma no se pierde ni rompe el formulario**,
+  aquí y en el simulador (2.5):
+  - Una entrada de `errors` que no sea un objeto con `field`, `code` y
+    `message` de texto **se ignora**: no hay campo al que llevarla ni texto
+    que enseñar. Las demás se muestran.
+  - Si llegan **dos errores del mismo campo**, el primero se muestra junto
+    al campo y los siguientes, en el aviso general, para que ninguno se
+    pierda.
+  - Si un `422` no deja ninguna entrada que mostrar, se trata como un error
+    inesperado (2.7): aviso general, y el formulario conserva lo escrito.
+
+  *Por qué*: el backend no debería enviar nada de eso, pero un `422` que
+  deja el formulario sin ningún mensaje, o que hace fallar la pantalla, no
+  le dice al usuario qué ha pasado.
 
 ### 2.4 Detalle del cliente
 
@@ -698,6 +719,7 @@ funcionando.
 | Un resultado con `country` `XX` y `plan` `legacy`, que `/meta` no trae | — | Se muestra `XX` y `legacy`, tal como llegan y sin marca |
 | `/meta` falla | — | Error con «Reintentar» en lugar del buscador y de la lista; no se muestra ningún código |
 | `/meta` falla y después «Reintentar» con éxito | 1 más a `/meta` | El panel muestra el listado inicial, con nombres |
+| `/meta` tarda más en responder que el listado inicial | 1 a `/customers`, sin esperar a `/meta`; ninguna más cuando `/meta` llega | Estado de carga hasta que llega `/meta`; después, el listado con nombres |
 | Navegar del panel al detalle y volver, con `/meta` ya cargado | Ninguna nueva a `/meta` | Se pide una sola vez por sesión |
 | La petición falla | — | Aviso con «Reintentar»; al pulsarlo se repite la misma búsqueda |
 | Borrar el texto después de una búsqueda | 1, sin `q` | Listado inicial |
@@ -741,6 +763,9 @@ funcionando.
 | Identificador `12345678Z` seguido de 22 espacios (31 caracteres) | Error de ayuda junto al campo; no se envía |
 | Identificador de solo espacios | La ayuda no lo rechaza (no está vacío): se envía, y el `422` `invalid_tax_id_format` del backend se muestra junto al campo |
 | `422` con un error en `plan` y un `unknown_field` en `zeta` | El de `plan`, junto a su campo; el de `zeta`, en el aviso general |
+| `422` con un error en `plan` y una entrada de `errors` sin `message` | El de `plan`, junto a su campo; la entrada sin la forma del contrato se ignora |
+| `422` con dos errores en `tax_id` | El primero, junto al identificador; el segundo, en el aviso general |
+| `422` cuyo `errors` no trae ninguna entrada con la forma del contrato | Aviso general de error inesperado; el formulario conserva lo escrito |
 | `503` `service_unavailable` | Aviso general de servicio no disponible, con «Reintentar»; el formulario conserva lo escrito |
 | `201` sin cabecera `Location` legible, con `id` 7 en el cuerpo | Navega a `/clientes/7` |
 
@@ -951,3 +976,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Corrección de la evaluación independiente de esta spec (H-10) y propuesta C-04 de la sesión 06, decididas por el Tech Lead. **Un código de país o de plan que `/meta` no trae se muestra tal como llega, sin marca** (2.1, E-35, una fila en 5.3 y CA-07). D-13 recoge la comprobación del *surrogate* suelto, que 2.3 y E-45 ya tenían. Motivo: la spec decía que nunca se muestran códigos y no decía qué hacer con uno que `/meta` no conoce, que es el caso de datos incoherentes de SPEC-02 E-10; y D-13 no nombraba una de las comprobaciones de la ayuda |
 | 2026-11-14 | Corrección de la evaluación independiente de esta spec (H-12) y propuesta C-05 de la sesión 06, decididas por el Tech Lead. **En los tres campos numéricos del simulador decide el texto escrito**: es válido solo si está formado por dígitos ASCII y su valor cabe en los límites; son campos de texto con `inputmode="numeric"`, no controles numéricos del navegador (2.5, E-22, E-36). En 5.5, `15.0` pasa de proyectarse a ser un error, junto con `1e3`, `+15`, `1 5` y `100000.000000000001`; `015` es válido y vale 15. **Aviso tras agotar la espera al guardar**: dice que la simulación puede haberse guardado y enlaza al detalle del cliente (2.5, E-55 nuevo, una fila en 5.5 y CA-08). Motivo: `Number.isInteger` miraba el número, y JavaScript lee `100000.000000000001` como el entero 100000 y `1e3` como 1000 (comprobado con Node), así que se enviaba un valor que el usuario no había escrito; y tras un `timeout` el servidor puede haber guardado, de modo que reintentar a ciegas duplica la simulación |
 | 2026-11-14 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-14), aparte del bloque backend y antes de empezar el frontend, con los doce hallazgos de la evaluación independiente y las propuestas C-01 a C-05 de la sesión 06 decididos y aplicados |
+| 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 1 del frontend (sesión 07, precisión Y-07), con la spec ya en vigor: **tres reglas que la IA había puesto en el código sin que la spec las dijera**. El panel pide su lista sin esperar a `/meta` y la enseña cuando `/meta` llega (2.2 y una fila en 5.3). De un `422`, una entrada de `errors` sin la forma del contrato se ignora, y un segundo error del mismo campo va al aviso general (2.3 y dos filas en 5.4). Añadida por la IA al escribirlas, y pendiente de que el Tech Lead la vea: un `422` que no deja ninguna entrada que mostrar se trata como error inesperado (2.3 y una fila en 5.4). Sin requisitos nuevos: precisan E-01, E-09 y E-48. Motivo: una regla no puede estar solo en el código |
