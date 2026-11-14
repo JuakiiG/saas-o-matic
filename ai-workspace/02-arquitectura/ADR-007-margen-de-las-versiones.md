@@ -71,7 +71,13 @@ nota de las versiones saltadas menciona seguridad.
 - **El frontend.** Esta decisión nombra el mecanismo de uv. Cómo se aplica
   el mismo margen con npm no está decidido ni probado, y no se ha comprobado
   la fecha de publicación de Angular CLI 21.2.29 (ADR-001). Se decide al
-  crear el frontend.
+  crear el frontend. **Añadido el 2026-11-14**: la fecha ya está
+  comprobada en el registro de npm. Angular CLI 21.2.29 se publicó el
+  2026-10-28 y cumple el margen; la 21.2.30, del 2026-11-12, no (tabla en
+  ADR-001). El mecanismo **sigue sin decidir**: el npm del equipo
+  (11.16.0) tiene dos opciones de configuración que podrían servir,
+  `before` y `min-release-age`, vistas en su lista de opciones y sin
+  probar.
 
 ## Consecuencias
 

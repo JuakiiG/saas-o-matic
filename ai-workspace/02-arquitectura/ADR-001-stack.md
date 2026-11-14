@@ -99,6 +99,27 @@ también admite Node 24:
 verificado** todavía: que el proyecto se cree, compile y pase sus tests con
 esa combinación; se comprobará al crearlo.
 
+**Comprobado de nuevo el 2026-11-14**, antes de aprobar SPEC-04, con el
+margen de una semana de ADR-007 (fecha de corte de ese día:
+`2026-11-07T00:00:00Z`) y las fechas del registro de npm. **La decisión no
+cambia.**
+
+| Pieza | Versión elegible con el margen | Publicada | Nota |
+|---|---|---|---|
+| Angular CLI (`@angular/cli`, con `@angular/build` y `@schematics/angular`) | 21.2.29 | 2026-10-28 | La etiqueta `v21-lts` apunta desde el 2026-11-12 a la 21.2.30, que queda fuera del margen |
+| Paquetes de Angular (`@angular/core`, `common`, `compiler`, `compiler-cli`, `forms`, `platform-browser` y `router`) | 21.2.26 | 2026-11-02 | Es la última de la línea 21. Su numeración no es la del CLI |
+| TypeScript | 5.9.3 | 2025-09-30 | El CLI 21.2.29 escribe `~5.9.2` en un proyecto nuevo |
+| RxJS | 7.8.2 | 2025-02-22 | El CLI escribe `~7.8.0` |
+| Vitest, el runner por defecto del CLI 21 | 4.1.12 | 2026-10-15 | El CLI escribe `^4.0.8`, con `jsdom` `^28.0.0` (28.1.0, del 2026-02-15) |
+
+El CLI 21.2.29 y los paquetes 21.2.26 declaran
+`node: ^20.19.0 || ^22.12.0 || >=24.0.0`. Los rangos que escribe el CLI se
+leyeron en su paquete de plantillas publicado, sin instalar nada. Las
+versiones exactas se fijan en `package-lock.json` al crear el proyecto; la
+tabla completa, con ESLint y Playwright, está en la bitácora de la sesión
+06. **Sigue sin verificar** lo mismo que arriba: que el proyecto se cree,
+compile y pase sus tests.
+
 ## Acceso a SQLite
 
 | Opción | A favor | En contra |

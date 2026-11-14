@@ -66,10 +66,23 @@ Hecha el 2026-11-12.
 | Divisa inexistente | `curl` con `quotes=XXX` | `422` con `{"status":422,"message":"invalid currency: XXX"}` |
 | Caché | Cabeceras de la misma respuesta | `cache-control: public, max-age=36362` |
 
+**Repetida el 2026-11-14, sábado, a las 09:29**, antes de aprobar SPEC-04,
+con `curl` y la cabecera `Origin: http://localhost:4200`. La decisión no
+cambia.
+
+| Qué | Resultado |
+|---|---|
+| Forma de la respuesta de la `v2` | `200`, `application/json; charset=utf-8`; la misma lista de tres objetos, con fecha 2026-11-14 (CHF 0,92491, GBP 0,83559, USD 1,1083) |
+| CORS | `access-control-allow-origin: *` y `access-control-allow-methods: GET, OPTIONS`, como el día 12; una comprobación previa `OPTIONS` responde `200` con las mismas cabeceras |
+| Divisa inexistente | El mismo `422` |
+| Caché | `cache-control: public, max-age=55805, stale-if-error=86400` |
+| Fin de semana | En sábado la `v2` responde igual, y los tres tipos traen la fecha de ese mismo día |
+| La `v1` | Responde `200` con fecha 2026-11-13 y una cabecera `deprecation` |
+
 **No verificado**: la llamada desde un navegador real; el límite de
 peticiones por segundo, que la documentación no declara; el comportamiento
-en fines de semana y festivos; que los tres tipos traigan siempre la misma
-fecha.
+en festivos (en fin de semana, solo se ha visto un sábado); que los tres
+tipos traigan siempre la misma fecha.
 
 ## Consecuencias
 
