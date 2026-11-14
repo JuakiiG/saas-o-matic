@@ -1,0 +1,8 @@
+/* The rate on one line and the warning on the next, both small and muted. */
+.rate-note {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

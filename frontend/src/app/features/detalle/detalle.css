@@ -21,6 +21,11 @@
   color: var(--color-text-muted);
 }
 
+.history-rate {
+  display: block;
+  margin-bottom: var(--space-3);
+}
+
 .history {
   display: grid;
   gap: var(--space-3);

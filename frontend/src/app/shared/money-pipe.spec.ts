@@ -58,6 +58,13 @@ describe('MoneyPipe · SPEC-04/E-28, E-29 (CA-01)', () => {
     expect(pipe.transform(16940)).toBe(`169,40${NO_BREAK_SPACE}EUR`);
   });
 
+  it('should show exact euros, whatever the currency chosen, when euros are asked for (E-29)', () => {
+    const pipe = pipeShowing('USD');
+
+    expect(pipe.transform(16940, 'EUR')).toBe(`169,40${NO_BREAK_SPACE}EUR`);
+    expect(pipe.transform(16940)).toBe(`188,69${NO_BREAK_SPACE}USD`);
+  });
+
   it('should differ by one cent from the sum of its parts when converted (5.1)', () => {
     const pipe = pipeShowing('USD');
 

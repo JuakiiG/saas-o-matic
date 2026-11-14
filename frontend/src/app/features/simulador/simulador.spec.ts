@@ -10,6 +10,7 @@ import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angul
 import { of } from 'rxjs';
 
 import { BACKEND_BASE_URL } from '../../core/backend-api';
+import { DisplayCurrency, DisplayedCurrency } from '../../core/display-currency';
 import { MetaStore } from '../../core/meta-store';
 import { Simulador } from './simulador';
 
@@ -814,4 +815,68 @@ describe('Simulador · el id de la ruta · SPEC-04/E-15, E-47 (CA-17, CA-16)', (
       expect(only(customerRequests(page)).request.urlWithParams).toBe(`${CUSTOMERS_URL}7`);
     },
   );
+});
+
+// The two rows of currency of SPEC-04, 5.5: with them CA-08 is complete.
+describe('Simulador · divisa · SPEC-04/E-27, E-29, E-31 (CA-08)', () => {
+  function openWith15Users(): Page {
+    const page = openWithProjection();
+    settleUsers(page, '15');
+    flush(page, only(quoteRequests(page)), OF_15);
+    return page;
+  }
+
+  function show(page: Page, currency: DisplayedCurrency): void {
+    TestBed.inject(DisplayCurrency).show(currency);
+    page.fixture.detectChanges();
+  }
+
+  it('should show the amounts in USD at once, with the rate, its date and the total in EUR, asking for nothing', () => {
+    const page = openWith15Users();
+
+    show(page, { code: 'USD', rate: 1.1139, date: '2026-11-12' });
+
+    expect(quoteRequests(page).length).toBe(0);
+    expect(amounts(page)).toEqual({
+      'Coste base': '155,95 USD',
+      'Impuesto (21 %)': '32,75 USD',
+      Total: '188,69 USD',
+      'Total en EUR': '169,40 EUR',
+    });
+    expect(textOf(page, '.quote .rate-applied')).toBe('1 EUR = 1,1139 USD · tipo del 12/11/2026');
+    expect(textOf(page, '.quote .rate-warning')).toContain('orientativos');
+  });
+
+  it('should show the date of the rate as it comes: the first of January stays the first of January', () => {
+    const page = openWith15Users();
+
+    show(page, { code: 'USD', rate: 1.1139, date: '2026-01-01' });
+
+    expect(textOf(page, '.quote .rate-applied')).toBe('1 EUR = 1,1139 USD · tipo del 01/01/2026');
+  });
+
+  it('should show neither a rate nor a total in EUR while the currency is EUR', () => {
+    const page = openWith15Users();
+
+    show(page, { code: 'USD', rate: 1.1139, date: '2026-11-12' });
+    show(page, { code: 'EUR' });
+
+    expect(page.element.querySelector('.rate-note')).toBeNull();
+    expect(amounts(page)).toEqual({
+      'Coste base': '140,00 EUR',
+      'Impuesto (21 %)': '29,40 EUR',
+      Total: '169,40 EUR',
+    });
+  });
+
+  it('should save the same body, with no currency and no converted amount, while USD is shown', () => {
+    const page = openWith15Users();
+    show(page, { code: 'USD', rate: 1.1139, date: '2026-11-12' });
+
+    press(page, 'Guardar');
+
+    expect(JSON.stringify(only(simulationRequests(page)).request.body)).toBe(
+      '{"customer_id":7,"active_users":15,"storage_gb":0,"estimated_api_calls":0}',
+    );
+  });
 });

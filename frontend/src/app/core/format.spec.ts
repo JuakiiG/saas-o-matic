@@ -1,4 +1,11 @@
-import { formatDateTime, formatInteger, formatPercent, formatRate, tierLabel } from './format';
+import {
+  formatDateTime,
+  formatInteger,
+  formatPercent,
+  formatRate,
+  formatRateDate,
+  tierLabel,
+} from './format';
 
 const NO_BREAK_SPACE = String.fromCodePoint(0xa0);
 
@@ -56,6 +63,22 @@ describe('formatDateTime · SPEC-04 2.8', () => {
 
   it('should show the text as it arrives when it is not a date', () => {
     expect(formatDateTime('ayer')).toBe('ayer');
+  });
+});
+
+describe('formatRateDate · SPEC-04 2.6', () => {
+  // The date of a rate has no time: it is turned round as a text and never goes through a
+  // `Date`, which in a time zone behind UTC would show the day before (5.5).
+  it.each([
+    ['2026-11-12', '12/11/2026'],
+    ['2026-01-01', '01/01/2026'],
+    ['2026-12-31', '31/12/2026'],
+  ])('should show the date %s as %s, whatever the time zone', (date, expected) => {
+    expect(formatRateDate(date)).toBe(expected);
+  });
+
+  it('should show the text as it arrives when it has not the shape of a date', () => {
+    expect(formatRateDate('hoy')).toBe('hoy');
   });
 });
 

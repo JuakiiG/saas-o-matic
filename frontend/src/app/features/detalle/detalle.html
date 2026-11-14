@@ -50,6 +50,7 @@
         }
 
         @if (hasSimulations()) {
+          <app-rate-note class="history-rate" />
           <ul class="history">
             @for (simulation of simulations(); track simulation.id) {
               <li class="card simulation">
@@ -81,6 +82,12 @@
                     <dt>Total</dt>
                     <dd>{{ simulation.totalCents | money }}</dd>
                   </div>
+                  @if (converted()) {
+                    <div>
+                      <dt>Total en EUR</dt>
+                      <dd>{{ simulation.totalCents | money: 'EUR' }}</dd>
+                    </div>
+                  }
                 </dl>
                 <details class="breakdown">
                   <summary>Desglose por tramos</summary>

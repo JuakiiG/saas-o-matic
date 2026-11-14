@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { CustomerLoader } from '../../core/customer-loader';
 import { formatDateTime, formatInteger, formatPercent } from '../../core/format';
+import { DisplayCurrency } from '../../core/display-currency';
 import { MetaStore } from '../../core/meta-store';
 import { CustomerDetail, Simulation, Tier } from '../../core/models';
 import { CustomerNotFound } from '../../shared/customer-not-found';
@@ -10,6 +11,7 @@ import { ErrorNotice } from '../../shared/error-notice';
 import { LoadingNotice } from '../../shared/loading-notice';
 import { MetaGate } from '../../shared/meta-gate';
 import { MoneyPipe } from '../../shared/money-pipe';
+import { RateNote } from '../../shared/rate-note';
 import { TierList } from '../../shared/tier-list';
 
 /** The customer as its card shows it: with the names of its country and plan. */
@@ -77,6 +79,7 @@ function shownOfTotalNote(detail: CustomerDetail | null): string | null {
     LoadingNotice,
     MetaGate,
     MoneyPipe,
+    RateNote,
     TierList,
   ],
   providers: [CustomerLoader],
@@ -87,6 +90,7 @@ function shownOfTotalNote(detail: CustomerDetail | null): string | null {
 export class Detalle {
   private readonly loader = inject(CustomerLoader);
   private readonly meta = inject(MetaStore);
+  private readonly display = inject(DisplayCurrency);
 
   private readonly detail = computed(() => {
     const state = this.loader.state();
@@ -105,6 +109,8 @@ export class Detalle {
   );
   protected readonly hasSimulations = computed(() => this.simulations().length > 0);
   protected readonly shownOfTotal = computed(() => shownOfTotalNote(this.detail()));
+  /** In another currency each total is also shown in euros, the exact one (E-29). */
+  protected readonly converted = computed(() => this.display.current().code !== 'EUR');
 
   /** «Reintentar»: asks again for the customer of the route. */
   protected retry(): void {

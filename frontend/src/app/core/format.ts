@@ -8,6 +8,7 @@ const EURO = currencyFormat('EUR');
 const RATE = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 6 });
 const PERCENT = new Intl.NumberFormat(LOCALE, { style: 'percent', maximumFractionDigits: 2 });
 const INTEGER = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
+const RATE_DATE = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/;
 const DATE_TIME_PARTS: Intl.DateTimeFormatOptions = {
   day: '2-digit',
   month: '2-digit',
@@ -49,6 +50,16 @@ export function formatConverted(cents: number, currency: string, rate: number): 
 /** An exchange rate with the decimals it brings, up to six (`1,1139`, `0,92316`). */
 export function formatRate(rate: number): string {
   return RATE.format(rate);
+}
+
+/**
+ * The date of an exchange rate (`2026-11-12`) as day/month/year (`12/11/2026`). It has no time,
+ * so it is turned round as a text and never goes through a `Date`: in a time zone behind UTC
+ * that would show the day before (SPEC-04, 2.6). A text without that shape is shown as it is.
+ */
+export function formatRateDate(date: string): string {
+  const parts = RATE_DATE.exec(date);
+  return parts === null ? date : `${parts[3]}/${parts[2]}/${parts[1]}`;
 }
 
 /** A tax rate in basis points as a percentage (`2100` is `21 %`). A rate is not money. */

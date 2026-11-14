@@ -10,6 +10,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { BACKEND_BASE_URL } from '../../core/backend-api';
+import { DisplayCurrency } from '../../core/display-currency';
 import { formatDateTime } from '../../core/format';
 import { MetaStore } from '../../core/meta-store';
 import { Detalle } from './detalle';
@@ -410,5 +411,38 @@ describe('Detalle · SPEC-04/E-12 a E-15, E-35, E-40, E-47 (CA-07, CA-16, CA-17)
     answer(page, { ...WITHOUT_SIMULATIONS, id: 2, company_name: 'Ejemplo Dos SL' });
 
     expect(clean(page.element.querySelector('.customer h2')?.textContent)).toBe('Ejemplo Dos SL');
+  });
+});
+
+describe('Detalle · divisa · SPEC-04/E-27, E-29 (2.4, 2.6)', () => {
+  it('should show each amount converted, the total in EUR of each simulation and the rate once, asking for nothing', async () => {
+    const page = await openWith(CUSTOMER);
+
+    TestBed.inject(DisplayCurrency).show({ code: 'USD', rate: 1.1139, date: '2026-11-12' });
+    page.harness.detectChanges();
+
+    expect(customerRequests(page).length).toBe(0);
+    expect(facts(simulationCards(page)[1].querySelector('dl'))).toEqual({
+      'Usuarios activos': '15',
+      Almacenamiento: '500 GB',
+      'Llamadas a la API': '250.000',
+      'Coste base': '155,95 USD',
+      'Impuesto (21 %)': '32,75 USD',
+      Total: '188,69 USD',
+      'Total en EUR': '169,40 EUR',
+    });
+    const rates = Array.from(page.element.querySelectorAll('.rate-applied'));
+    expect(rates.map((rate) => clean(rate.textContent))).toEqual([
+      '1 EUR = 1,1139 USD · tipo del 12/11/2026',
+    ]);
+  });
+
+  it('should show neither a rate nor a total in EUR while the currency is EUR', async () => {
+    const page = await openWith(CUSTOMER);
+
+    expect(page.element.querySelector('.rate-note')).toBeNull();
+    expect(Object.keys(facts(simulationCards(page)[1].querySelector('dl')))).not.toContain(
+      'Total en EUR',
+    );
   });
 });

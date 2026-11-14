@@ -14,9 +14,10 @@ import { formatConverted, formatEuroCents } from '../core/format';
 export class MoneyPipe implements PipeTransform {
   private readonly displayCurrency = inject(DisplayCurrency);
 
-  transform(cents: number): string {
+  /** With `only` set to `'EUR'` the amount is shown in exact euros whatever the currency chosen. */
+  transform(cents: number, only?: 'EUR'): string {
     const currency = this.displayCurrency.current();
-    if (currency.code === 'EUR') {
+    if (only === 'EUR' || currency.code === 'EUR') {
       return formatEuroCents(cents);
     }
     return formatConverted(cents, currency.code, currency.rate);

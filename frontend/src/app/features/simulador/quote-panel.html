@@ -22,7 +22,14 @@
           <dt>Total</dt>
           <dd>{{ amounts.total_cents | money }}</dd>
         </div>
+        @if (converted()) {
+          <div>
+            <dt>Total en EUR</dt>
+            <dd>{{ amounts.total_cents | money: 'EUR' }}</dd>
+          </div>
+        }
       </dl>
+      <app-rate-note />
     </div>
   }
   @if (notice(); as failure) {
