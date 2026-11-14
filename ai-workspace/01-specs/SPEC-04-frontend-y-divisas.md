@@ -70,7 +70,11 @@ mano en la base de datos.
 **Nombres de país y de plan (`GET /meta`).** `/meta` se pide **una vez, al
 arrancar la aplicación**, y se guarda en memoria durante la sesión. Las
 cuatro vistas que muestran un país o un plan (panel, alta, detalle y
-simulador) usan sus nombres («España», «Profesional»), nunca los códigos.
+simulador) usan sus nombres («España», «Profesional»), no los códigos.
+**Si un código no está en `/meta`**, se muestra el código tal como llega,
+sin ninguna marca: es un dato incoherente (el caso de SPEC-02, E-10, un
+cliente guardado con un país que el dominio no tiene) y ocultarlo no ayuda
+a nadie.
 Mientras `/meta` se está cargando, esas vistas muestran el estado de carga.
 Si `/meta` falla, cada una muestra el error con «Reintentar» en lugar de su
 contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
@@ -441,7 +445,7 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | E-51 | El sistema deberá enviar el texto del buscador tal como está escrito, en un único parámetro `q` codificado por el cliente HTTP, y sin `q` cuando el texto está vacío. | R-10 |
 | E-53 | Cuando la lista del panel trae 20 clientes, el sistema deberá indicar bajo ella que se muestran como máximo 20. | R-10, A13 |
 | E-54 | Cuando el listado inicial, pedido sin `q`, llega vacío, el sistema deberá mostrar «Todavía no hay clientes» con un acceso al alta, en lugar del mensaje de «sin resultados» de una búsqueda. | R-10, R-17 |
-| E-35 | El sistema deberá mostrar el país y el plan con los nombres que devuelve `GET /meta`, no con sus códigos, en el panel, el alta, el detalle y el simulador. | R-10, R-11, R-12 |
+| E-35 | El sistema deberá mostrar el país y el plan con los nombres que devuelve `GET /meta`, no con sus códigos, en el panel, el alta, el detalle y el simulador; si un código no está en `/meta`, deberá mostrar ese código tal como llega. | R-10, R-11, R-12 |
 | E-39 | Cuando arranca la aplicación, el sistema deberá pedir `GET /meta` una sola vez y conservar la respuesta en memoria durante la sesión. | A13 |
 | E-40 | Si `GET /meta` falla, entonces el sistema deberá mostrar en el panel, el alta, el detalle y el simulador el error con un botón «Reintentar» en lugar de su contenido, sin mostrar ningún código de país o de plan. | R-17 |
 
@@ -676,6 +680,7 @@ funcionando.
 | La respuesta trae 19 clientes | — | La lista, sin esa nota |
 | La respuesta trae tres clientes en este orden: `Zeta Datos SL`, `alfa Ejemplo SA` y `Ñandú Pruebas SL` | — | Se muestran en ese mismo orden, que no es el alfabético: el frontend no reordena |
 | Un resultado con `country` `ES` y `plan` `professional` | — | Se muestra «España» y «Profesional» |
+| Un resultado con `country` `XX` y `plan` `legacy`, que `/meta` no trae | — | Se muestra `XX` y `legacy`, tal como llegan y sin marca |
 | `/meta` falla | — | Error con «Reintentar» en lugar del buscador y de la lista; no se muestra ningún código |
 | `/meta` falla y después «Reintentar» con éxito | 1 más a `/meta` | El panel muestra el listado inicial, con nombres |
 | Navegar del panel al detalle y volver, con `/meta` ya cargado | Ninguna nueva a `/meta` | Se pide una sola vez por sesión |
@@ -819,7 +824,7 @@ clientes que no existen.
 | CA-04 | Tests del buscador con temporizadores simulados reproducen cada fila de 5.3, comprobando el número de peticiones, el parámetro `q` y la URL de cada una, y cuál se muestra. | E-01 a E-04, E-35, E-39, E-40, E-50, E-51, E-53, E-54 |
 | CA-05 | Tests del formulario de alta reproducen cada fila de 5.4, simulando las respuestas con los ejemplos de SPEC-01, apartado 4.1 (el `201`, el `409` y los tres `422`); las demás se construyen con esa misma forma y los códigos de su tabla de errores. De cada fila que se envía, el test comprueba además el cuerpo de la petición. | E-05, E-07 a E-11, E-40, E-41, E-44 a E-46 |
 | CA-06 | Un test comprueba que cambiar el `message` de una respuesta de error sin cambiar su `code` no altera el comportamiento de la interfaz. | E-11 |
-| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas (55 y 50: «Se muestran las 50 últimas de 55»), `404` con `customer_not_found`, país y plan con los nombres de `/meta`, y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
+| CA-07 | Tests del detalle cubren: cliente con simulaciones (orden de la API), sin simulaciones, con `simulation_count` mayor que las recibidas (55 y 50: «Se muestran las 50 últimas de 55»), `404` con `customer_not_found`, país y plan con los nombres de `/meta`, un país que `/meta` no trae (se muestra su código), y `/meta` en error (error con «Reintentar», sin códigos). | E-12 a E-15, E-35, E-40 |
 | CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-27, E-29, E-35 a E-38, E-40, E-48, E-49 |
 | CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
 | CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
@@ -858,7 +863,7 @@ dice si aprobó la propuesta de la IA o la cambió.
 | D-10 | **Tiempos**: 300 ms en el buscador, 200 ms en el simulador, 10 s de espera al backend y 5 s a la API de divisas | Aprobada |
 | D-11 | **La divisa elegida no se recuerda al recargar**: vuelve a EUR | Aprobada |
 | D-12 | **Mensajes de error de campo**: se muestra el `message` del backend; la lógica solo mira el `code` | Aprobada |
-| D-13 | **Validación de ayuda en el navegador** limitada a obligatorios, longitudes y lo mínimo del email (una `@` que no está en un extremo). Mide como el backend: puntos de código y recorte solo de U+0020. Solo rechaza lo que el backend rechazaría seguro: sin el validador de email del framework ni del navegador y sin `maxlength` (2.3) | Aprobada; la medida, fijada por el Tech Lead tras la segunda evaluación (N-10) |
+| D-13 | **Validación de ayuda en el navegador** limitada a obligatorios, longitudes, lo mínimo del email (una `@` que no está en un extremo) y que el texto no lleve un *surrogate* suelto. Mide como el backend: puntos de código y recorte solo de U+0020. Solo rechaza lo que el backend rechazaría seguro: sin el validador de email del framework ni del navegador y sin `maxlength` (2.3) | Aprobada; la medida, fijada por el Tech Lead tras la segunda evaluación (N-10) |
 | D-14 | **`/meta` se pide una vez al arrancar.** Si falla, el panel, el alta, el detalle y el simulador muestran el error con «Reintentar», sin códigos sueltos; el simulador muestra el nombre del país | Decidida por el Tech Lead tras la segunda evaluación (N-09) |
 
 D-01 y D-02 se registran además como ADR-003, con las alternativas y la
@@ -923,3 +928,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Decisión del Tech Lead sobre la propuesta C-01 de la sesión 06: la limitación del `id` por encima de 2^53 − 1 queda aceptada como **limitación conocida L-06**, con fila en `04-calidad/limitaciones-conocidas.md`. 2.1 la cita en lugar de darla por pendiente; también la fila de 5.7, una frase en 4.3 y el apartado 9. Sin cambios en reglas, requisitos ni casos. Motivo: JavaScript no representa exactos los enteros por encima de 2^53 − 1, y un cliente con un `id` mayor solo existiría insertado a mano |
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-06, H-07 y H-11), decididas por el Tech Lead. **Se quita la rama del `422` del cliente**: con el filtro del `id`, un `422` de `GET /customers/{id}` solo puede venir de un defecto del frontend y se muestra como error inesperado; «Cliente no encontrado» queda para dos casos, el `id` que no pasa el filtro y el `404` con `customer_not_found` (2.4, 2.5, 2.7, 4.1, E-15 y una fila de 5.6 y otra de 5.7). **La forma del `id`** dice «el primero distinto de `0`», que excluye el `0` solo (2.1). **La remisión de 5.7 a SPEC-01 5.10** dice qué textos están allí y cuáles se sondearon aparte, con su resultado. Motivo: la rama del `422` venía de antes del filtro y contradecía la tabla de 2.7; «sin ceros a la izquierda» no descartaba el `0`, y los casos esperan que no se pida; y cinco textos de 5.7 no tienen fila en SPEC-01 5.10 |
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-03, H-04 y H-08) y propuestas C-02 y C-03 de la sesión 06, decididas por el Tech Lead. **Buscador**: al superar el límite se cancela la búsqueda en curso y el aviso sale al momento (2.2 y E-50); ya no se afirma que U+FFFD no coincide con ningún cliente, porque el backend lo admite en un nombre (2.2); y la fila del buscador de 4.1 recoge el `422` que declara el OpenAPI. **Panel**: una nota bajo la lista cuando llegan 20 clientes, el máximo de la API (E-53 nuevo), y un mensaje propio, «Todavía no hay clientes», con el acceso al alta, cuando el listado inicial llega vacío (E-54 nuevo). Cinco filas nuevas en 5.3 y CA-04. Motivo: una respuesta que llegara tarde podía pintar la lista retirada; la frase de U+FFFD era falsa (sondeado); la columna de 4.1 decía recoger lo que el OpenAPI declara y omitía un estado; la API no dice cuántos clientes hay; y el listado inicial vacío es lo primero que se ve con la base de datos recién creada, sin que nadie haya buscado nada |
+| 2026-11-14 | Corrección de la evaluación independiente de esta spec (H-10) y propuesta C-04 de la sesión 06, decididas por el Tech Lead. **Un código de país o de plan que `/meta` no trae se muestra tal como llega, sin marca** (2.1, E-35, una fila en 5.3 y CA-07). D-13 recoge la comprobación del *surrogate* suelto, que 2.3 y E-45 ya tenían. Motivo: la spec decía que nunca se muestran códigos y no decía qué hacer con uno que `/meta` no conoce, que es el caso de datos incoherentes de SPEC-02 E-10; y D-13 no nombraba una de las comprobaciones de la ayuda |
