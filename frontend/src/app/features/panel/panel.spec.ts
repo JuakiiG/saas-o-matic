@@ -267,6 +267,13 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     expect(text(page)).not.toContain('ES');
   });
 
+  it('should turn the spell checker of the browser off in the search box (SPEC-04 2.8)', () => {
+    const page = open();
+
+    const input = page.element.querySelector('#panel-search');
+    expect(input?.getAttribute('spellcheck')).toBe('false');
+  });
+
   it('should ask for the list without waiting for /meta and show it when /meta arrives', () => {
     const page = open('pending');
     answer(page, [customer(7, 'Ejemplo Uno SL', 'ES', 'professional')]);

@@ -440,6 +440,11 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   en la zona horaria del navegador, con formato `es-ES`. La fecha del tipo de
   cambio no tiene hora y queda fuera de esta regla (2.6).
 - Controles con etiqueta, manejables con teclado; HTML semántico.
+- **El corrector ortográfico del navegador se desactiva**
+  (`spellcheck="false"`) en el campo de búsqueda del panel y, en el alta,
+  en el nombre, el identificador fiscal y el email. *Por qué*: lo que se
+  escribe ahí son nombres propios, códigos y direcciones, y el corrector
+  los subraya como si fueran faltas.
 
 ### 2.9 Configuración
 
@@ -977,3 +982,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Corrección de la evaluación independiente de esta spec (H-12) y propuesta C-05 de la sesión 06, decididas por el Tech Lead. **En los tres campos numéricos del simulador decide el texto escrito**: es válido solo si está formado por dígitos ASCII y su valor cabe en los límites; son campos de texto con `inputmode="numeric"`, no controles numéricos del navegador (2.5, E-22, E-36). En 5.5, `15.0` pasa de proyectarse a ser un error, junto con `1e3`, `+15`, `1 5` y `100000.000000000001`; `015` es válido y vale 15. **Aviso tras agotar la espera al guardar**: dice que la simulación puede haberse guardado y enlaza al detalle del cliente (2.5, E-55 nuevo, una fila en 5.5 y CA-08). Motivo: `Number.isInteger` miraba el número, y JavaScript lee `100000.000000000001` como el entero 100000 y `1e3` como 1000 (comprobado con Node), así que se enviaba un valor que el usuario no había escrito; y tras un `timeout` el servidor puede haber guardado, de modo que reintentar a ciegas duplica la simulación |
 | 2026-11-14 | Aprobación del Tech Lead: el estado pasa a `aprobada` (2026-11-14), aparte del bloque backend y antes de empezar el frontend, con los doce hallazgos de la evaluación independiente y las propuestas C-01 a C-05 de la sesión 06 decididos y aplicados |
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 1 del frontend (sesión 07, precisión Y-07), con la spec ya en vigor: **tres reglas que la IA había puesto en el código sin que la spec las dijera**. El panel pide su lista sin esperar a `/meta` y la enseña cuando `/meta` llega (2.2 y una fila en 5.3). De un `422`, una entrada de `errors` sin la forma del contrato se ignora, y un segundo error del mismo campo va al aviso general (2.3 y dos filas en 5.4). Añadida por la IA al escribirlas, y pendiente de que el Tech Lead la vea: un `422` que no deja ninguna entrada que mostrar se trata como error inesperado (2.3 y una fila en 5.4). Sin requisitos nuevos: precisan E-01, E-09 y E-48. Motivo: una regla no puede estar solo en el código |
+| 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 1 del frontend en el navegador (sesión 07): **el corrector ortográfico del navegador se desactiva** en el campo de búsqueda y en el nombre, el identificador fiscal y el email del alta (2.8). Sin requisitos nuevos. Motivo: el corrector subrayaba el texto del buscador como si fuera una falta |
