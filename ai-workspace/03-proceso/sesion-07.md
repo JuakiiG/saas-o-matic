@@ -93,6 +93,10 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 18:07 | `7f094ec` | **Pieza 8, cierre: los recorridos completos** (E-28, E-30, E-31, E-52; CA-03, CA-09 y CA-18), 18:06:56. Tres tests con la aplicación entera y su configuración real. **Nacieron en verde, a las 18:02:18** (AA-04). **El primer commit, `672938b` (18:04:23), se hizo con el oráculo en rojo** por el formato del fichero nuevo; corregido con `prettier --write`, oráculo en verde a las 18:06 con su código de salida comprobado, y **commit enmendado** (AA-03) |
 | 18:07 | — | **La API pública de divisas, con `curl`** (18:07:05): `200`, `access-control-allow-origin: *` y los tres tipos con fecha de hoy (apartado 4). La IA no ha arrancado ningún servidor en esta parte: los puertos 8000 y 4200 siguen siendo del Tech Lead |
 | 18:07 | *(este commit)* | Cierre de esta bitácora para la **parada 3**. La IA para aquí: el Tech Lead revisa las piezas 7 y 8 y prueba el selector de divisa en el navegador |
+| 18:48 | — | **El Tech Lead aprueba la parada 3** y admite AA-01 a AA-09 y U-01 a U-05, con ocho cambios (apartado 3). Hora leída al recibir el mensaje, 18:48:00; el commit anterior, el de esta bitácora, es `4314dd9` (18:10:08). El apartado 3 se escribió a las 18:50; esta fila, a las 18:54 |
+| 18:54 | `5b40374` | **Cambio 1 (AA-01)**, 18:53:47: test de «con `/meta` en error, el cliente y la primera proyección se piden igual» (E-38, E-40; SPEC-04, 2.5). **Nació en verde a las 18:50:58** (78 de 78 en su fichero). **Mutación** en `simulador.ts`: el `customerId` que arranca la proyección se dejó en `null` mientras `/meta` no estuviera en datos. A las 18:51:27 falla **solo el test nuevo**, por aserción (`expected +0 to be 1`: ninguna petición de proyección), y los otros 77 pasan: nada más vigilaba la regla. Mutación deshecha (`git diff` vacío en `simulador.ts`) y oráculo con código de salida 0 antes del commit |
+| 18:58 | `dc8abf6` | **Cambio 2 (AA-03)**, 18:55:59: la regla 7 de `CLAUDE.md` dice ya que el commit depende del código de salida del oráculo, nunca de un filtro de su salida, con su porqué. Oráculo con código de salida 0 antes |
+| 18:58 | *(este commit)* | **Cambio 3 (AA-04)**: los tres recorridos, rotos a propósito uno a uno entre las 18:56:20 y las 18:58:00 (tabla en el apartado 3). **Los tres fallan por aserción con su mutación y solo ellos**; las mutaciones están deshechas (`git status` sin ningún fichero de `frontend/`) y los tres vuelven a verde a las 18:58:30. No hay código que cambie: el commit es el de esta anotación |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -323,6 +327,60 @@ Precisiones de la IA, **sin aprobar**:
 | AA-07 | La fila de 5.2 del «cuerpo que no es JSON» se simula con un cuerpo de texto, que el servicio rechaza con `invalid_rates`. En un navegador real el cliente HTTP fallaría antes, al leer el JSON, y el código sería `unknown_error` | Las utilidades de test entregan el texto tal cual. En los dos casos el estado es de error y la interfaz es la misma |
 | AA-08 | CA-02 pide las filas de 5.2 en el servicio; las de la respuesta están todas en `exchange-rates.spec.ts`. La columna «Importes» de esa tabla la sostienen el *pipe*, el selector (qué divisa queda elegida) y el recorrido de CA-03, no una fila por caso | El selector reproduce una fila por estado: cargando, datos, cinco de error y el reintento |
 | AA-09 | El test de recorrido espera 350 ms **reales** por la pausa del buscador | Con el *router* de verdad no se usan temporizadores simulados (Z-11). Son los únicos milisegundos reales de la batería |
+
+### Revisión de la parada 3 por el Tech Lead (18:48)
+
+**Parada 3 aprobada.** Lo que el Tech Lead dice haber hecho (lo afirma él;
+la IA no lo ha visto): probar las divisas en Chrome con la API pública real
+y con ella caída. **Sin defectos.** La lectura que la IA hizo de las dos
+frases cortadas del mensaje de la parada 2 era correcta.
+
+**Admitidas AA-01 a AA-09 y U-01 a U-05** (estas, de la sesión 06), con
+estos cambios, un commit por cambio y cada commit dependiendo del código de
+salida del oráculo:
+
+| # | Sobre | Decisión del Tech Lead | Frente a lo que hizo la IA |
+|---|---|---|---|
+| 1 | AA-01 | Se añade el test de esa regla. Nacerá en verde: se demuestra que muerde con una mutación y se deshace | La IA la había dejado sin test, porque el cambio anterior mandaba no añadir tests |
+| 2 | AA-03 | Admitido. La regla se escribe en `CLAUDE.md`: el commit depende del código de salida del oráculo, nunca de un filtro de su salida | La IA lo aplicaba desde `7f094ec` y lo tenía en su memoria, no en las reglas del repo |
+| 3 | AA-04 | Para cada uno de los tres recorridos se rompe a propósito lo que vigila, se comprueba que falla, se deshace el cambio y se anota aquí qué se rompió y qué falló | **Corregido**: la IA los había dado por buenos sin demostrar que detectan nada |
+| 4 | AA-05 | (a) a (g) se escriben en SPEC-04, con historial | **Corregido otra vez**: estaban en el código y en la bitácora, como Y-07 y Z-01 |
+| 5 | AA-07 | La fila de 5.2 del cuerpo que no es JSON dice que el estado es de error; el `code` puede ser `invalid_rates` o `unknown_error` | Admitido lo hecho, precisando la spec |
+| 6 | AA-06 | Se anota para la fase de QA un caso de Playwright (frase cortada; ver debajo) | Admitido lo hecho; el caso que falta pasa a Playwright |
+| 7 | Aspecto | El aviso del fallo de los tipos hace la cabecera demasiado alta a 375 px (frase cortada; ver debajo). Compacto: el texto y «Reintentar» en una línea cuando quepan. Solo CSS, y la IA dice qué no puede comprobar | **Defecto de aspecto que la IA no podía ver**: no abre el navegador |
+| 8 | Playwright | Para la fase de QA, configuración propia: otros dos puertos, comprobados libres; una configuración de compilación del frontend con la URL del backend en ese puerto; `CORS_ORIGINS` y `DATABASE_PATH` propios en el backend, con base temporal; y la API de divisas interceptada, porque un test no llama a un servicio externo. **Hoy no se monta: se deja anotado** | Decide entre las dos opciones que la IA dejó en el apartado 6 |
+
+El mensaje llegó otra vez con dos frases cortadas. La IA las ha leído así,
+**y lo dice para que el Tech Lead lo corrija si no es eso**: en el cambio 6
+(«un caso de Playwright ase negativo»), un caso de Playwright con una zona
+horaria con desfase negativo, que comprueba que la fecha del tipo no cambia
+de día; en el cambio 7 («hace la cabecy 232 px a 375 px»), el aviso hace
+que la cabecera mida 232 px de alto con la ventana a 375 px de ancho.
+
+Después se cierra la sesión 07 en esta bitácora y la IA **para**. La fase
+de QA va en una sesión nueva.
+
+### Cambios de la revisión de la parada 3 · lo hecho (desde las 18:50)
+
+**Cambio 3 (AA-04): qué se rompió y qué falló.** Cada mutación se aplicó
+sola, se ejecutó `app.journeys.spec.ts` (3 tests) y se deshizo antes de la
+siguiente. En las cuatro falla un test y pasan los otros dos.
+
+| Recorrido | Qué se rompió | Hora | Qué falló |
+|---|---|---|---|
+| CA-18 · solo `GET` y `POST`, sin cabecera propia | `BackendApi.post` añadió una cabecera `X-Client` a cada `POST` | 18:56:20 | Solo el primer recorrido: `expected [ 'X-Client', 'X-Client', 'X-Client' ] to deeply equal []` |
+| CA-09 · con USD no viaja la divisa | `BackendApi.saveSimulation` añadió `currency` al cuerpo cuando la divisa mostrada no es EUR | 18:56:53 | Solo el segundo recorrido: el texto JSON de los cuerpos no es el esperado. El primero, que guarda en EUR, pasa: la mutación solo muerde con otra divisa, que es lo que vigila este |
+| CA-03 · tipos en error | El selector ofreció las cuatro divisas con los tipos en error | 18:57:22 | Solo el tercer recorrido: `expected [ 'EUR', 'USD', 'GBP', 'CHF' ] to deeply equal [ 'EUR' ]` |
+| CA-03 · tipos en error, segunda mutación | El aviso del fallo dejó de salir en la cabecera | 18:58:00 | Solo el tercer recorrido: `expected '' to contain 'No se han podido cargar los tipos de …'` |
+
+Lo que esto **no** demuestra, y se dice: (1) en CA-03 no se ha roto la
+parte de «los importes siguen en EUR» (E-28); sin tipos no hay con qué
+convertir, y no encontré una mutación de una línea que lo rompa sin romper
+antes el selector; (2) las mutaciones de CA-18 y CA-09 se miraron solo
+contra los recorridos, no contra toda la batería: es de esperar que
+`backend-api.spec.ts` también las detecte, y no se ha comprobado; (3) un
+primer intento de la segunda mutación de CA-03 (18:57:46) no compilaba
+(`TS2367`) y no cuenta: un fallo de compilación no es un rojo.
 
 ## 4. Comprobaciones hechas en la sesión
 
