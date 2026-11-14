@@ -1,5 +1,11 @@
-/* The label, the select and the loading note on one line that wraps; the notice of a failure
-   below them. The select takes the width of its content, not the whole line. */
+/* The host adds no box of its own: the header places the selector and the notice of a failure
+   directly, so the selector stays on the line of the name and only the notice takes a new one. */
+:host {
+  display: contents;
+}
+
+/* The label, the select and the loading note on one line that wraps. The select takes the
+   width of its content, not the whole line. */
 .currency {
   display: flex;
   flex-wrap: wrap;
@@ -17,15 +23,28 @@
   font-size: var(--font-size-sm);
 }
 
+/* Compact, so that the header stays low at 375 px: a line of its own across the header, with
+   the text and «Reintentar» side by side. Where the text does not fit on one line it wraps
+   beside the button instead of pushing it below. */
 .currency-error {
-  margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--color-danger);
   border-radius: var(--radius);
   background: var(--color-danger-surface);
 }
 
 .currency-error p {
-  margin-bottom: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  margin: 0;
   color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.currency-error button {
+  flex: none;
 }
