@@ -58,11 +58,13 @@ direcciones en el frontend. *Por qué el filtro*: salvo la limitación que
 sigue, todo lo que rechaza lo rechaza también el backend (`not_an_integer`
 u `out_of_range`), así que no cambia lo que ve el usuario; evita construir
 una URL con un texto arbitrario y garantiza que el `id` que después viaja
-en el cuerpo de la proyección y del guardado es exacto. **Limitación**: un
-cliente con un `id` entre 2^53 y 2^63 − 1, que el backend admite, no puede
-abrirse desde el frontend. Solo puede existir si se inserta a mano en la
-base de datos. Está propuesta como limitación conocida y **pendiente de
-que el Tech Lead la acepte**.
+en el cuerpo de la proyección y del guardado es exacto. **Limitación
+conocida L-06**
+([`limitaciones-conocidas.md`](../04-calidad/limitaciones-conocidas.md)),
+aceptada por el Tech Lead el 2026-11-14: JavaScript no representa exactos
+los enteros por encima de 2^53 − 1, así que el frontend no abre un cliente
+con un `id` mayor, aunque el backend lo admita. Solo existiría insertado a
+mano en la base de datos.
 
 **Nombres de país y de plan (`GET /meta`).** `/meta` se pide **una vez, al
 arrancar la aplicación**, y se guarda en memoria durante la sesión. Las
@@ -577,6 +579,9 @@ por qué no las alcanza:
 | **L-04**: con un `q` repetido solo se valida y se usa el último | El buscador envía un solo `q`, o ninguno (2.2) |
 | **L-05**: un entero de más de 4300 dígitos en el cuerpo responde `400` | Ningún número que envía el frontend pasa de 16 dígitos: los campos numéricos se validan antes de enviar (2.5) y el `id` de la ruta se filtra (2.1) |
 
+La sexta limitación de ese documento, **L-06**, no es del backend sino del
+frontend: el `id` por encima de 2^53 − 1 (2.1).
+
 ## 5. Casos de prueba
 
 ### 5.1 Conversión y formato
@@ -768,7 +773,7 @@ en SPEC-01, 5.10.
 | `/clientes/0` y `/clientes/-1` | 0 | «Cliente no encontrado» |
 | `/clientes/١` (un dígito que no es ASCII, U+0661) | 0 | «Cliente no encontrado» |
 | `/clientes/9007199254740991` (2^53 − 1; el backend responde `404`) | 1, a `/customers/9007199254740991`, con ese texto exacto | «Cliente no encontrado» |
-| `/clientes/9007199254740993` (16 dígitos, por encima de 2^53 − 1) | 0 | «Cliente no encontrado»: JavaScript no lo representa exacto (limitación de 2.1) |
+| `/clientes/9007199254740993` (16 dígitos, por encima de 2^53 − 1) | 0 | «Cliente no encontrado»: JavaScript no lo representa exacto (limitación L-06) |
 | `/clientes/99999999999999999` (17 dígitos) | 0 | «Cliente no encontrado» |
 | `/clientes/7`, y el backend responde `422` | 1 | «Cliente no encontrado» |
 | `/clientes/7`, y el backend responde `404` `not_found` | 1 | Aviso de error inesperado (2.7), **no** «Cliente no encontrado» |
@@ -864,7 +869,7 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 |---|---|
 | A3 · almacenamiento y API | Nada: confirmado. Cambiarlos no pide una proyección nueva (2.5) |
 | SPEC-01, SPEC-02 y SPEC-03 | Sus contratos cambiaron el 2026-11-13, después de escribirse esta spec, y el 2026-11-14 se puso al día con ellos (historial). Si vuelven a cambiar: 2.7, 4.1, 4.3 y las tablas de 5.3 a 5.7 |
-| Limitación del `id` por encima de 2^53 − 1 (2.1) | Pendiente de que el Tech Lead la acepte o la cambie. Si no la acepta, cambian 2.1, E-15, E-47 y la tabla 5.7 |
+| Limitación del `id` por encima de 2^53 − 1 (2.1) | Aceptada por el Tech Lead el 2026-11-14 como limitación conocida L-06. Nada pendiente |
 
 ## Historial
 
@@ -884,3 +889,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Corrección de dos cambios de este mismo día, vista por la IA antes de la evaluación: 2.2 y 2.3 nombraban `isWellFormed()` y `toWellFormed()` para detectar un *surrogate* suelto. Son de ES2024, y el proyecto que crea el CLI 21.2.29 compila para ES2022 sin declarar otra biblioteca (leído en su plantilla de `tsconfig.json`), así que no las conoce; `.claude/rules/frontend.md` manda usar la configuración por defecto del CLI. La spec dice ahora cómo se detecta sin salir de ella: una expresión regular en modo Unicode, comprobada con Node 24. Sin cambios en requisitos, criterios ni casos |
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (`04-calidad/evaluacion-spec04-01.md`, H-01, H-05 y H-09), decididas por el Tech Lead. **El EUR se formatea solo con enteros** (2.6): los euros y los céntimos se separan con una división exacta y un resto, y el importe no se divide entre 100; la regla del dinero no cambia. **Presentación**: el tipo de cambio se muestra con los decimales que trae, hasta 6; los importes de cuatro cifras, sin punto de millar, como los da `es-ES`; y los tramos se rotulan «del 1 al 10», «del 11 al 50» y «del 51 en adelante» (2.6 y 2.8). Dos filas nuevas en la tabla de importes de 5.1 (5 y 123450 céntimos) y dos tablas más, del tipo de cambio y de los rótulos. CA-01 deja de citar E-27, que un test del *pipe* no demuestra, y pasa a citar E-28 y E-29; E-27 lo citan CA-02 y CA-08, que tienen sus filas. Motivo: 2.6 decía que el importe en EUR «sale exacto de los céntimos» sin decir cómo, y lo directo era dividir entre 100, que es coma flotante sobre dinero; el formato por defecto daba `1,114` para un tipo de `1.1139`; y ninguna fila fijaba un importe de cuatro cifras ni el rótulo del último tramo |
 | 2026-11-14 | Correcciones de la evaluación independiente de esta spec (H-02 y el caso A-01 de su respuesta), decididas por el Tech Lead. **Casos que faltaban**, sin cambiar ningún requisito: una fila en 5.3 para el orden de la API (E-03), una en 5.4 para los desplegables del alta (E-05 y E-35) y dos en 5.5, para los importes marcados como «actualizando» y para «Guardar» desactivado mientras se proyecta y mientras se guarda (E-21 y E-23). **CA-18 se parte**: el test de `core/` comprueba que la petición no lleva ninguna cabecera puesta por la aplicación, y CA-14, la prueba de principio a fin, que las peticiones reales pasan el CORS del backend; CA-14 cita E-52. Motivo: CA-04, CA-05 y CA-08 dicen reproducir «cada fila» y esos cinco requisitos no tenían ninguna; y CA-18 pedía mirar unas cabeceras que Angular añade al enviar y que un test con sus utilidades no ve |
+| 2026-11-14 | Decisión del Tech Lead sobre la propuesta C-01 de la sesión 06: la limitación del `id` por encima de 2^53 − 1 queda aceptada como **limitación conocida L-06**, con fila en `04-calidad/limitaciones-conocidas.md`. 2.1 la cita en lugar de darla por pendiente; también la fila de 5.7, una frase en 4.3 y el apartado 9. Sin cambios en reglas, requisitos ni casos. Motivo: JavaScript no representa exactos los enteros por encima de 2^53 − 1, y un cliente con un `id` mayor solo existiría insertado a mano |
