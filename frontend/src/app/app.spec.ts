@@ -5,8 +5,8 @@ import { environment } from '../environments/environment';
 import { App } from './app';
 import { appConfig } from './app.config';
 
-// SPEC-04, 2.1: a header shared by every view carries the application name and the link to the
-// panel. The currency selector joins it with the currencies piece.
+// SPEC-04, 2.1: a header shared by every view carries the application name, the link to the
+// panel and the currency selector.
 describe('App · SPEC-04 2.1', () => {
   async function render(): Promise<HTMLElement> {
     await TestBed.configureTestingModule({
@@ -40,12 +40,24 @@ describe('App · SPEC-04 2.1', () => {
     expect(page.querySelectorAll('h1').length).toBe(0);
   });
 
-  it('should ask for /meta once when the application starts (SPEC-04/E-39)', async () => {
+  // Until the currencies piece this test expected `/meta` alone. E-26 adds the rates to the
+  // start; the list is still the exact one: anything else asked at the start fails it.
+  it('should ask at the start for /meta and for the rates, once each, and for nothing else (SPEC-04/E-39, E-26)', async () => {
     await render();
 
     const requests = TestBed.inject(HttpTestingController).match(() => true);
     expect(requests.map((request) => request.request.urlWithParams)).toEqual([
       `${environment.apiBaseUrl}/meta`,
+      environment.ratesUrl,
     ]);
+  });
+
+  it('should carry the currency selector in the header, with its label (SPEC-04 2.1)', async () => {
+    const page = await render();
+
+    const select = page.querySelector('header select');
+    const label = page.querySelector(`header label[for="${select?.id ?? ''}"]`);
+    expect(select?.id).toBe('currency-select');
+    expect(label?.textContent?.trim()).toBe('Divisa');
   });
 });
