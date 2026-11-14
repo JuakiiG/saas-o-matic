@@ -6,8 +6,15 @@ paths:
 # Frontend (Angular · TypeScript strict · ESLint)
 
 La versión de Angular es la fijada en ADR-001. Se usa la configuración por
-defecto del CLI y sus generadores (`ng generate`); no se añaden librerías de
-UI ni de estado sin aprobación.
+defecto del CLI; no se añaden librerías de UI ni de estado sin aprobación.
+
+**Los generadores del CLI se usan para el proyecto (`ng new`) y para los
+ficheros de entorno (`ng generate environments`). Los componentes, los
+servicios y los pipes se escriben a mano**, con las herramientas de
+edición y con el nombre de fichero y de clase que les daría el CLI
+(`panel.ts` y `Panel`, `money-pipe.ts` y `MoneyPipe`). *Por qué: el
+generador escribe el componente y su test a la vez, y aquí el test va antes
+y se ve fallar.*
 
 ## Estructura
 
