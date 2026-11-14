@@ -1,3 +1,5 @@
-/* Global styles: the custom properties and the base. Everything else lives with its component. */
+/* Global styles: the custom properties, the base and the form controls. Everything else lives
+   with its component. */
 @import './styles/tokens.css';
 @import './styles/base.css';
+@import './styles/controls.css';

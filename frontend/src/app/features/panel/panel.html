@@ -1,0 +1,77 @@
+<div class="panel-heading">
+  <h1>Clientes</h1>
+  <a class="button" routerLink="/clientes/nuevo">Nuevo cliente</a>
+</div>
+
+@if (metaError(); as error) {
+  <app-error-notice [error]="error" (retry)="retryMeta()" />
+} @else if (metaLoading()) {
+  <app-loading-notice label="Cargando…" />
+} @else {
+  <div class="search" role="search">
+    <label for="panel-search">Buscar cliente</label>
+    <input
+      id="panel-search"
+      type="search"
+      autocomplete="off"
+      [formControl]="searchBox"
+      [attr.aria-invalid]="tooLong()"
+      [attr.aria-describedby]="searchErrorId()"
+    />
+    @if (tooLong()) {
+      <p id="panel-search-error" class="field-error" role="alert">
+        El texto de búsqueda admite 100 caracteres como máximo
+      </p>
+    }
+  </div>
+
+  <section class="results-region" aria-label="Resultados">
+    @switch (listView()) {
+      @case ('loading') {
+        <app-loading-notice label="Cargando clientes…" />
+      }
+      @case ('error') {
+        @if (listError(); as error) {
+          <app-error-notice [error]="error" (retry)="retrySearch()" />
+        }
+      }
+      @case ('empty-initial') {
+        <div class="empty">
+          <p>Todavía no hay clientes.</p>
+          <p><a routerLink="/clientes/nuevo">Dar de alta el primer cliente</a></p>
+        </div>
+      }
+      @case ('empty-search') {
+        <p class="empty">No hay clientes que coincidan.</p>
+      }
+      @case ('list') {
+        <ul class="results">
+          @for (row of rows(); track row.id) {
+            <li class="card">
+              <a class="card-title" [routerLink]="row.link">{{ row.name }}</a>
+              <dl class="card-facts">
+                <div>
+                  <dt>Identificador fiscal</dt>
+                  <dd>{{ row.taxId }}</dd>
+                </div>
+                <div>
+                  <dt>País</dt>
+                  <dd>{{ row.country }}</dd>
+                </div>
+                <div>
+                  <dt>Plan</dt>
+                  <dd>{{ row.plan }}</dd>
+                </div>
+              </dl>
+            </li>
+          }
+        </ul>
+        @if (atMaximum()) {
+          <p class="results-note">
+            Se muestran como máximo 20 clientes. Escribe más texto para afinar la búsqueda.
+          </p>
+        }
+      }
+    }
+  </section>
+}

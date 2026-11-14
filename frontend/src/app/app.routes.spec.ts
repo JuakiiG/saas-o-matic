@@ -20,6 +20,12 @@ describe('Routes · SPEC-04/E-34', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
+  it('should show the panel when the route is the root (SPEC-04 2.1)', async () => {
+    const page = await open('/');
+
+    expect(page.querySelector('main h1')?.textContent?.trim()).toBe('Clientes');
+  });
+
   it('should show the not found page when the route matches no view', async () => {
     const page = await open('/esta-ruta-no-existe');
 

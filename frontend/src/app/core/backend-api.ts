@@ -18,6 +18,9 @@ import {
 import { BACKEND_TIMEOUT_MS, Remote, toRemote } from './remote';
 import { replaceLoneSurrogates, trimSpaces } from './text';
 
+/** Where the backend is. Features never read the environment: this is their only way to it. */
+export const BACKEND_BASE_URL = environment.apiBaseUrl;
+
 /**
  * The calls to the backend (SPEC-04, 4.1). Components never see a URL.
  *
@@ -29,7 +32,7 @@ import { replaceLoneSurrogates, trimSpaces } from './text';
 @Injectable({ providedIn: 'root' })
 export class BackendApi {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly baseUrl = BACKEND_BASE_URL;
 
   /** Countries and plans with their names. It does not read the database (SPEC-04, 4.1). */
   getMeta(): Observable<Remote<MetaData>> {
