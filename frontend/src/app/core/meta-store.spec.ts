@@ -28,7 +28,9 @@ const META = {
 };
 const SERVER_ERROR = { status: 500, statusText: 'Internal Server Error' };
 
-describe('MetaStore · SPEC-04/E-35, E-39, E-40', () => {
+describe('MetaStore · SPEC-04/E-33, E-35, E-39, E-40', () => {
+  afterEach(() => vi.useRealTimers());
+
   function setUp(): { store: MetaStore; controller: HttpTestingController } {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
@@ -95,6 +97,27 @@ describe('MetaStore · SPEC-04/E-35, E-39, E-40', () => {
 
     const error = { code: 'internal_error', fieldErrors: [] };
     expect(store.state()).toEqual({ status: 'error', error });
+  });
+
+  // CA-10 (E-33): the wait of 10 s belongs to `BackendApi`; the store has to end in its error,
+  // so that the four views show the notice with «Reintentar» instead of loading for ever.
+  it('should end in an error state with `timeout`, and ask again on a retry, when /meta does not answer in 10 s', () => {
+    vi.useFakeTimers();
+    const { store, controller } = setUp();
+    store.load();
+    const request = controller.match(META_URL)[0];
+
+    vi.advanceTimersByTime(9_999);
+    expect(store.state()).toEqual({ status: 'loading' });
+    vi.advanceTimersByTime(1);
+
+    expect(store.state()).toEqual({
+      status: 'error',
+      error: { code: 'timeout', fieldErrors: [] },
+    });
+    expect(request?.cancelled).toBe(true);
+    store.retry();
+    expect(controller.match(META_URL).length).toBe(1);
   });
 
   it('should ask once more when it is retried after a failure, and hold the data then', () => {
