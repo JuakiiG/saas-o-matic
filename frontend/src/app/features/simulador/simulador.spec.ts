@@ -385,7 +385,9 @@ describe('Simulador · proyección · SPEC-04/E-17 a E-22, E-35, E-38, E-40, E-4
       textOf(page, '.quote-updating'),
       saveButton(page)?.disabled,
     ];
-    wait(page, 200);
+    wait(page, 199);
+    const askedBeforeTheWait = quoteRequests(page).length;
+    wait(page, 1);
     const request = only(quoteRequests(page));
     const inFlight = [
       amounts(page)['Total'],
@@ -395,6 +397,9 @@ describe('Simulador · proyección · SPEC-04/E-17 a E-22, E-35, E-38, E-40, E-4
     flush(page, request, OF_15);
 
     expect(waiting).toEqual(['121,00 EUR', 'Actualizando…', true]);
+    // The row of the 200 ms of 5.5: «0 todavía», and then one, for the 15 users.
+    expect(askedBeforeTheWait).toBe(0);
+    expect(request.request.body).toEqual({ customer_id: 7, active_users: 15 });
     expect(inFlight).toEqual(['121,00 EUR', 'Actualizando…', true]);
     expect(amounts(page)['Total']).toBe('169,40 EUR');
     expect(page.element.querySelector('.quote-updating')).toBeNull();
@@ -545,13 +550,15 @@ describe('Simulador · proyección · SPEC-04/E-17 a E-22, E-35, E-38, E-40, E-4
     const page = openWithProjection();
     settleUsers(page, '15');
 
+    const request = only(quoteRequests(page));
     flush(
       page,
-      only(quoteRequests(page)),
+      request,
       invalid([{ field: 'active_users', code: 'out_of_range', message: OUT_OF_RANGE }]),
       422,
     );
 
+    expect(request.request.body).toEqual({ customer_id: 7, active_users: 15 });
     expect(errorOf(page, USERS)).toBe(OUT_OF_RANGE);
     expect(amounts(page)).toEqual({});
     expect(saveButton(page)?.disabled).toBe(true);
@@ -660,7 +667,8 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
     page.fixture.detectChanges();
 
     expect(disabledWhileSaving).toBe(true);
-    expect(simulationRequests(page).length).toBe(1);
+    // `only` checks that there is one request and no more.
+    expect(only(simulationRequests(page)).request.body).toEqual(SAVED_BODY);
   });
 
   it.each<[string, number, object, string]>([
@@ -704,10 +712,12 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
 
   it('should warn that it may have been saved, with a retry and a link to the detail, on a timeout', () => {
     const page = openAndSave();
+    const request = only(simulationRequests(page));
 
     wait(page, 10_000);
 
     const notice = page.element.querySelector(SAVE_NOTICE);
+    expect(request.request.body).toEqual(SAVED_BODY);
     expect(clean(notice?.textContent)).toContain(TIMED_OUT);
     expect(clean(notice?.textContent)).toContain('puede haberse guardado');
     expect(clean(notice?.querySelector('button')?.textContent)).toBe('Reintentar');
@@ -726,9 +736,10 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
   it('should show each error of a 422 next to its field, or in the notice if it has none here', () => {
     const page = openAndSave();
 
+    const request = only(simulationRequests(page));
     flush(
       page,
-      only(simulationRequests(page)),
+      request,
       invalid([
         { field: 'storage_gb', code: 'out_of_range', message: OUT_OF_RANGE },
         { field: 'customer_id', code: 'out_of_range', message: 'El cliente no es válido.' },
@@ -736,6 +747,7 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
       422,
     );
 
+    expect(request.request.body).toEqual(SAVED_BODY);
     expect(errorOf(page, STORAGE)).toBe(OUT_OF_RANGE);
     expect(textOf(page, SAVE_NOTICE)).toContain('El cliente no es válido.');
     expect(textOf(page, SAVE_NOTICE)).not.toContain(OUT_OF_RANGE);
@@ -761,8 +773,10 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
   it('should show «Cliente no encontrado» when saving answers 404 customer_not_found', () => {
     const page = openAndSave();
 
-    flush(page, only(simulationRequests(page)), { code: 'customer_not_found' }, 404);
+    const request = only(simulationRequests(page));
+    flush(page, request, { code: 'customer_not_found' }, 404);
 
+    expect(request.request.body).toEqual(SAVED_BODY);
     expect(heading(page)).toBe('Cliente no encontrado');
   });
 
@@ -770,8 +784,10 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
     const page = openWithProjection();
     settleUsers(page, '15');
 
-    flush(page, only(quoteRequests(page)), { code: 'customer_not_found' }, 404);
+    const request = only(quoteRequests(page));
+    flush(page, request, { code: 'customer_not_found' }, 404);
 
+    expect(request.request.body).toEqual({ customer_id: 7, active_users: 15 });
     expect(heading(page)).toBe('Cliente no encontrado');
     expect(clean(page.element.querySelector('a')?.textContent)).toBe('Volver al panel');
   });

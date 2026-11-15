@@ -204,9 +204,12 @@ function send(page: Page, values: Partial<Values> = {}): void {
   press(page, 'Guardar');
 }
 
-function reject(page: Page, status: number, body: object | string): void {
-  onlyPost(page).flush(body, { status, statusText: 'Error' });
+/** Answers the only sign-up in flight with an error, and gives back the body it carried. */
+function reject(page: Page, status: number, body: object | string): unknown {
+  const request = onlyPost(page);
+  request.flush(body, { status, statusText: 'Error' });
   page.fixture.detectChanges();
+  return request.request.body;
 }
 
 function errorOf(page: Page, field: keyof Values): string {
@@ -248,6 +251,27 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     );
     expect(options('plan')).toEqual(META.plans.map((plan) => [plan.code, plan.name]));
   });
+
+  // SPEC-04, 2.3 and its row of 5.4: without it the drop-down would show the first country as
+  // if somebody had chosen it.
+  it.each<[keyof Values, string]>([
+    ['country', 'Elige un país'],
+    ['plan', 'Elige un plan'],
+  ])(
+    'should open the drop-down of %s on «%s», a first option that cannot be chosen',
+    (field, label) => {
+      const page = open();
+
+      const select = control(page, field);
+      const first = select?.querySelector('option');
+
+      expect(select instanceof HTMLSelectElement && select.selectedIndex).toBe(0);
+      expect(first?.textContent?.trim()).toBe(label);
+      expect(first?.disabled).toBe(true);
+      expect(first?.value).toBe('');
+      expect(select?.querySelectorAll('option[disabled]').length).toBe(1);
+    },
+  );
 
   it('should send the codes of the chosen country and plan, and go to the detail on 201', async () => {
     const page = open();
@@ -384,8 +408,9 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
       const page = open();
       send(page);
 
-      reject(page, 422, invalid([error]));
+      const sent = reject(page, 422, invalid([error]));
 
+      expect(sent).toEqual(VALID_BODY);
       expect(errorOf(page, 'taxId')).toBe(error.message);
       expect(written(page)).toEqual(VALID);
       expect(notice(page)).toBe('');
@@ -396,8 +421,9 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     const page = open();
     send(page);
 
-    reject(page, 422, invalid([SHORT_NAME, BAD_EMAIL]));
+    const sent = reject(page, 422, invalid([SHORT_NAME, BAD_EMAIL]));
 
+    expect(sent).toEqual(VALID_BODY);
     expect(errorOf(page, 'name')).toBe(SHORT_NAME.message);
     expect(errorOf(page, 'email')).toBe(BAD_EMAIL.message);
     expect(written(page)).toEqual(VALID);
@@ -416,12 +442,13 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     const page = open();
     send(page);
 
-    reject(
+    const sent = reject(
       page,
       422,
       invalid([BAD_PLAN, fieldError('zeta', 'unknown_field', 'Campo no reconocido.')]),
     );
 
+    expect(sent).toEqual(VALID_BODY);
     expect(errorOf(page, 'plan')).toBe(BAD_PLAN.message);
     expect(notice(page)).toContain('Campo no reconocido.');
     expect(notice(page)).not.toContain(BAD_PLAN.message);
@@ -433,8 +460,13 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     const page = open();
     send(page);
 
-    reject(page, 422, invalid([BAD_PLAN, { field: 'tax_id', code: 'invalid_tax_id_format' }]));
+    const sent = reject(
+      page,
+      422,
+      invalid([BAD_PLAN, { field: 'tax_id', code: 'invalid_tax_id_format' }]),
+    );
 
+    expect(sent).toEqual(VALID_BODY);
     expect(errorOf(page, 'plan')).toBe(BAD_PLAN.message);
     expect(errorOf(page, 'taxId')).toBe('');
     expect(notice(page)).toBe('');
@@ -444,8 +476,13 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     const page = open();
     send(page);
 
-    reject(page, 422, invalid([BAD_FORMAT, fieldError('tax_id', 'too_long', 'Segundo mensaje.')]));
+    const sent = reject(
+      page,
+      422,
+      invalid([BAD_FORMAT, fieldError('tax_id', 'too_long', 'Segundo mensaje.')]),
+    );
 
+    expect(sent).toEqual(VALID_BODY);
     expect(errorOf(page, 'taxId')).toBe(BAD_FORMAT.message);
     expect(notice(page)).toContain('Segundo mensaje.');
   });
@@ -454,8 +491,9 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     const page = open();
     send(page);
 
-    reject(page, 422, invalid([{ field: 'x' }, 'texto']));
+    const sent = reject(page, 422, invalid([{ field: 'x' }, 'texto']));
 
+    expect(sent).toEqual(VALID_BODY);
     expect(notice(page)).toContain(UNEXPECTED);
     expect(written(page)).toEqual(VALID);
   });
@@ -474,9 +512,10 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     const page = open();
     send(page);
 
-    reject(page, 409, CONFLICT);
+    const sent = reject(page, 409, CONFLICT);
     await page.fixture.whenStable();
 
+    expect(sent).toEqual(VALID_BODY);
     expect(notice(page)).toContain(ALREADY_EXISTS);
     // Sending the same again cannot help: no «Reintentar» (SPEC-04, 2.3).
     expect(page.element.querySelector('.form-notice button')).toBeNull();
@@ -561,7 +600,8 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
 
     press(page, 'Guardar');
 
-    expect(posts(page).length).toBe(1);
+    // `onlyPost` checks that there is one request and no more.
+    expect(onlyPost(page).request.body).toEqual(VALID_BODY);
   });
 
   it('should show the error of /meta with a retry instead of the form when /meta fails', () => {
