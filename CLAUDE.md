@@ -50,7 +50,11 @@ al tocar esa parte del repo.
    dos sesiones seguidas hubo que corregir horas estimadas.*
 7. **Commits**: Conventional Commits en español (`feat(pricing): …`), citando
    los requisitos que cubren. La IA propone el mensaje; solo hace el commit
-   cuando el Tech Lead lo pide. Nunca hace `push`. Sin trailers de coautoría
+   cuando el Tech Lead lo pide. **Un encargo con pasos autoriza un commit
+   por paso**, con el oráculo en verde, sin pedirlo otra vez en cada uno.
+   *Por qué: es como se trabaja desde la sesión 07, y la regla tiene que
+   decir lo que se hace (AC-01 de la sesión 08).* Nunca hace `push`: es
+   solo del Tech Lead. Sin trailers de coautoría
    ni firmas de herramientas; el uso de la IA se documenta en
    `ai-workspace/`. Un commit solo se enmienda (`--amend`) si es el último
    y no está subido, y la enmienda se anota en la bitácora. *Por qué: una
