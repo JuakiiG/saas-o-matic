@@ -4,6 +4,8 @@ Herramienta interna para que un equipo comercial simule y presupueste
 suscripciones SaaS: tarificación por tramos, impuestos por país e importes
 en varias divisas. Una API REST (FastAPI y SQLite) y un panel web (Angular).
 
+![El simulador con 15 usuarios activos y los importes en USD: el desglose por tramos, el coste base, el impuesto, el total y el total en EUR](ai-workspace/04-calidad/capturas/simulador-usd-1280.png)
+
 ## Requisitos
 
 Probado con estas versiones, y solo con ellas:
@@ -72,8 +74,9 @@ identificador no se puede repetir dentro de un país.
 ## Tests y oráculo
 
 El oráculo, desde la raíz, ejecuta tests, lint, tipos, cobertura, límites
-de tamaño y el control de specs. Con `--e2e` añade las pruebas de principio
-a fin, con Playwright:
+de tamaño y el control de specs. **Necesita antes el `npm ci` del frontend**
+(«Arranque»). Con `--e2e` añade las pruebas de principio a fin, con
+Playwright:
 
 ```
 uv run scripts/check.py
@@ -96,7 +99,7 @@ npx playwright install --only-shell chromium
   nada.
 - **Solo funcionan en Chromium.**
 
-Tests que hay hoy (2026-11-15): 741 del backend, 565 del frontend, 18 de
+Tests que hay hoy (2026-11-15): 741 del backend, 566 del frontend, 18 de
 Playwright y 96 de los propios scripts. Por separado:
 `uv run --locked pytest` en `backend/`; `npm run test:ci` y `npm run e2e`
 en `frontend/`.
