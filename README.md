@@ -1,7 +1,7 @@
 # SaaS-O-Matic
 
 Herramienta interna para que un equipo comercial simule y presupueste
-suscripciones SaaS: tarificación por tramos, impuestos por país y importes
+suscripciones SaaS: tarificación por tramos, impuestos por país e importes
 en varias divisas. Una API REST (FastAPI y SQLite) y un panel web (Angular).
 
 ## Requisitos
@@ -48,8 +48,9 @@ conectar con el servidor.».
 
 ## Datos para probar
 
-Con la base vacía, «Dar de alta el primer cliente». El nombre y el email
-son libres; un identificador fiscal válido de cada país:
+Con la base vacía, «Dar de alta el primer cliente». El nombre es libre y el
+email solo tiene que tener forma de email (`pruebas@empresa.example`). Un
+identificador fiscal válido de cada país:
 
 | País | Identificador |
 |---|---|
@@ -70,16 +71,16 @@ identificador no se puede repetir dentro de un país.
 
 ## Tests y oráculo
 
-Una sola orden, desde la raíz, ejecuta tests, lint, tipos, cobertura,
-límites de tamaño y el control de specs:
+El oráculo, desde la raíz, ejecuta tests, lint, tipos, cobertura, límites
+de tamaño y el control de specs. Con `--e2e` añade las pruebas de principio
+a fin, con Playwright:
 
 ```
 uv run scripts/check.py
 uv run scripts/check.py --e2e
 ```
 
-La segunda añade las pruebas de principio a fin, con Playwright, que antes
-necesitan su navegador, una sola vez:
+Playwright necesita antes su navegador, una sola vez:
 
 ```
 cd frontend
