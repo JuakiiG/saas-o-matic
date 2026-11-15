@@ -44,6 +44,20 @@ describe('Routes · SPEC-04/E-34', () => {
     expect(page.querySelector('main h1')?.textContent?.trim()).toBe('Simulador');
   });
 
+  // SPEC-04/E-57: the name of the view and, behind, the name of the application.
+  it.each([
+    ['/', 'Clientes · SaaS-O-Matic'],
+    ['/clientes/nuevo', 'Nuevo cliente · SaaS-O-Matic'],
+    ['/clientes/7', 'Detalle del cliente · SaaS-O-Matic'],
+    ['/clientes/7/simulacion', 'Simulador · SaaS-O-Matic'],
+  ])('should title the document of %s as «%s» (SPEC-04/E-57)', async (url, title) => {
+    document.title = 'The title of a page opened before';
+
+    await open(url);
+
+    expect(document.title).toBe(title);
+  });
+
   it('should show the not found page when the route matches no view', async () => {
     const page = await open('/esta-ruta-no-existe');
 

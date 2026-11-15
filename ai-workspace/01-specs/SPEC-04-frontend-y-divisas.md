@@ -40,6 +40,16 @@ enlace al panel y el **selector de divisa**. La divisa elegida vale para
 todas las vistas y se conserva al navegar; al recargar la página vuelve a
 EUR.
 
+**El título del documento.** Cada una de las cuatro vistas pone su título
+en el documento (el que se ve en la pestaña y en el historial del
+navegador), con la opción `title` del router: el nombre de la vista y,
+detrás, el de la aplicación. Son «Clientes · SaaS-O-Matic» (panel), «Nuevo
+cliente · SaaS-O-Matic», «Detalle del cliente · SaaS-O-Matic» y
+«Simulador · SaaS-O-Matic» (E-57). *Por qué*: el título es lo primero que
+anuncia un lector de pantalla al cambiar de vista, y con uno solo para
+toda la aplicación todas las vistas se anuncian igual. La página «no
+encontrada» no tiene título propio.
+
 **El `id` de la ruta (`/clientes/:id`).** El frontend **nunca convierte
 ese texto en número** para pedir el cliente:
 
@@ -647,6 +657,7 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | E-42 | Si una llamada al backend responde `503` con `service_unavailable`, entonces el sistema deberá mostrar el aviso de servicio no disponible, distinto del de error inesperado, con un botón «Reintentar». | R-17, A14 |
 | E-43 | Si una llamada al backend responde con un error que su vista no trata por su `code` (un `500`, un `400`, un `415`, un `405`, un `404` con `not_found`, un código que el frontend no conoce o un error sin `code`), entonces el sistema deberá mostrar el aviso de error inesperado con un botón «Reintentar» y conservar en el estado de error el `code` recibido, o `unknown_error` si no lo hay. | R-17, A14 |
 | E-52 | El sistema deberá llamar al backend solo con `GET` y `POST`, sin cabeceras propias y con cuerpos JSON, y no deberá leer ninguna cabecera de sus respuestas. | A16 |
+| E-57 | Cuando el usuario abre el panel, el alta, el detalle o el simulador, el sistema deberá poner como título del documento el nombre de esa vista seguido del nombre de la aplicación. | — |
 
 ## 4. Contratos consumidos
 
@@ -986,7 +997,7 @@ clientes que no existen.
 | CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-27, E-29, E-35 a E-38, E-40, E-48, E-49, E-55 |
 | CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
 | CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
-| CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada». | E-34 |
+| CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada», y el título del documento de cada una de las cuatro vistas. | E-34, E-57 |
 | CA-12 | El evaluador independiente comprueba que `frontend/src` no contiene la tarifa, los tipos impositivos, la tabla de letras del DNI ni el cálculo del CIF. | E-06, E-19 |
 | CA-13 | Una prueba de Playwright comprueba que, a 375 px de ancho, ninguna de las cuatro vistas (panel, alta, detalle y simulador) tiene desplazamiento horizontal. | E-16 |
 | CA-14 | Una prueba de Playwright de principio a fin, contra el backend y el frontend reales en local, da de alta un cliente, abre el simulador, guarda una simulación y comprueba que aparece la primera en el detalle. Corre contra el backend real con su CORS por defecto: una cabecera de más o un método no admitido harían fallar la comprobación previa del navegador y, con ella, la prueba. | E-08, E-12, E-24, E-52 |
@@ -1119,3 +1130,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-15 | Cambio mandado por el Tech Lead al revisar la parada 1 de la fase de QA (sesión 08, precisión AC-11). **La nota bajo la tabla de criterios** deja de dar CA-13 y CA-14 por pendientes de implementar: dice que están en `frontend/e2e/`, que se ejecutan con `npm run e2e` y que el oráculo los pasa con `--e2e`; y precisa que la API de divisas se responde con el protocolo de depuración de Chromium y no con `page.route()`, por lo que las pruebas solo funcionan en Chromium. **CA-15 nombra las dos capturas añadidas**, el simulador con otra divisa y la cabecera con el aviso del fallo de los tipos. **D-09 no se reescribe**: lleva al lado una nota fechada. Sin cambios en requisitos ni en casos. Motivo: la nota decía de CA-13 y CA-14 algo que dejó de ser cierto al implementarlos; «la intercepta» no decía cómo, y el cómo decide si CA-14 comprueba el CORS del backend (con `page.route()`, Playwright responde las comprobaciones previas y una cabecera de más no hacía fallar la prueba); y CA-15 pedía menos capturas de las que hay |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-01 de la evaluación independiente del frontend (`04-calidad/evaluacion-frontend-01.md`), sin tocar el código. **El filtro del `id` se aplica al segmento ya descodificado por el router** (2.1), y 5.7 gana dos filas: `/clientes/%31` pide el cliente 1, y `/clientes/1;x=y` también, porque el parámetro de matriz no forma parte del `id`. La frase de 5.7 sobre el simulador dice «las tres primeras filas» donde decía «la primera». Sin requisitos ni criterios nuevos; los dos casos, en los tests de 5.7 del detalle y del simulador. Motivo: la spec decía que el cliente 1 tiene una sola dirección en el frontend y no decía qué pasa con las dos formas que el router reduce a `1` antes de que la aplicación vea el texto |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-02 de la evaluación independiente del frontend. **El anillo de foco y el borde de los campos de formulario tienen un contraste de 3:1 o más sobre el blanco y sobre el fondo de la página** (2.8 y criterio nuevo CA-19, una prueba de Playwright que lee los colores que pinta el navegador). El anillo pasa del naranja `#f59e0b` al azul de acento, `#1d4ed8`; el borde de los campos, de `#c9ced8` a `#7c8698`, y el de las tarjetas, los avisos y la cabecera no cambia. **CA-15 nombra una captura más**, el alta con un campo enfocado. Sin requisitos nuevos. Motivo: el anillo tenía un contraste de 2,15 sobre el blanco y el borde de los campos, de 1,58; con menos de 3:1, quien ve poco no distingue qué campo tiene el foco ni dónde empieza un campo |
+| 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-03 de la evaluación independiente del frontend. **Cada una de las cuatro vistas pone su título en el documento**, con la opción `title` del router y el nombre de la aplicación detrás: «Clientes», «Nuevo cliente», «Detalle del cliente» y «Simulador» (2.1, requisito nuevo E-57 y CA-11). El anuncio del resultado de la búsqueda y el foco al navegar, que el mismo hallazgo señalaba, no se hacen: son la limitación conocida L-10. Motivo: con un solo título para toda la aplicación, un lector de pantalla anuncia igual todas las vistas; lo demás no se puede comprobar sin un lector de pantalla |
