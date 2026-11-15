@@ -970,18 +970,23 @@ clientes que no existen.
 | CA-12 | El evaluador independiente comprueba que `frontend/src` no contiene la tarifa, los tipos impositivos, la tabla de letras del DNI ni el cálculo del CIF. | E-06, E-19 |
 | CA-13 | Una prueba de Playwright comprueba que, a 375 px de ancho, ninguna de las cuatro vistas (panel, alta, detalle y simulador) tiene desplazamiento horizontal. | E-16 |
 | CA-14 | Una prueba de Playwright de principio a fin, contra el backend y el frontend reales en local, da de alta un cliente, abre el simulador, guarda una simulación y comprueba que aparece la primera en el detalle. Corre contra el backend real con su CORS por defecto: una cabecera de más o un método no admitido harían fallar la comprobación previa del navegador y, con ella, la prueba. | E-08, E-12, E-24, E-52 |
-| CA-15 | Capturas generadas con Playwright y revisadas por el Tech Lead de las cuatro vistas a 375 px y a 1280 px, guardadas en `04-calidad/capturas/` como complemento de CA-13. | E-16 |
+| CA-15 | Capturas generadas con Playwright y revisadas por el Tech Lead de las cuatro vistas a 375 px y a 1280 px, y, a esos mismos anchos, del simulador con otra divisa y de la cabecera con el aviso del fallo de los tipos, guardadas en `04-calidad/capturas/` como complemento de CA-13. | E-16 |
 | CA-16 | Tests de los servicios de `core/` reproducen **cada fila** de 5.6, comprobando el `code` del estado de error y el aviso que le corresponde. Cada una de las cuatro vistas, o el servicio que carga sus datos, reproduce **una fila por cada aviso distinto** de 2.7 (servicio no disponible, error inesperado, falta de conexión y espera agotada), comprobando el aviso que se muestra y que hay «Reintentar»; en el servicio, el `code` del estado de error. *Por qué no cada fila en cada vista*: el reparto de `code` a aviso vive en `core/` y se prueba allí fila a fila; repetirlo en cada vista probaría cuatro veces la misma tabla. | E-11, E-42, E-43 |
 | CA-17 | Tests del detalle y del simulador reproducen cada fila de 5.7, comprobando el número de peticiones del cliente y la URL exacta de cada una. | E-15, E-47 |
 | CA-18 | Un test recorre todas las peticiones al backend de un recorrido completo (panel, búsqueda, alta, detalle, proyección y guardado) y comprueba que su método es `GET` o `POST`, que la petición no lleva ninguna cabecera puesta por la aplicación y que el cuerpo de cada `POST` es un objeto JSON con los campos del contrato y ninguno más. `Accept` y `Content-Type` no se ven en este test: Angular las añade al enviar, no en la petición; que las peticiones reales pasan el CORS del backend lo comprueba CA-14. | E-52 |
 
 **Sobre CA-12 a CA-15**: CA-12 es una revisión del evaluador y CA-15, unas
 capturas que genera Playwright (`npm run e2e:capturas`) y revisa una
-persona; ninguna de las dos la hace el oráculo. CA-13 y CA-14 se
-implementan **en la fase de QA**, con Playwright (D-09); hasta entonces
-están **pendientes de implementar** y no pueden darse por cumplidos. La
-prueba de principio a fin no llama a la API real de divisas: la intercepta
-con la respuesta de 4.2, para no depender de la red.
+persona; ninguna de las dos la hace el oráculo. CA-13 y CA-14 están en
+`frontend/e2e/`, con Playwright (D-09): se ejecutan con `npm run e2e` y el
+oráculo los pasa con `--e2e`; sin esa opción su comprobación sale como
+inactiva, no como correcta. Las pruebas de principio a fin no llaman a la
+API real de divisas: la respuesta de 4.2 se da dentro del navegador, para
+no depender de la red. **Se responde con el protocolo de depuración de
+Chromium y no con `page.route()`**: con una ruta puesta, Playwright
+contesta él mismo las comprobaciones previas de CORS, admitiendo lo que se
+le pida, y CA-14 no comprobaría el CORS del backend. Por eso las pruebas
+solo funcionan en Chromium.
 
 ## 7. Decisiones de diseño
 
@@ -1016,6 +1021,14 @@ era la 1.65.0, que declara `node >=20` (consultado con `npm view`). El
 una semana de ADR-007, la elegible ese día sigue siendo la 1.65.0,
 publicada el 2026-11-05 (fechas del registro de npm). No se ha instalado ni
 ejecutado.
+
+**Nota del 2026-11-15 sobre D-09** (la decisión y el párrafo anterior se
+conservan como se escribieron): Playwright 1.65.0 está instalado y sus
+pruebas, en `frontend/e2e/`. A las dos que nombra D-09 se han sumado, por
+decisión del Tech Lead, el caso de frontera de la limitación conocida L-09
+y la fila de la zona horaria de 5.5. Las capturas de `04-calidad/` ya no
+son manuales: las genera Playwright y las revisa el Tech Lead (CA-15). El
+detalle, en ADR-005.
 
 ## 8. Cambios que provoca en otros documentos
 
@@ -1081,3 +1094,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 3 del frontend (sesión 07, precisión AA-05): **reglas de las divisas que la IA había puesto en el código sin que la spec las dijera** (2.6). El tipo aplicado y el aviso de «orientativos» van una vez por vista: en el simulador, dentro de la proyección, y en el detalle, sobre el historial; el «Total en EUR» va junto a cada total convertido. Se convierten todos los importes visibles, también los del desglose por tramos. El aviso del fallo de la API vive en la cabecera, en todas las vistas, con «Reintentar». El selector enseña los códigos, no nombres. Una respuesta no válida deja el estado de error con el código `invalid_rates`. El *pipe* de importes admite un argumento para dar el EUR exacto. Y los cinco textos de la interfaz de las divisas. Sin requisitos nuevos ni filas nuevas: precisan E-27, E-29 y E-30, y los tests ya lo comprueban. Motivo: una regla no puede estar solo en el código |
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 3 del frontend (sesión 07, precisión AA-07): **la fila de 5.2 del cuerpo que no es JSON dice que el estado es de error y que su `code` puede ser `invalid_rates` o `unknown_error`**, con una nota bajo la tabla. Sin cambios en requisitos, criterios ni tests. Motivo: las utilidades de test entregan el cuerpo como texto y lo rechaza la validación; en un navegador, el cliente HTTP puede fallar antes, al leer el JSON. En los dos casos la interfaz es la misma |
 | 2026-11-15 | Cambio mandado por el Tech Lead al empezar la fase de QA (sesión 08): **CA-15 deja de pedir «capturas manuales» y pide «capturas generadas con Playwright y revisadas por el Tech Lead»**, guardadas en `04-calidad/capturas/`; la nota bajo la tabla de criterios dice lo mismo y nombra la orden que las genera. Sin cambios en requisitos ni en casos. D-09 y ADR-005 siguen diciendo «capturas manuales»: son el registro de lo que se decidió el día 12 y no se han tocado. Motivo: unas capturas que salen de una orden se pueden repetir y son las mismas para quien revise; la revisión sigue siendo de una persona |
+| 2026-11-15 | Cambio mandado por el Tech Lead al revisar la parada 1 de la fase de QA (sesión 08, precisión AC-11). **La nota bajo la tabla de criterios** deja de dar CA-13 y CA-14 por pendientes de implementar: dice que están en `frontend/e2e/`, que se ejecutan con `npm run e2e` y que el oráculo los pasa con `--e2e`; y precisa que la API de divisas se responde con el protocolo de depuración de Chromium y no con `page.route()`, por lo que las pruebas solo funcionan en Chromium. **CA-15 nombra las dos capturas añadidas**, el simulador con otra divisa y la cabecera con el aviso del fallo de los tipos. **D-09 no se reescribe**: lleva al lado una nota fechada. Sin cambios en requisitos ni en casos. Motivo: la nota decía de CA-13 y CA-14 algo que dejó de ser cierto al implementarlos; «la intercepta» no decía cómo, y el cómo decide si CA-14 comprueba el CORS del backend (con `page.route()`, Playwright responde las comprobaciones previas y una cabecera de más no hacía fallar la prueba); y CA-15 pedía menos capturas de las que hay |
