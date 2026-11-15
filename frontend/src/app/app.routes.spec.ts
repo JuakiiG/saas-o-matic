@@ -50,12 +50,24 @@ describe('Routes · SPEC-04/E-34', () => {
     ['/clientes/nuevo', 'Nuevo cliente · SaaS-O-Matic'],
     ['/clientes/7', 'Detalle del cliente · SaaS-O-Matic'],
     ['/clientes/7/simulacion', 'Simulador · SaaS-O-Matic'],
+    ['/esta-ruta-no-existe', 'Página no encontrada · SaaS-O-Matic'],
   ])('should title the document of %s as «%s» (SPEC-04/E-57)', async (url, title) => {
     document.title = 'The title of a page opened before';
 
     await open(url);
 
     expect(document.title).toBe(title);
+  });
+
+  // The router only changes the title when the route brings one: without its own, the not
+  // found page would keep the title of the view the user comes from.
+  it('should title the not found page with its own title when it is reached from the panel (SPEC-04/E-57)', async () => {
+    await open('/');
+    expect(document.title).toBe('Clientes · SaaS-O-Matic');
+
+    await expect(TestBed.inject(Router).navigateByUrl('/esta-ruta-no-existe')).resolves.toBe(true);
+
+    expect(document.title).toBe('Página no encontrada · SaaS-O-Matic');
   });
 
   it('should show the not found page when the route matches no view', async () => {

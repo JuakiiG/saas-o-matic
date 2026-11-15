@@ -32,6 +32,8 @@ export const routes: Routes = [
   },
   {
     path: '**',
+    // With no title of its own this page would keep the one of the view the user comes from.
+    title: titleOf('Página no encontrada'),
     loadComponent: () => import('./features/not-found/not-found').then((file) => file.NotFound),
   },
 ];

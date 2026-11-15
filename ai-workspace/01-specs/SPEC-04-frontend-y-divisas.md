@@ -40,15 +40,17 @@ enlace al panel y el **selector de divisa**. La divisa elegida vale para
 todas las vistas y se conserva al navegar; al recargar la página vuelve a
 EUR.
 
-**El título del documento.** Cada una de las cuatro vistas pone su título
-en el documento (el que se ve en la pestaña y en el historial del
-navegador), con la opción `title` del router: el nombre de la vista y,
-detrás, el de la aplicación. Son «Clientes · SaaS-O-Matic» (panel), «Nuevo
-cliente · SaaS-O-Matic», «Detalle del cliente · SaaS-O-Matic» y
-«Simulador · SaaS-O-Matic» (E-57). *Por qué*: el título es lo primero que
-anuncia un lector de pantalla al cambiar de vista, y con uno solo para
-toda la aplicación todas las vistas se anuncian igual. La página «no
-encontrada» no tiene título propio.
+**El título del documento.** Cada una de las cinco vistas, la página «no
+encontrada» incluida, pone su título en el documento (el que se ve en la
+pestaña y en el historial del navegador), con la opción `title` del
+router: el nombre de la vista y, detrás, el de la aplicación. Son
+«Clientes · SaaS-O-Matic» (panel), «Nuevo cliente · SaaS-O-Matic»,
+«Detalle del cliente · SaaS-O-Matic», «Simulador · SaaS-O-Matic» y «Página
+no encontrada · SaaS-O-Matic» (E-57). *Por qué*: el título es lo primero
+que anuncia un lector de pantalla al cambiar de vista, y con uno solo para
+toda la aplicación todas las vistas se anuncian igual. *Por qué también la
+página «no encontrada»*: el router solo cambia el título cuando la ruta
+trae uno, y sin el suyo esa página conservaría el de la vista anterior.
 
 **El `id` de la ruta (`/clientes/:id`).** El frontend **nunca convierte
 ese texto en número** para pedir el cliente:
@@ -680,7 +682,7 @@ Lo que esa configuración de CORS exige del frontend (SPEC-03, 2.7):
 | E-42 | Si una llamada al backend responde `503` con `service_unavailable`, entonces el sistema deberá mostrar el aviso de servicio no disponible, distinto del de error inesperado, con un botón «Reintentar». | R-17, A14 |
 | E-43 | Si una llamada al backend responde con un error que su vista no trata por su `code` (un `500`, un `400`, un `415`, un `405`, un `404` con `not_found`, un código que el frontend no conoce o un error sin `code`), entonces el sistema deberá mostrar el aviso de error inesperado con un botón «Reintentar» y conservar en el estado de error el `code` recibido, o `unknown_error` si no lo hay. | R-17, A14 |
 | E-52 | El sistema deberá llamar al backend solo con `GET` y `POST`, sin cabeceras propias y con cuerpos JSON, y no deberá leer ninguna cabecera de sus respuestas. | A16 |
-| E-57 | Cuando el usuario abre el panel, el alta, el detalle o el simulador, el sistema deberá poner como título del documento el nombre de esa vista seguido del nombre de la aplicación. | — |
+| E-57 | Cuando el usuario abre el panel, el alta, el detalle, el simulador o la página «no encontrada», el sistema deberá poner como título del documento el nombre de esa vista seguido del nombre de la aplicación. | — |
 
 ## 4. Contratos consumidos
 
@@ -1020,7 +1022,7 @@ clientes que no existen.
 | CA-08 | Tests del simulador con temporizadores simulados reproducen cada fila de 5.5. Las respuestas se construyen con la forma de los ejemplos de SPEC-02 (4) y SPEC-03 (4.1) y los importes de las filas de 10, 15, 51 y 20000 usuarios de la tabla 5.1 de SPEC-02. De cada petición, el test comprueba además el cuerpo enviado. | E-15, E-17, E-18, E-20 a E-25, E-27, E-29, E-35 a E-38, E-40, E-48, E-49, E-55 |
 | CA-09 | Un test recorre los cuerpos de todas las peticiones al backend durante un alta y un guardado con la divisa en USD, y comprueba que no contienen ni la divisa ni importes. | E-31 |
 | CA-10 | De cada servicio de `core/` hay tests de sus tres estados (carga, error, datos) y del paso a error por tiempo agotado. | E-32, E-33 |
-| CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada», y el título del documento de cada una de las cuatro vistas. | E-34, E-57 |
+| CA-11 | Un test de rutas comprueba las cinco filas de 2.1, incluida la página «no encontrada», y el título del documento de cada una de las cinco vistas; el de la página «no encontrada», llegando a ella desde otra vista. | E-34, E-57 |
 | CA-12 | El evaluador independiente comprueba que `frontend/src` no contiene la tarifa, los tipos impositivos, la tabla de letras del DNI ni el cálculo del CIF. | E-06, E-19 |
 | CA-13 | Una prueba de Playwright comprueba que, a 375 px de ancho, ninguna de las cuatro vistas (panel, alta, detalle y simulador) tiene desplazamiento horizontal. | E-16 |
 | CA-14 | Una prueba de Playwright de principio a fin, contra el backend y el frontend reales en local, da de alta un cliente, abre el simulador, guarda una simulación y comprueba que aparece la primera en el detalle. Corre contra el backend real con su CORS por defecto: una cabecera de más o un método no admitido harían fallar la comprobación previa del navegador y, con ella, la prueba. | E-08, E-12, E-24, E-52 |
@@ -1156,3 +1158,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-03 de la evaluación independiente del frontend. **Cada una de las cuatro vistas pone su título en el documento**, con la opción `title` del router y el nombre de la aplicación detrás: «Clientes», «Nuevo cliente», «Detalle del cliente» y «Simulador» (2.1, requisito nuevo E-57 y CA-11). El anuncio del resultado de la búsqueda y el foco al navegar, que el mismo hallazgo señalaba, no se hacen: son la limitación conocida L-10. Motivo: con un solo título para toda la aplicación, un lector de pantalla anuncia igual todas las vistas; lo demás no se puede comprobar sin un lector de pantalla |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-04 de la evaluación independiente del frontend. **2.7 dice qué lleva `role="alert"` y qué no**: lo llevan los avisos generales y los mensajes junto a un campo que salen mientras se escribe (los del simulador y el del buscador); **los mensajes junto a un campo del alta dejan de llevarlo** y se leen con su campo, por `aria-describedby` y `aria-invalid`. Sin requisitos nuevos. Motivo: un envío del alta con los cinco campos vacíos anunciaba cinco alertas a la vez, además de leerse cada mensaje con su campo; en el simulador el foco no se mueve y el mensaje sale mientras se escribe, así que allí se quedan. No se ha probado con un lector de pantalla (L-10) |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-05 de la evaluación independiente del frontend: **tres reglas que la IA había puesto en el código sin que la spec las dijera**, escritas tal como está el código. **El `409` del alta y el aviso general de un `422` no ofrecen «Reintentar»**, porque enviar lo mismo no puede salir bien (2.3, la fila del `409` de su tabla y 2.7); **la fila «Error» de la tabla de 2.5 recoge la excepción** del `422` de la proyección; y **un `created_at` que no se puede leer como fecha se muestra como llega** (2.8). Sin cambios en el código, en los requisitos ni en los tests. Motivo: 2.5 y 2.7 decían «aviso con «Reintentar»» sin esas excepciones, y 2.8 no decía qué hacer con una fecha que no lo es |
+| 2026-11-15 | Decisión del Tech Lead sobre el hallazgo N-06 de la segunda evaluación independiente del frontend (`04-calidad/evaluacion-frontend-02.md`). **La página «no encontrada» lleva también su título**, «Página no encontrada · SaaS-O-Matic»: 2.1, E-57 y CA-11 pasan a decir cinco vistas, y CA-11 pide comprobar ese título llegando desde otra vista. Motivo: el router solo cambia el título cuando la ruta trae uno, así que esa página conservaba el de la vista anterior y un lector de pantalla habría anunciado otra vista |
