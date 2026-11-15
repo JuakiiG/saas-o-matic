@@ -61,6 +61,12 @@ async function createExampleData(request: APIRequestContext): Promise<number> {
 }
 
 async function capture(page: Page, name: string): Promise<void> {
+  // Without the focus: its ring around the last field written looks like a warning.
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  });
   const width = page.viewportSize()?.width;
   await page.screenshot({
     path: join(FOLDER, `${name}-${width}.png`),
