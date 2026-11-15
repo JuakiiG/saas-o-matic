@@ -572,6 +572,8 @@ describe('Simulador · proyección · SPEC-04/E-17 a E-22, E-35, E-38, E-40, E-4
     );
 
     expect(textOf(page, PROJECTION_NOTICE)).toContain('El cliente no es válido.');
+    // Asking the same again would bring the same 422: no «Reintentar» (SPEC-04, 2.5).
+    expect(page.element.querySelector(`${PROJECTION_NOTICE} button`)).toBeNull();
     expect(amounts(page)).toEqual({});
   });
 
@@ -720,6 +722,8 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
     expect(errorOf(page, STORAGE)).toBe(OUT_OF_RANGE);
     expect(textOf(page, SAVE_NOTICE)).toContain('El cliente no es válido.');
     expect(textOf(page, SAVE_NOTICE)).not.toContain(OUT_OF_RANGE);
+    // Saving the same again would bring the same 422: no «Reintentar» (SPEC-04, 2.5).
+    expect(page.element.querySelector(`${SAVE_NOTICE} button`)).toBeNull();
     expect(written(page)).toEqual(['10', '500', '250000']);
   });
 

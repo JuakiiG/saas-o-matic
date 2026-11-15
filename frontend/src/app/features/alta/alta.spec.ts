@@ -425,6 +425,8 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     expect(errorOf(page, 'plan')).toBe(BAD_PLAN.message);
     expect(notice(page)).toContain('Campo no reconocido.');
     expect(notice(page)).not.toContain(BAD_PLAN.message);
+    // Sending the same again would bring the same 422: no «Reintentar» (SPEC-04, 2.3).
+    expect(page.element.querySelector('.form-notice button')).toBeNull();
   });
 
   it('should ignore an entry of errors without the shape of the contract', () => {
@@ -476,6 +478,8 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
     await page.fixture.whenStable();
 
     expect(notice(page)).toContain(ALREADY_EXISTS);
+    // Sending the same again cannot help: no «Reintentar» (SPEC-04, 2.3).
+    expect(page.element.querySelector('.form-notice button')).toBeNull();
     expect(written(page)).toEqual(VALID);
     expect(url()).not.toContain('/clientes/');
   });
