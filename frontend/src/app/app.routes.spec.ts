@@ -5,9 +5,9 @@ import { Router } from '@angular/router';
 import { App } from './app';
 import { appConfig } from './app.config';
 
-// SPEC-04/E-34 and the last row of the table of 2.1. The rows of the four views join this file
-// as each view arrives (CA-11).
-describe('Routes · SPEC-04/E-34', () => {
+// CA-11: the five rows of the table of SPEC-04, 2.1, the not found page among them (E-34), and
+// the title each of the five views gives to the document (E-57).
+describe('Routes · SPEC-04/E-34, E-57 (CA-11)', () => {
   async function open(url: string): Promise<HTMLElement> {
     TestBed.configureTestingModule({
       imports: [App],
