@@ -91,6 +91,10 @@ frontend/src/app/
   y ninguna llega al backend, que es justo lo que CA-14 comprueba.* La API
   de divisas la responde `e2e/support/fixtures.ts`, de donde las pruebas
   importan `test` y `expect`.
-- **Las capturas de CA-15** (`e2e/capturas/`) se generan con
-  `npm run e2e:capturas`. El oráculo no las ejecuta. *Por qué: llevan la
-  fecha del día y cambiarían doce ficheros versionados en cada pasada.*
+- **Las capturas de CA-15** (`e2e/capturas/`) tienen su propia
+  configuración, `playwright.capturas.config.ts`, que parte de la de las
+  pruebas, y se generan con `npm run e2e:capturas`. La configuración por
+  defecto deja fuera esa carpeta: `npx playwright test` sin opciones solo
+  ejecuta las pruebas. El oráculo no ejecuta las capturas. *Por qué:
+  llevan la fecha del día y cambiarían los ficheros versionados de
+  `04-calidad/capturas/` en cada pasada.*

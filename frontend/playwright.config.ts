@@ -4,9 +4,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 import { temporaryFolder } from './e2e/support/temporary-folder';
 
-// End-to-end tests of SPEC-04 (CA-13 and CA-14), against the real backend and the real frontend
-// on their default ports, 8000 and 4200: what CA-14 checks is the backend with its default CORS,
-// which only admits `http://localhost:4200`.
+// End-to-end tests of SPEC-04 (CA-13, CA-14 and CA-19), against the real backend and the real
+// frontend on their default ports, 8000 and 4200: what CA-14 checks is the backend with its
+// default CORS, which only admits `http://localhost:4200`. This is what `npm run e2e` runs, and
+// with it the oracle (`uv run scripts/check.py --e2e`).
 //
 // Playwright starts both servers and never reuses one that is already running: with a port in
 // use the run fails before starting anything on it (CLAUDE.md, rule 8). `port`, and not `url`,
@@ -21,6 +22,9 @@ delete process.env['CORS_ORIGINS'];
 
 export default defineConfig({
   testDir: './e2e',
+  // The screenshots of CA-15 write versioned files: they have a configuration of their own
+  // (`playwright.capturas.config.ts`), so that no command without options runs them.
+  testIgnore: '**/capturas/**',
   outputDir: './test-results',
   // One database for the whole run: the tests go one after another, in the order of the files.
   fullyParallel: false,
@@ -29,6 +33,7 @@ export default defineConfig({
   forbidOnly: true,
   reporter: 'list',
   use: {
+    ...devices['Desktop Chrome'],
     baseURL: `http://localhost:${FRONTEND_PORT}`,
     // Dates with time are shown in the time zone of the browser: fixed, so that the result
     // does not depend on the machine.
@@ -42,20 +47,6 @@ export default defineConfig({
       args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost, EXCLUDE 127.0.0.1'],
     },
   },
-  projects: [
-    {
-      // What `npm run e2e` runs, and with it the oracle (`uv run scripts/check.py --e2e`).
-      name: 'pruebas',
-      testIgnore: '**/capturas/**',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      // Writes the screenshots of CA-15; only on request (`npm run e2e:capturas`).
-      name: 'capturas',
-      testMatch: '**/capturas/*.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
   webServer: [
     {
       name: 'backend',
