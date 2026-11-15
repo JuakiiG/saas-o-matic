@@ -5,8 +5,8 @@ que hay escritas en los tests, no de una lista mantenida a mano.
 
 | | |
 |---|---|
-| **Generada** | 2026-11-15, 16:24 |
-| **Sobre el commit** | `f2379c4`, con `backend/` y `frontend/` sin cambios respecto a él (`git status --short backend frontend`, vacío) |
+| **Generada** | 2026-11-15, 17:41. La primera, el mismo día a las 16:24, sobre `f2379c4` |
+| **Sobre el commit** | `f82184e`, más un cambio que entra en el mismo commit que esta versión del documento: el título de la prueba del detalle de `frontend/e2e/responsive.spec.ts`, que pasa a citar `SPEC-04/E-16`. Ningún otro cambio en `backend/` ni en `frontend/` (`git status --short backend frontend`) |
 | **Orden** | `uv run scripts/traceability.py`, desde la raíz. Solo lee; escribe la matriz en la salida estándar |
 | **Qué es salida de la orden** | El apartado 4 entero, sin retocar. Los apartados 1 a 3 los escribe la IA leyendo esa salida |
 
@@ -50,9 +50,9 @@ cada uno.
 
 ## 2. Lo que dice la matriz y lo que no dice
 
-De los **140 requisitos** (35, 15, 33 y 57), **139 tienen al menos un test
-que los cita y 1 no tiene ninguno**: SPEC-04/E-16 (apartado 3). Ninguna
-cita apunta a un requisito o a un criterio que no exista.
+**Los 140 requisitos** (35, 15, 33 y 57) **tienen al menos un test que los
+cita.** En la primera matriz eran 139: faltaba SPEC-04/E-16 (apartado 3).
+Ninguna cita apunta a un requisito o a un criterio que no exista.
 
 **En el backend cada número es exacto.** Cada test cita en su docstring lo
 que comprueba (lo exige el oráculo), así que `Total` y `En su título`
@@ -63,9 +63,9 @@ siempre en el `describe`, con una lista o un rango, y la heredan todos sus
 tests. La matriz dice entonces **cuántos tests hay en bloques que citan el
 requisito, no cuántos lo comprueban**:
 
-- De los 57 requisitos de SPEC-04, **solo 10 tienen algún test que los cite
-  en su propio título** (E-22, E-26, E-29, E-30, E-36, E-39, E-41, E-50,
-  E-53 y E-57). **46 se citan solo desde un `describe`** y 1 no se cita.
+- De los 57 requisitos de SPEC-04, **solo 11 tienen algún test que los cite
+  en su propio título** (E-16, E-22, E-26, E-29, E-30, E-36, E-39, E-41,
+  E-50, E-53 y E-57). **Los otros 46 se citan solo desde un `describe`.**
 - El caso extremo es E-40, con 102 tests: son todos los de los bloques
   que lo nombran en su título, en cinco ficheros, no 102 comprobaciones de
   `/meta` en error.
@@ -96,13 +96,13 @@ lo dice el oráculo.
 
 ## 3. Requisitos sin ningún test que los cite
 
-| Requisito | Qué pide | Criterio que lo cubre | Dónde está la prueba |
-|---|---|---|---|
-| SPEC-04/E-16 | El detalle, sin desplazamiento horizontal a 375 px de ancho | **CA-13** (lo cubre: una prueba de Playwright por vista, la del detalle entre ellas). También lo nombra CA-15, las capturas, que no es una comprobación automática | `frontend/e2e/responsive.spec.ts`: sus cinco pruebas citan `SPEC-04/CA-13`, y la tercera es la del detalle. El comentario de cabecera del fichero dice «SPEC-04/CA-13 (E-16)», que no es una cita. `frontend/e2e/capturas/capturas.spec.ts` cita `SPEC-04/CA-15` |
+**Ninguno.**
 
-**Ninguno queda «sin cubrir».** E-16 está comprobado; lo que falta es su
-nombre en el título de la prueba. **No se ha tocado nada**: lo decide el
-Tech Lead.
+En la primera matriz (2026-11-15, 16:24) había uno:
+
+| Requisito | Qué pide | Criterio que lo cubría | Qué se hizo |
+|---|---|---|---|
+| SPEC-04/E-16 | El detalle, sin desplazamiento horizontal a 375 px de ancho | **CA-13**: una prueba de Playwright por vista, la del detalle entre ellas. Estaba comprobado; faltaba su nombre en el título de la prueba. El comentario de cabecera de `frontend/e2e/responsive.spec.ts` dice «SPEC-04/CA-13 (E-16)», que no es una cita | Decisión del Tech Lead al aprobar la parada 1 de la sesión 09: la prueba del detalle a 375 px cita también `SPEC-04/E-16` en su título, además de CA-13. La prueba no cambia |
 
 ## 4. Matriz
 
@@ -233,7 +233,7 @@ Tech Lead.
 | E-13 | 0 | 19 | 0 | 19 | 0 | `frontend/src/app/features/detalle/detalle.spec.ts` (19) |
 | E-14 | 0 | 19 | 0 | 19 | 0 | `frontend/src/app/features/detalle/detalle.spec.ts` (19) |
 | E-15 | 0 | 35 | 0 | 35 | 0 | `frontend/src/app/core/customer-id.spec.ts` (2), `frontend/src/app/core/customer-loader.spec.ts` (9), `frontend/src/app/features/detalle/detalle.spec.ts` (19), `frontend/src/app/features/simulador/simulador.spec.ts` (5) |
-| E-16 | 0 | 0 | 0 | 0 | 0 | — |
+| E-16 | 0 | 0 | 1 | 1 | 1 | `frontend/e2e/responsive.spec.ts` (1) |
 | E-17 | 0 | 24 | 0 | 24 | 0 | `frontend/src/app/features/simulador/simulador.spec.ts` (24) |
 | E-18 | 0 | 24 | 0 | 24 | 0 | `frontend/src/app/features/simulador/simulador.spec.ts` (24) |
 | E-19 | 0 | 24 | 0 | 24 | 0 | `frontend/src/app/features/simulador/simulador.spec.ts` (24) |
@@ -278,9 +278,7 @@ Tech Lead.
 
 ### Requisitos sin ningún test que los cite
 
-| Requisito | Criterios que lo nombran: tests que citan cada criterio |
-|---|---|
-| SPEC-04/E-16 | CA-13: 5 (`frontend/e2e/responsive.spec.ts`); CA-15: 2 (`frontend/e2e/capturas/capturas.spec.ts`) |
+Ninguno.
 
 ### Citas de algo que no está en las specs
 

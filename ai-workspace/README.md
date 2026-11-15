@@ -70,9 +70,9 @@ A 2026-11-15, al cerrar la sesión 09:
   decidido por el Tech Lead.
 - **Lo que se sabe que no hace**: once limitaciones aceptadas (L-01 a
   L-11) y los casos fiscales no modelados (ADR-008).
-- **Trazabilidad**: de 140 requisitos EARS, 139 tienen algún test que los
-  cita; el que falta está cubierto por un criterio
-  ([`trazabilidad.md`](04-calidad/trazabilidad.md)).
+- **Trazabilidad**: los 140 requisitos EARS tienen algún test que los
+  cita, 140 de 140 ([`trazabilidad.md`](04-calidad/trazabilidad.md), que
+  dice también lo que esa cifra no demuestra).
 
 **Pendiente**, y por tanto sin comprobar:
 

@@ -53,7 +53,7 @@ test.describe('Width of 375 px', () => {
     await expectNoHorizontalScroll(page);
   });
 
-  test('should not scroll sideways in the detail when it shows the longest texts and an open breakdown in another currency (SPEC-04/CA-13)', async ({
+  test('should not scroll sideways in the detail when it shows the longest texts and an open breakdown in another currency (SPEC-04/CA-13, E-16)', async ({
     page,
     request,
   }) => {
