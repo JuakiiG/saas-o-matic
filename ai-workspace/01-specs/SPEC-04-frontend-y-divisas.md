@@ -246,9 +246,16 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 |---|---|
 | `201` | Navega al detalle del cliente creado, con el `id` **del cuerpo** de la respuesta. La cabecera `Location` no se lee: CORS no la expone al navegador (2.9) |
 | `422` con `errors` | Cada error se muestra junto a su campo (`field`), con el `message` del backend. El formulario conserva lo escrito |
-| `409` `customer_already_exists` | Aviso en el formulario: ya existe un cliente con ese identificador en ese país. Conserva lo escrito |
+| `409` `customer_already_exists` | Aviso en el formulario: ya existe un cliente con ese identificador en ese país. **Sin «Reintentar»**. Conserva lo escrito |
 | Otro error o sin conexión | Aviso general con «Reintentar», con el texto que le corresponde por su `code` (tabla de 2.7). Conserva lo escrito |
 
+- **El `409` y el aviso general de un `422` no ofrecen «Reintentar»**, aquí
+  y en el simulador (2.5). *Por qué*: enviar lo mismo no puede salir bien;
+  el backend ya ha dicho que esos datos no valen, y lo que toca es
+  cambiarlos. La salida es corregir el formulario o dejarlo, con «Cancelar»
+  o con el enlace al panel de la cabecera (2.7). Un `422` que no deja
+  ninguna entrada que mostrar es otro caso: se trata como un error
+  inesperado, con «Reintentar» (más abajo).
 - El frontend decide **por el código**, nunca por el texto. Un código de
   campo que no conoce se muestra igualmente junto a su campo; un `field` que
   no existe en el formulario se muestra en el aviso general.
@@ -364,7 +371,7 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 |---|---|
 | Cargando | Los importes anteriores se marcan como «actualizando»; no se presentan como vigentes |
 | Datos | El desglose y el total |
-| Error | Se retiran los importes; aviso con «Reintentar». **Nunca queda a la vista un importe anterior como si fuera el actual** |
+| Error | Se retiran los importes; aviso con «Reintentar». **Excepción**: con un `422` con `errors`, cada mensaje va junto a su campo o al aviso general, **sin «Reintentar»**, porque pedir lo mismo daría el mismo `422` (2.3). **Nunca queda a la vista un importe anterior como si fuera el actual** |
 | Usuarios no válidos | No se llama a la API; mensaje junto al campo; se retiran los importes |
 
 - **Guardar**: llama a `POST /simulations`. El botón está desactivado
@@ -480,7 +487,10 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   datos, y la interfaz muestra los tres.
 - Ninguna llamada espera sin límite: 10 s para el backend y 5 s para la API
   de divisas. Pasado ese tiempo el estado es «error».
-- Todo error ofrece una salida: «Reintentar» o un enlace al panel.
+- Todo error ofrece una salida: «Reintentar» o un enlace al panel. En un
+  formulario, el `409` del alta y el aviso general de un `422` no ofrecen
+  «Reintentar» (2.3 y 2.5): su salida es corregir lo escrito, o el enlace
+  del propio formulario y el del panel en la cabecera.
 - Los indicadores de carga llevan `role="status"` y los avisos de error
   `role="alert"`. **Qué lleva `role="alert"`**: los avisos generales (el de
   una carga o un envío que falla y el del fallo de los tipos en la
@@ -541,7 +551,11 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   y es el que se rotula «en adelante».
 - Las fechas con hora del backend (`created_at`) llegan en UTC y se muestran
   en la zona horaria del navegador, con formato `es-ES`. La fecha del tipo de
-  cambio no tiene hora y queda fuera de esta regla (2.6).
+  cambio no tiene hora y queda fuera de esta regla (2.6). **Un `created_at`
+  que no se puede leer como fecha se muestra como llega**, sin marca. *Por
+  qué*: el backend no debería enviarlo, y si lo envía, ocultarlo o
+  sustituirlo por un texto propio no ayuda a nadie; es el mismo criterio
+  que con un código que `/meta` no trae (2.1).
 - Controles con etiqueta, manejables con teclado; HTML semántico.
 - **El anillo de foco y el borde de los campos de formulario tienen un
   contraste de 3:1 o más** sobre el blanco y sobre el fondo de la página
@@ -1141,3 +1155,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-02 de la evaluación independiente del frontend. **El anillo de foco y el borde de los campos de formulario tienen un contraste de 3:1 o más sobre el blanco y sobre el fondo de la página** (2.8 y criterio nuevo CA-19, una prueba de Playwright que lee los colores que pinta el navegador). El anillo pasa del naranja `#f59e0b` al azul de acento, `#1d4ed8`; el borde de los campos, de `#c9ced8` a `#7c8698`, y el de las tarjetas, los avisos y la cabecera no cambia. **CA-15 nombra una captura más**, el alta con un campo enfocado. Sin requisitos nuevos. Motivo: el anillo tenía un contraste de 2,15 sobre el blanco y el borde de los campos, de 1,58; con menos de 3:1, quien ve poco no distingue qué campo tiene el foco ni dónde empieza un campo |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-03 de la evaluación independiente del frontend. **Cada una de las cuatro vistas pone su título en el documento**, con la opción `title` del router y el nombre de la aplicación detrás: «Clientes», «Nuevo cliente», «Detalle del cliente» y «Simulador» (2.1, requisito nuevo E-57 y CA-11). El anuncio del resultado de la búsqueda y el foco al navegar, que el mismo hallazgo señalaba, no se hacen: son la limitación conocida L-10. Motivo: con un solo título para toda la aplicación, un lector de pantalla anuncia igual todas las vistas; lo demás no se puede comprobar sin un lector de pantalla |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-04 de la evaluación independiente del frontend. **2.7 dice qué lleva `role="alert"` y qué no**: lo llevan los avisos generales y los mensajes junto a un campo que salen mientras se escribe (los del simulador y el del buscador); **los mensajes junto a un campo del alta dejan de llevarlo** y se leen con su campo, por `aria-describedby` y `aria-invalid`. Sin requisitos nuevos. Motivo: un envío del alta con los cinco campos vacíos anunciaba cinco alertas a la vez, además de leerse cada mensaje con su campo; en el simulador el foco no se mueve y el mensaje sale mientras se escribe, así que allí se quedan. No se ha probado con un lector de pantalla (L-10) |
+| 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-05 de la evaluación independiente del frontend: **tres reglas que la IA había puesto en el código sin que la spec las dijera**, escritas tal como está el código. **El `409` del alta y el aviso general de un `422` no ofrecen «Reintentar»**, porque enviar lo mismo no puede salir bien (2.3, la fila del `409` de su tabla y 2.7); **la fila «Error» de la tabla de 2.5 recoge la excepción** del `422` de la proyección; y **un `created_at` que no se puede leer como fecha se muestra como llega** (2.8). Sin cambios en el código, en los requisitos ni en los tests. Motivo: 2.5 y 2.7 decían «aviso con «Reintentar»» sin esas excepciones, y 2.8 no decía qué hacer con una fecha que no lo es |
