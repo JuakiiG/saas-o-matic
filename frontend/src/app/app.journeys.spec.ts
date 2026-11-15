@@ -247,6 +247,54 @@ describe('Journeys · SPEC-04/E-31, E-52 (CA-09, CA-18)', () => {
   });
 });
 
+// SPEC-04, 5.3, the row of leaving the panel and coming back: `/meta` is asked when the
+// application starts and never again, whatever views are opened afterwards (E-39).
+describe('Journeys · /meta is asked once · SPEC-04/E-39 (CA-04)', () => {
+  const LISTED = {
+    items: [
+      {
+        id: 7,
+        company_name: 'Ejemplo Uno SL',
+        tax_id: 'B12345674',
+        country: 'ES',
+        plan: 'professional',
+      },
+    ],
+  };
+
+  async function follow(journey: Journey, selector: string): Promise<void> {
+    const link = journey.page.querySelector<HTMLAnchorElement>(selector);
+    expect(link).not.toBeNull();
+    link?.click();
+    await settle(journey);
+  }
+
+  it('should ask for /meta once in the whole journey from the panel to the detail and back', async () => {
+    const journey = await start('answered');
+    await answer(journey, 'GET', '/customers', LISTED);
+
+    await follow(journey, 'main .results a');
+    await answer(journey, 'GET', '/customers/7', CUSTOMER);
+    const urlOfTheDetail = TestBed.inject(Router).url;
+    await follow(journey, 'header a[href="/"]');
+    await answer(journey, 'GET', '/customers', LISTED);
+
+    expect(urlOfTheDetail).toBe('/clientes/7');
+    expect(TestBed.inject(Router).url).toBe('/');
+    expect(
+      journey.seen.map(
+        (request) => `${request.method} ${request.urlWithParams.replace(BACKEND, '')}`,
+      ),
+    ).toEqual(['GET /meta', 'GET /customers', 'GET /customers/7', 'GET /customers']);
+    // Nothing else is waiting: in particular, no second request to `/meta`.
+    expect(journey.controller.match((request) => request.url.startsWith(BACKEND)).length).toBe(0);
+    // The panel shows the names again, from the answer it kept in memory.
+    expect(clean(journey.page.querySelector('main .results')?.textContent)).toContain(
+      META.countries[0].name,
+    );
+  });
+});
+
 describe('Journeys · the public API of rates in error · SPEC-04/E-28, E-30 (CA-03)', () => {
   it('should show the panel, the detail and the simulator in EUR, with the notice in the header', async () => {
     const journey = await start('failed');

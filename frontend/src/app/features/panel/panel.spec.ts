@@ -157,7 +157,9 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     expect(searches(page).length).toBe(0);
     wait(page, 1);
 
-    expect(answer(page, [customer(2, 'Ejemplo Dos SL')]).params.get('q')).toBe('eje');
+    const request = answer(page, [customer(2, 'Ejemplo Dos SL')]);
+    expect(request.params.get('q')).toBe('eje');
+    expect(request.urlWithParams).toBe(`${CUSTOMERS_URL}?q=eje`);
     expect(names(page)).toEqual(['Ejemplo Dos SL']);
   });
 
@@ -172,7 +174,9 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     wait(page, 300);
 
     expect(first.cancelled).toBe(true);
-    expect(answer(page, [customer(3, 'Ejemplo Tres SL')]).params.get('q')).toBe('ejem');
+    const request = answer(page, [customer(3, 'Ejemplo Tres SL')]);
+    expect(request.params.get('q')).toBe('ejem');
+    expect(request.urlWithParams).toBe(`${CUSTOMERS_URL}?q=ejem`);
     expect(names(page)).toEqual(['Ejemplo Tres SL']);
   });
 
@@ -182,8 +186,10 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     type(page, 'noexiste');
     wait(page, 300);
 
-    answer(page, []);
+    const request = answer(page, []);
 
+    expect(request.params.get('q')).toBe('noexiste');
+    expect(request.urlWithParams).toBe(`${CUSTOMERS_URL}?q=noexiste`);
     expect(text(page)).toContain(NO_MATCHES);
     expect(text(page)).not.toContain(NO_CUSTOMERS_YET);
   });
@@ -191,8 +197,10 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
   it('should say there are no customers yet, with a link to the sign-up, when the initial list is empty', () => {
     const page = open();
 
-    answer(page, []);
+    const request = answer(page, []);
 
+    expect(request.params.has('q')).toBe(false);
+    expect(request.urlWithParams).toBe(CUSTOMERS_URL);
     expect(text(page)).toContain(NO_CUSTOMERS_YET);
     expect(text(page)).not.toContain(NO_MATCHES);
     expect(page.element.querySelector('.empty a')?.getAttribute('href')).toBe('/clientes/nuevo');
@@ -265,6 +273,9 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     expect(page.element.querySelector('#panel-search')).toBeNull();
     expect(page.element.querySelector('.results')).toBeNull();
     expect(text(page)).not.toContain('ES');
+    expect(text(page)).not.toContain('professional');
+    const retry = page.element.querySelector('[role="alert"] button');
+    expect(retry?.textContent?.trim()).toBe('Reintentar');
   });
 
   it('should turn the spell checker of the browser off in the search box (SPEC-04 2.8)', () => {
@@ -363,7 +374,9 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     type(page, GRINNING_FACE.repeat(100));
     wait(page, 300);
 
-    expect(answer(page, []).params.get('q')).toBe(GRINNING_FACE.repeat(100));
+    const request = answer(page, []);
+    expect(request.params.get('q')).toBe(GRINNING_FACE.repeat(100));
+    expect(request.urlWithParams).toBe(`${CUSTOMERS_URL}?q=${'%F0%9F%98%80'.repeat(100)}`);
     expect(text(page)).not.toContain(LIMIT);
   });
 
@@ -390,7 +403,9 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     type(page, 'x'.repeat(100));
     wait(page, 300);
 
-    expect(answer(page, []).params.get('q')).toBe('x'.repeat(100));
+    const request = answer(page, []);
+    expect(request.params.get('q')).toBe('x'.repeat(100));
+    expect(request.urlWithParams).toBe(`${CUSTOMERS_URL}?q=${'x'.repeat(100)}`);
     expect(text(page)).not.toContain(LIMIT);
   });
 
@@ -401,7 +416,9 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     type(page, 'a' + HIGH_SURROGATE + 'b');
     wait(page, 300);
 
-    expect(answer(page, []).params.get('q')).toBe('a' + REPLACEMENT + 'b');
+    const request = answer(page, []);
+    expect(request.params.get('q')).toBe('a' + REPLACEMENT + 'b');
+    expect(request.urlWithParams).toBe(`${CUSTOMERS_URL}?q=a%EF%BF%BDb`);
   });
 
   it('should cancel the search in flight and warn at once when a text over the limit is pasted', () => {
