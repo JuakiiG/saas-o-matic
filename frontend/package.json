@@ -8,7 +8,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:ci": "ng test --configuration ci",
-    "lint": "eslint . --max-warnings 0 && prettier --check .",
+    "lint": "eslint . --max-warnings 0 && prettier --check . && tsc --noEmit -p tsconfig.e2e.json",
     "e2e": "playwright test --project=pruebas",
     "e2e:capturas": "playwright test --project=capturas"
   },
@@ -30,6 +30,7 @@
     "@angular/compiler-cli": "21.2.26",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.65.0",
+    "@types/node": "24.19.2",
     "@vitest/coverage-v8": "4.1.12",
     "angular-eslint": "21.4.0",
     "eslint": "10.14.0",

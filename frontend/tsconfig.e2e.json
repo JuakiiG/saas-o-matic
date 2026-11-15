@@ -1,0 +1,10 @@
+/* The end-to-end tests and their configuration. Playwright runs TypeScript without checking it,
+   and the build only looks at `src/`: `npm run lint` checks the types of these files with this. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["e2e/**/*.ts", "playwright.config.ts"]
+}

@@ -141,7 +141,8 @@ sin rangos.
 | `@eslint/js` (desarrollo) | 10.0.1 | 2026-02-06 | **Nueva**: las reglas recomendadas de ESLint, que ESLint 10 ya no trae consigo |
 | `angular-eslint` (desarrollo) | 21.4.0 | 2026-05-13 | **Nueva**: las reglas de Angular y de sus plantillas |
 | `typescript-eslint` (desarrollo) | 8.72.1 | 2026-10-26 | **Nueva**: ESLint sobre TypeScript |
-| `@playwright/test` (desarrollo) | 1.65.0 | 2026-11-05 | **Nueva, y todavía no instalada**: entra en la fase de QA |
+| `@playwright/test` (desarrollo) | 1.65.0 | 2026-11-05 | **Nueva**, instalada el 2026-11-15, en la fase de QA (ADR-005) |
+| `@types/node` (desarrollo) | 24.19.2 | 2026-10-09 | **Nueva**, instalada el 2026-11-15 por decisión del Tech Lead (sesión 08): los tipos de Node que necesita `tsc` para comprobar `e2e/` y `playwright.config.ts` dentro de `npm run lint`. Trae `undici-types` 7.24.6 (2026-03-25) |
 
 **Comprobado el 2026-11-14 en un ensayo fuera del repositorio**, con Node
 24.18.0 y npm 11.16.0: el proyecto que crea el CLI 21.2.29 se instala con
