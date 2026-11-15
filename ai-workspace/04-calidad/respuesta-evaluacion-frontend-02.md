@@ -90,8 +90,46 @@ No son hallazgos del informe: salen de leerlo y de compararlo.
 
 ## 4. Decisión del Tech Lead
 
-Pendiente. Esta respuesta se entrega en la parada 3 de la sesión 08 sin
-aplicar nada.
+~~Pendiente. Esta respuesta se entrega en la parada 3 de la sesión 08 sin
+aplicar nada.~~
+
+**Decidido el 2026-11-15, a las 14:54, al aprobar la parada 3 de la sesión
+08.** El informe no se toca. Los apartados 1 a 3 y el 5 se quedan como se
+entregaron; lo que sigue es la decisión y dónde quedó aplicada. Cada
+hallazgo, en un commit, con el oráculo con `--e2e` en verde antes. **No hay
+tercera evaluación**: estos cambios los revisa el Tech Lead.
+
+| # | Decisión del Tech Lead | Commit |
+|---|---|---|
+| N-06 | Sí: la quinta ruta lleva el título «Página no encontrada · SaaS-O-Matic». SPEC-04 2.1, E-57 y CA-11 pasan a decir cinco vistas. Test en rojo antes | `93841ac` |
+| N-07 | La recomendada: `formatDateTime` acepta solo la forma del contrato, la de SPEC-01 (`2026-11-12T14:30:00Z`), y muestra como llega todo lo demás. **Añade un caso**: una fecha imposible con esa forma, como `2026-02-30T10:00:00Z`, también se muestra como llega, porque `Date` la convierte en el 2 de marzo. SPEC-04 2.8 lo dice así. Test en rojo antes | `48a0f70` |
+| N-01 | Sí: las aserciones de que falta «Reintentar» en el `409` y en el aviso general de un `422`, en el alta y en el simulador, con una mutación en cada sitio | `305ea79` |
+| N-02 | Sí: el test nuevo del simulador, con su mutación | `c05a78b` |
+| N-03 | La recomendada: se cumple el criterio como está escrito. **Por qué no la alternativa**: rebajar un criterio para que salga cumplido es justo lo que un revisor buscaría | `b05f847` |
+| N-04 | Sí: la URL y `q` en las siete filas, «Reintentar» en la fila de `/meta` y un recorrido de verdad del panel al detalle y vuelta. **Autorizó quitar el test de `panel.spec.ts:304`** porque «no puede fallar y lo sustituye el del recorrido». **La IA no lo ha quitado**: la mutación del recorrido lo hace fallar, así que la premisa, que venía del informe y de esta respuesta, no era cierta (precisión AF-05 de la bitácora). Queda a su decisión | `1e12aaf` |
+| N-05 | Sí: «Reintentar» en los tres casos y un caso nuevo de falta de conexión al guardar, con mutación | `2d7f731` |
+| N-08 | Sí: el test del `role="alert"` en los mensajes de campo del simulador, con mutación | `29f4af6` |
+| N-09 | Se precisa CA-08: esas dos filas las reproducen `e2e/rate-date.spec.ts` y la prueba de CA-14 | `64d501a` |
+| C-01 | Nada: el informe no se toca y las líneas buenas están en esta respuesta | — |
+| C-02 | Los dos primeros, sí: el título del párrafo de SPEC-04 nombra también CA-19, y el `describe` y el comentario de `app.routes.spec.ts` se ponen al día. **El nombre de la comprobación del oráculo se queda**: no se toca `scripts/` por una etiqueta | `9bb7825` |
+| C-03, C-05 | Nada. **La parte B la da por buena**: ha contrastado `core/models.ts` con los modelos de `backend/app/api` y coinciden campo a campo | — |
+| C-04 | Admitido | — |
+
+**Corrección a esta respuesta** (fila de N-04 del apartado 1): decía de
+`panel.spec.ts:304` que «es un test que no prueba nada». **No es exacto.**
+No detecta que el panel llame a `MetaStore.load()`, que es lo que el
+informe razonaba, pero sí falla si el panel provoca una petición a `/meta`
+al abrirse por segunda vez. La IA lo afirmó sin probarlo con una mutación.
+
+Lo que queda sin cerrar a propósito, por decisión del Tech Lead: el botón
+desactivado conserva el borde claro y el separador « · » se queda; el
+anillo azul sobre un botón azul se queda, y lo mira él con el tabulador en
+la pasada manual; y las capturas no se regeneran sin motivo, porque
+cambian en unos pocos píxeles de una pasada a otra (anotado en
+`.claude/rules/frontend.md`, commit `36b1cce`).
+
+Lo que la IA añadió o dejó sin hacer al aplicarlas (precisiones AF-01 en
+adelante) está en la bitácora de la sesión 08, apartado 3.
 
 ## 5. Lo que esta respuesta no demuestra
 
