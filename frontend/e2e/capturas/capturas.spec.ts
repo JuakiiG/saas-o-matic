@@ -60,19 +60,24 @@ async function createExampleData(request: APIRequestContext): Promise<number> {
   return id;
 }
 
-async function capture(page: Page, name: string): Promise<void> {
-  // Without the focus: its ring around the last field written looks like a warning.
-  await page.evaluate(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-  });
+async function screenshot(page: Page, name: string): Promise<void> {
   const width = page.viewportSize()?.width;
   await page.screenshot({
     path: join(FOLDER, `${name}-${width}.png`),
     fullPage: true,
     animations: 'disabled',
   });
+}
+
+async function capture(page: Page, name: string): Promise<void> {
+  // Without the focus: its ring is around whatever field was written last, not something of
+  // the view. The ring has a picture of its own, `alta-foco`.
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  });
+  await screenshot(page, name);
 }
 
 test.beforeAll(async ({ playwright }) => {
@@ -88,7 +93,7 @@ for (const size of SIZES) {
   test.describe(`Screenshots at ${size.width} px`, () => {
     test.use({ viewport: size });
 
-    test(`should capture the four views and the simulator in another currency at ${size.width} px (SPEC-04/CA-15)`, async ({
+    test(`should capture the four views, a focused field and the simulator in another currency at ${size.width} px (SPEC-04/CA-15)`, async ({
       page,
     }) => {
       await page.goto('/');
@@ -102,6 +107,10 @@ for (const size of SIZES) {
       await page.getByLabel('País').selectOption({ label: 'España' });
       await page.getByLabel('Plan').selectOption({ label: 'Básico' });
       await capture(page, 'alta');
+
+      // The focus ring and the border of the fields (CA-19), for a person to see them.
+      await page.getByLabel('Identificador fiscal').focus();
+      await screenshot(page, 'alta-foco');
 
       await page.goto(`/clientes/${customerId}`);
       await expect(historyCards(page)).toHaveCount(3);
