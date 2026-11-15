@@ -64,6 +64,25 @@ describe('formatDateTime · SPEC-04 2.8', () => {
   it('should show the text as it arrives when it is not a date', () => {
     expect(formatDateTime('ayer')).toBe('ayer');
   });
+
+  // `Date` reads these three as a date, and the fourth as the 2nd of March: an invented date.
+  it.each(['Ejemplo 7', '1', '12/11/2026', '2026-02-30T10:00:00Z'])(
+    'should show «%s» as it arrives: it is not a date with the shape of the contract',
+    (text) => {
+      expect(formatDateTime(text, 'Europe/Madrid')).toBe(text);
+    },
+  );
+
+  // Real dates, but not written the way the contract writes them (SPEC-01: `…T14:30:00Z`).
+  it.each([
+    '2026-11-12',
+    '2026-11-12 14:30:00',
+    '2026-11-12T14:30:00+01:00',
+    '2026-11-12T14:30:00.500Z',
+    '2026-11-12T24:00:00Z',
+  ])('should show «%s» as it arrives: only the shape of the contract is converted', (text) => {
+    expect(formatDateTime(text, 'Europe/Madrid')).toBe(text);
+  });
 });
 
 describe('formatRateDate · SPEC-04 2.6', () => {

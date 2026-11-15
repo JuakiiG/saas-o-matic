@@ -554,10 +554,17 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Las fechas con hora del backend (`created_at`) llegan en UTC y se muestran
   en la zona horaria del navegador, con formato `es-ES`. La fecha del tipo de
   cambio no tiene hora y queda fuera de esta regla (2.6). **Un `created_at`
-  que no se puede leer como fecha se muestra como llega**, sin marca. *Por
-  qué*: el backend no debería enviarlo, y si lo envía, ocultarlo o
-  sustituirlo por un texto propio no ayuda a nadie; es el mismo criterio
-  que con un código que `/meta` no trae (2.1).
+  que no tiene la forma del contrato se muestra como llega**, sin marca. La
+  forma es la de SPEC-01: `2026-11-12T14:30:00Z` (fecha, `T`, hora con
+  segundos y `Z`). **Tampoco se convierte una fecha imposible con esa
+  forma**, como `2026-02-30T10:00:00Z`: se muestra como llega. *Por qué no
+  decide el lector de fechas del navegador*: lee como fecha textos que no
+  lo son (`Ejemplo 7` sería el 30 de junio de 2001; `1`, el 31 de diciembre
+  de 2000) y convierte el 30 de febrero en el 2 de marzo: se mostraría una
+  fecha inventada. *Por qué se muestra el texto*: el backend no debería
+  enviarlo, y si lo envía, ocultarlo o sustituirlo por un texto propio no
+  ayuda a nadie; es el mismo criterio que con un código que `/meta` no
+  trae (2.1).
 - Controles con etiqueta, manejables con teclado; HTML semántico.
 - **El anillo de foco y el borde de los campos de formulario tienen un
   contraste de 3:1 o más** sobre el blanco y sobre el fondo de la página
@@ -1159,3 +1166,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-04 de la evaluación independiente del frontend. **2.7 dice qué lleva `role="alert"` y qué no**: lo llevan los avisos generales y los mensajes junto a un campo que salen mientras se escribe (los del simulador y el del buscador); **los mensajes junto a un campo del alta dejan de llevarlo** y se leen con su campo, por `aria-describedby` y `aria-invalid`. Sin requisitos nuevos. Motivo: un envío del alta con los cinco campos vacíos anunciaba cinco alertas a la vez, además de leerse cada mensaje con su campo; en el simulador el foco no se mueve y el mensaje sale mientras se escribe, así que allí se quedan. No se ha probado con un lector de pantalla (L-10) |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-05 de la evaluación independiente del frontend: **tres reglas que la IA había puesto en el código sin que la spec las dijera**, escritas tal como está el código. **El `409` del alta y el aviso general de un `422` no ofrecen «Reintentar»**, porque enviar lo mismo no puede salir bien (2.3, la fila del `409` de su tabla y 2.7); **la fila «Error» de la tabla de 2.5 recoge la excepción** del `422` de la proyección; y **un `created_at` que no se puede leer como fecha se muestra como llega** (2.8). Sin cambios en el código, en los requisitos ni en los tests. Motivo: 2.5 y 2.7 decían «aviso con «Reintentar»» sin esas excepciones, y 2.8 no decía qué hacer con una fecha que no lo es |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo N-06 de la segunda evaluación independiente del frontend (`04-calidad/evaluacion-frontend-02.md`). **La página «no encontrada» lleva también su título**, «Página no encontrada · SaaS-O-Matic»: 2.1, E-57 y CA-11 pasan a decir cinco vistas, y CA-11 pide comprobar ese título llegando desde otra vista. Motivo: el router solo cambia el título cuando la ruta trae uno, así que esa página conservaba el de la vista anterior y un lector de pantalla habría anunciado otra vista |
+| 2026-11-15 | Decisión del Tech Lead sobre el hallazgo N-07 de la segunda evaluación independiente del frontend. **Solo se convierte un `created_at` con la forma del contrato** (`2026-11-12T14:30:00Z`, la de SPEC-01); todo lo demás se muestra como llega, también una fecha imposible con esa forma, como `2026-02-30T10:00:00Z` (2.8). Corrige la frase escrita ese mismo día por el hallazgo H-05, que decía «que no se puede leer como fecha». Motivo: el lector de fechas del navegador lee como fecha textos que no lo son (`Ejemplo 7`, `1`, `12/11/2026`) y convierte el 30 de febrero en el 2 de marzo, y se habría mostrado una fecha inventada |

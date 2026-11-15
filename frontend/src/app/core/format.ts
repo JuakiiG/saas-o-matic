@@ -9,6 +9,8 @@ const RATE = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 6 });
 const PERCENT = new Intl.NumberFormat(LOCALE, { style: 'percent', maximumFractionDigits: 2 });
 const INTEGER = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
 const RATE_DATE = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/;
+// The only way the backend writes a date with time (SPEC-01, 4.1): UTC, to the second.
+const CONTRACT_DATE_TIME = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/;
 const DATE_TIME_PARTS: Intl.DateTimeFormatOptions = {
   day: '2-digit',
   month: '2-digit',
@@ -70,14 +72,33 @@ export function formatPercent(basisPoints: number): string {
 /**
  * A date with time of the backend (`created_at`, in UTC) shown in the time zone of the browser
  * (`12/11/2026, 15:30`). The zone is a parameter only so that a test does not depend on the
- * machine it runs on. A text that is not a date is shown as it arrives: it is not hidden.
+ * machine it runs on. A text without the shape of the contract, or with a date that does not
+ * exist, is shown as it arrives: it is neither hidden nor turned into an invented date.
  */
 export function formatDateTime(createdAt: string, timeZone?: string): string {
-  const moment = new Date(createdAt);
-  if (Number.isNaN(moment.getTime())) {
+  const moment = contractMoment(createdAt);
+  if (moment === null) {
     return createdAt;
   }
   return new Intl.DateTimeFormat(LOCALE, { ...DATE_TIME_PARTS, timeZone }).format(moment);
+}
+
+/**
+ * The moment a `created_at` names, or `null` when the text is not one the contract writes.
+ *
+ * `Date` alone cannot decide: it reads «Ejemplo 7» as a day of 2001 and rolls the 30th of
+ * February over to the 2nd of March. So the text must have the shape of the contract and the
+ * moment read from it must write back as that same text.
+ */
+function contractMoment(createdAt: string): Date | null {
+  if (!CONTRACT_DATE_TIME.test(createdAt)) {
+    return null;
+  }
+  const moment = new Date(createdAt);
+  if (Number.isNaN(moment.getTime())) {
+    return null;
+  }
+  return moment.toISOString() === createdAt.replace('Z', '.000Z') ? moment : null;
 }
 
 /** A count (users, gigabytes, calls) the Spanish way: `250.000`. */
