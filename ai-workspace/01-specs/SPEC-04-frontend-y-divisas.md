@@ -103,6 +103,17 @@ Si `/meta` falla, cada una muestra el error con «Reintentar» en lugar de su
 contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 `/meta`.
 
+**«Reintentar» de `/meta` repite solo `/meta`.** Lo que la vista pide por
+su cuenta mientras tanto (la lista del panel, el cliente del detalle y del
+simulador y, en el simulador, la primera proyección) no se vuelve a pedir.
+Si esa petición salió bien, al llegar `/meta` la vista aparece ya cargada.
+**Si también falló**, tras reintentar `/meta` con éxito se ve el aviso de
+esa petición, con su propio «Reintentar», que es el que la repite: el de
+la lista en el panel (2.2 y 5.3); el del cliente en el detalle y en el
+simulador; y, en el simulador, el de la proyección cuando el cliente llegó
+y fue ella la que falló. *Por qué*: son peticiones distintas y cada aviso
+reintenta la suya.
+
 ### 2.2 Panel y buscador
 
 - Al entrar se muestra el listado inicial (`GET /customers` sin `q`).
@@ -155,7 +166,12 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   de `/meta` (2.1), nunca la lista con códigos. *Por qué*: las dos
   peticiones son independientes, y lanzar una al acabar la otra alargaría
   la espera sin evitar nada. Cuando `/meta` llega, o se reintenta con
-  éxito, la lista ya está y no hace falta pedirla otra vez.
+  éxito, **la lista ya está si su petición salió bien**, y no hace falta
+  pedirla otra vez. **Si la lista también falló**, tras reintentar `/meta`
+  con éxito se ve el buscador y, en el sitio de la lista, el aviso de su
+  error con su propio «Reintentar», que repite la búsqueda; reintentar
+  `/meta` no vuelve a pedir la lista. *Por qué*: son dos peticiones y cada
+  aviso reintenta la suya (2.1).
 - El frontend no filtra ni ordena: muestra lo que devuelve la API, en su
   orden. También cuando, para un texto que no está vacío, el backend
   devuelve el listado inicial: es lo que hace con un texto de solo espacios
@@ -366,7 +382,8 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
 - Con un texto no válido en el campo de usuarios, **el control deslizante
   se queda donde estaba**.
 - Si `/meta` falla, el cliente y su primera proyección se piden igual,
-  detrás del aviso: al reintentar `/meta` el simulador aparece ya cargado.
+  detrás del aviso: al reintentar `/meta` el simulador aparece ya cargado,
+  si esas dos peticiones salieron bien (2.1).
 - Estados de la proyección:
 
 | Estado | Qué se ve |
@@ -864,6 +881,7 @@ dos casos, porque el selector y el aviso deciden por el estado.
 | Un resultado con `country` `XX` y `plan` `legacy`, que `/meta` no trae | — | Se muestra `XX` y `legacy`, tal como llegan y sin marca |
 | `/meta` falla | — | Error con «Reintentar» en lugar del buscador y de la lista; no se muestra ningún código |
 | `/meta` falla y después «Reintentar» con éxito | 1 más a `/meta` | El panel muestra el listado inicial, con nombres |
+| `/meta` falla y el listado inicial también; después, «Reintentar» de `/meta` con éxito | 1 más a `/meta`; ninguna a `/customers` | El buscador y, en lugar de la lista, el aviso del error de la lista, con su propio «Reintentar». Al pulsarlo: 1 a `/customers`, sin `q`, ninguna a `/meta`, y el listado inicial, con nombres |
 | `/meta` tarda más en responder que el listado inicial | 1 a `/customers`, sin esperar a `/meta`; ninguna más cuando `/meta` llega | Estado de carga hasta que llega `/meta`; después, el listado con nombres |
 | Navegar del panel al detalle y volver, con `/meta` ya cargado | Ninguna nueva a `/meta` | Se pide una sola vez por sesión |
 | La petición falla | — | Aviso con «Reintentar»; al pulsarlo se repite la misma búsqueda |
@@ -1169,3 +1187,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo N-07 de la segunda evaluación independiente del frontend. **Solo se convierte un `created_at` con la forma del contrato** (`2026-11-12T14:30:00Z`, la de SPEC-01); todo lo demás se muestra como llega, también una fecha imposible con esa forma, como `2026-02-30T10:00:00Z` (2.8). Corrige la frase escrita ese mismo día por el hallazgo H-05, que decía «que no se puede leer como fecha». Motivo: el lector de fechas del navegador lee como fecha textos que no lo son (`Ejemplo 7`, `1`, `12/11/2026`) y convierte el 30 de febrero en el 2 de marzo, y se habría mostrado una fecha inventada |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo N-09 de la segunda evaluación independiente del frontend. **CA-08 dice qué dos filas de 5.5 se reproducen fuera de los tests del simulador**: la de la zona horaria, en `e2e/rate-date.spec.ts`, y «la simulación nueva es la primera», en la prueba de CA-14. Sin cambios en 5.5, en los requisitos ni en los tests. Motivo: el criterio decía que los tests del simulador reproducen cada fila, y esas dos ya se reproducían en otro sitio, que es donde se pueden comprobar |
 | 2026-11-15 | Decisión del Tech Lead sobre el caso C-02 de la respuesta a la segunda evaluación (`04-calidad/respuesta-evaluacion-frontend-02.md`): el título del párrafo que sigue a la tabla de criterios nombra también CA-19, del que el párrafo ya hablaba. Sin cambios en el contenido |
+| 2026-11-15 | Decisión del Tech Lead sobre la precisión AG-07 de la sesión 09 (`03-proceso/sesion-09.md`), escrita **tal como está el código, sin cambiar el comportamiento**. **«Reintentar» de `/meta` repite solo `/meta`**: si lo que la vista pidió por su cuenta también falló, tras reintentar `/meta` con éxito se ve el aviso de esa petición, con su propio «Reintentar» (2.1). La frase de 2.2 deja de decir sin condición que «la lista ya está»; la de 2.5, que el simulador «aparece ya cargado»; y 5.3 gana la fila de `/meta` y el listado inicial fallando a la vez, con su test en el panel. En el detalle y en el simulador ocurre lo mismo con el cliente, y en el simulador también con la proyección: está dicho en 2.1 y **no tiene test que lo fije**. Sin requisitos nuevos. Motivo: son peticiones distintas y cada aviso reintenta la suya; la spec decía que tras reintentar `/meta` la lista ya estaba, y eso solo es cierto si su petición salió bien |

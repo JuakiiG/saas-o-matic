@@ -5,8 +5,8 @@ que hay escritas en los tests, no de una lista mantenida a mano.
 
 | | |
 |---|---|
-| **Generada** | 2026-11-15, 17:41. La primera, el mismo día a las 16:24, sobre `f2379c4` |
-| **Sobre el commit** | `f82184e`, más un cambio que entra en el mismo commit que esta versión del documento: el título de la prueba del detalle de `frontend/e2e/responsive.spec.ts`, que pasa a citar `SPEC-04/E-16`. Ningún otro cambio en `backend/` ni en `frontend/` (`git status --short backend frontend`) |
+| **Generada** | 2026-11-15, 17:50. Antes, el mismo día: a las 16:24, sobre `f2379c4`, y a las 17:41, con el título de la prueba del detalle a 375 px citando `SPEC-04/E-16` (`426be86`) |
+| **Sobre el commit** | `426be86`, más un cambio que entra en el mismo commit que esta versión del documento: un test nuevo en `frontend/src/app/features/panel/panel.spec.ts`. Ningún otro cambio en `backend/` ni en `frontend/` (`git status --short backend frontend`) |
 | **Orden** | `uv run scripts/traceability.py`, desde la raíz. Solo lee; escribe la matriz en la salida estándar |
 | **Qué es salida de la orden** | El apartado 4 entero, sin retocar. Los apartados 1 a 3 los escribe la IA leyendo esa salida |
 
@@ -34,12 +34,12 @@ Un comentario no es una cita, ni encima del test ni dentro.
 **Se cuentan declaraciones, no casos.** Un test parametrizado es una
 declaración aunque el *runner* haga de él muchos casos. Por eso las cifras
 de la matriz son menores que las que dan los *runners* (salidas del
-2026-11-15, 16:23):
+2026-11-15: 16:23 y, la del frontend, 17:46):
 
 | Grupo | Declaraciones (esta matriz) | Casos que ejecuta el *runner* |
 |---|---|---|
 | Backend | 183, en 23 ficheros | 741 (`pytest --collect-only`) |
-| Frontend | 249, en 19 ficheros | 565 (`ng test`) |
+| Frontend | 250, en 19 ficheros | 566 (`ng test`) |
 | Playwright | 14, en 6 ficheros | 18 pruebas en 5 ficheros (`playwright test --list`) y 4 capturas en 1, con su propia configuración |
 
 **Las columnas.** `Backend`, `Frontend` y `Playwright`: cuántos tests de
@@ -66,8 +66,8 @@ requisito, no cuántos lo comprueban**:
 - De los 57 requisitos de SPEC-04, **solo 11 tienen algún test que los cite
   en su propio título** (E-16, E-22, E-26, E-29, E-30, E-36, E-39, E-41,
   E-50, E-53 y E-57). **Los otros 46 se citan solo desde un `describe`.**
-- El caso extremo es E-40, con 102 tests: son todos los de los bloques
-  que lo nombran en su título, en cinco ficheros, no 102 comprobaciones de
+- El caso extremo es E-40, con 103 tests: son todos los de los bloques
+  que lo nombran en su título, en cinco ficheros, no 103 comprobaciones de
   `/meta` en error.
 - Qué test comprueba qué requisito del frontend **no se puede leer de las
   citas**. Lo que sí lo dice, fila a fila, son las tablas de casos de
@@ -113,7 +113,7 @@ En la primera matriz (2026-11-15, 16:24) había uno:
 | Grupo | Tests declarados | Ficheros | Con alguna cita | Sin ninguna cita |
 |---|---|---|---|---|
 | Backend | 183 | 23 | 183 | 0 |
-| Frontend | 249 | 19 | 228 | 21 |
+| Frontend | 250 | 19 | 229 | 21 |
 | Playwright | 14 | 6 | 14 | 0 |
 
 ### SPEC-01
@@ -218,10 +218,10 @@ En la primera matriz (2026-11-15, 16:24) había uno:
 
 | Requisito | Backend | Frontend | Playwright | Total | En su título | Ficheros |
 |---|---|---|---|---|---|---|
-| E-01 | 0 | 24 | 0 | 24 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (24) |
-| E-02 | 0 | 24 | 0 | 24 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (24) |
-| E-03 | 0 | 24 | 0 | 24 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (24) |
-| E-04 | 0 | 24 | 0 | 24 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (24) |
+| E-01 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (25) |
+| E-02 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (25) |
+| E-03 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (25) |
+| E-04 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (25) |
 | E-05 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/alta/alta.spec.ts` (25) |
 | E-06 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/alta/alta.spec.ts` (25) |
 | E-07 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/alta/alta.spec.ts` (25) |
@@ -252,12 +252,12 @@ En la primera matriz (2026-11-15, 16:24) había uno:
 | E-32 | 0 | 19 | 0 | 19 | 0 | `frontend/src/app/core/backend-api.spec.ts` (5), `frontend/src/app/core/customer-loader.spec.ts` (9), `frontend/src/app/features/panel/panel.spec.ts` (5) |
 | E-33 | 0 | 28 | 0 | 28 | 0 | `frontend/src/app/core/backend-api.spec.ts` (5), `frontend/src/app/core/customer-loader.spec.ts` (9), `frontend/src/app/core/meta-store.spec.ts` (9), `frontend/src/app/features/panel/panel.spec.ts` (5) |
 | E-34 | 0 | 8 | 0 | 8 | 0 | `frontend/src/app/app.routes.spec.ts` (8) |
-| E-35 | 0 | 76 | 0 | 76 | 0 | `frontend/src/app/core/meta-store.spec.ts` (9), `frontend/src/app/features/detalle/detalle.spec.ts` (19), `frontend/src/app/features/panel/panel.spec.ts` (24), `frontend/src/app/features/simulador/simulador.spec.ts` (24) |
+| E-35 | 0 | 77 | 0 | 77 | 0 | `frontend/src/app/core/meta-store.spec.ts` (9), `frontend/src/app/features/detalle/detalle.spec.ts` (19), `frontend/src/app/features/panel/panel.spec.ts` (25), `frontend/src/app/features/simulador/simulador.spec.ts` (24) |
 | E-36 | 0 | 4 | 1 | 5 | 1 | `frontend/e2e/limits.spec.ts` (1), `frontend/src/app/features/simulador/simulador-help.spec.ts` (4) |
 | E-37 | 0 | 12 | 0 | 12 | 0 | `frontend/src/app/features/simulador/simulador.spec.ts` (12) |
 | E-38 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/simulador/simulador.spec.ts` (25) |
 | E-39 | 0 | 11 | 0 | 11 | 1 | `frontend/src/app/app.journeys.spec.ts` (1), `frontend/src/app/app.spec.ts` (1), `frontend/src/app/core/meta-store.spec.ts` (9) |
-| E-40 | 0 | 102 | 0 | 102 | 0 | `frontend/src/app/core/meta-store.spec.ts` (9), `frontend/src/app/features/alta/alta.spec.ts` (25), `frontend/src/app/features/detalle/detalle.spec.ts` (19), `frontend/src/app/features/panel/panel.spec.ts` (24), `frontend/src/app/features/simulador/simulador.spec.ts` (25) |
+| E-40 | 0 | 103 | 0 | 103 | 0 | `frontend/src/app/core/meta-store.spec.ts` (9), `frontend/src/app/features/alta/alta.spec.ts` (25), `frontend/src/app/features/detalle/detalle.spec.ts` (19), `frontend/src/app/features/panel/panel.spec.ts` (25), `frontend/src/app/features/simulador/simulador.spec.ts` (25) |
 | E-41 | 0 | 27 | 1 | 28 | 1 | `frontend/e2e/limits.spec.ts` (1), `frontend/src/app/core/text.spec.ts` (2), `frontend/src/app/features/alta/alta.spec.ts` (25) |
 | E-42 | 0 | 38 | 0 | 38 | 0 | `frontend/src/app/core/api-error.spec.ts` (8), `frontend/src/app/features/alta/alta.spec.ts` (25), `frontend/src/app/features/panel/panel.spec.ts` (5) |
 | E-43 | 0 | 38 | 0 | 38 | 0 | `frontend/src/app/core/api-error.spec.ts` (8), `frontend/src/app/features/alta/alta.spec.ts` (25), `frontend/src/app/features/panel/panel.spec.ts` (5) |
@@ -267,11 +267,11 @@ En la primera matriz (2026-11-15, 16:24) había uno:
 | E-47 | 0 | 37 | 0 | 37 | 0 | `frontend/src/app/core/backend-api.spec.ts` (2), `frontend/src/app/core/customer-id.spec.ts` (2), `frontend/src/app/core/customer-loader.spec.ts` (9), `frontend/src/app/features/detalle/detalle.spec.ts` (19), `frontend/src/app/features/simulador/simulador.spec.ts` (5) |
 | E-48 | 0 | 46 | 0 | 46 | 0 | `frontend/src/app/core/api-error.spec.ts` (10), `frontend/src/app/features/simulador/simulador.spec.ts` (36) |
 | E-49 | 0 | 42 | 0 | 42 | 0 | `frontend/src/app/core/backend-api.spec.ts` (2), `frontend/src/app/features/simulador/simulador-help.spec.ts` (4), `frontend/src/app/features/simulador/simulador.spec.ts` (36) |
-| E-50 | 0 | 25 | 1 | 26 | 1 | `frontend/e2e/limits.spec.ts` (1), `frontend/src/app/core/text.spec.ts` (1), `frontend/src/app/features/panel/panel.spec.ts` (24) |
-| E-51 | 0 | 29 | 0 | 29 | 0 | `frontend/src/app/core/backend-api.spec.ts` (5), `frontend/src/app/features/panel/panel.spec.ts` (24) |
+| E-50 | 0 | 26 | 1 | 27 | 1 | `frontend/e2e/limits.spec.ts` (1), `frontend/src/app/core/text.spec.ts` (1), `frontend/src/app/features/panel/panel.spec.ts` (25) |
+| E-51 | 0 | 30 | 0 | 30 | 0 | `frontend/src/app/core/backend-api.spec.ts` (5), `frontend/src/app/features/panel/panel.spec.ts` (25) |
 | E-52 | 0 | 7 | 0 | 7 | 0 | `frontend/src/app/app.journeys.spec.ts` (2), `frontend/src/app/core/backend-api.spec.ts` (5) |
-| E-53 | 0 | 24 | 1 | 25 | 1 | `frontend/e2e/limits.spec.ts` (1), `frontend/src/app/features/panel/panel.spec.ts` (24) |
-| E-54 | 0 | 24 | 0 | 24 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (24) |
+| E-53 | 0 | 25 | 1 | 26 | 1 | `frontend/e2e/limits.spec.ts` (1), `frontend/src/app/features/panel/panel.spec.ts` (25) |
+| E-54 | 0 | 25 | 0 | 25 | 0 | `frontend/src/app/features/panel/panel.spec.ts` (25) |
 | E-55 | 0 | 12 | 0 | 12 | 0 | `frontend/src/app/features/simulador/simulador.spec.ts` (12) |
 | E-56 | 0 | 3 | 0 | 3 | 0 | `frontend/src/app/features/alta/alta.spec.ts` (3) |
 | E-57 | 0 | 8 | 0 | 8 | 2 | `frontend/src/app/app.routes.spec.ts` (8) |

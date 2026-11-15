@@ -312,6 +312,37 @@ describe('Panel · SPEC-04/E-01 a E-04, E-35, E-40, E-50, E-51, E-53, E-54 (CA-0
     expect(text(page)).toContain('España');
   });
 
+  // SPEC-04, 2.2 and 5.3: `/meta` and the list are two requests, and each notice retries its
+  // own. The two fail with different errors here, to tell one notice from the other.
+  it('should show the notice of the list, with its own retry, when the list failed too and the retry of /meta succeeds', () => {
+    const page = open('failed');
+    fail(page, 503, 'service_unavailable');
+    expect(page.element.querySelector('[role="alert"]')?.textContent).toContain(UNEXPECTED);
+
+    press(page, 'Reintentar');
+    const retries = page.controller.match(META_URL);
+    retries.forEach((request) => request.flush(META));
+    page.fixture.detectChanges();
+
+    expect(retries.length).toBe(1);
+    expect(searches(page).length).toBe(0);
+    expect(page.element.querySelector('#panel-search')).not.toBeNull();
+    expect(page.element.querySelector('.results')).toBeNull();
+    const notices = page.element.querySelectorAll('[role="alert"]');
+    expect(notices.length).toBe(1);
+    expect(notices[0].textContent).toContain(UNAVAILABLE);
+    expect(notices[0].querySelector('button')?.textContent?.trim()).toBe('Reintentar');
+
+    press(page, 'Reintentar');
+
+    expect(page.controller.match(META_URL).length).toBe(0);
+    const request = answer(page, [customer(7, 'Ejemplo Uno SL', 'ES', 'professional')]);
+    expect(request.params.has('q')).toBe(false);
+    expect(names(page)).toEqual(['Ejemplo Uno SL']);
+    expect(text(page)).toContain('España');
+    expect(page.element.querySelector('[role="alert"]')).toBeNull();
+  });
+
   it('should not ask for /meta again when the panel is opened a second time', () => {
     const page = open();
     answer(page, []);

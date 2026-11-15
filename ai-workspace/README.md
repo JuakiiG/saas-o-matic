@@ -63,7 +63,7 @@ A 2026-11-15, al cerrar la sesión 09:
   SPEC-04 el 2026-11-14).
 - **Código**: backend y frontend implementados sobre ellas. El oráculo
   (`uv run scripts/check.py --e2e`, desde la raíz) ejecuta 741 tests del
-  backend, 565 del frontend, 18 pruebas de Playwright y 96 de los propios
+  backend, 566 del frontend, 18 pruebas de Playwright y 96 de los propios
   scripts.
 - **Evaluaciones independientes**: siete (tres de las specs, dos del
   backend y dos del frontend), todas respondidas y con cada hallazgo
