@@ -685,6 +685,23 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
     },
   );
 
+  // SPEC-04, 2.7 and 5.5: «Reintentar» in a form sends what the form holds at that moment, not
+  // the body of the request that failed.
+  it('should save what the form holds now when «Reintentar» is pressed after an edit', () => {
+    const page = openAndSave();
+    flush(page, only(simulationRequests(page)), { code: 'internal_error' }, 500);
+
+    write(page, STORAGE, '400');
+    write(page, CALLS, '300000');
+    press(page, 'Reintentar', SAVE_NOTICE);
+
+    expect(only(simulationRequests(page)).request.body).toEqual({
+      ...SAVED_BODY,
+      storage_gb: 400,
+      estimated_api_calls: 300000,
+    });
+  });
+
   it('should warn that it may have been saved, with a retry and a link to the detail, on a timeout', () => {
     const page = openAndSave();
 
