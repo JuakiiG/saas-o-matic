@@ -1,0 +1,68 @@
+# Continuous integration: what is run locally, the oracle with the end-to-end tests
+# (`uv run scripts/check.py --e2e`), on Linux and on Windows.
+#
+# Every action is pinned to the full SHA of a commit, with its version in a comment: a tag can
+# be moved, a commit cannot. To update one, read the SHA of the new tag with
+# `git ls-remote --tags https://github.com/<owner>/<action>` (for an annotated tag, the line
+# that ends in `^{}`) and check that the version is more than a week old (ADR-007).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# The jobs only read the repository. No secret is used.
+permissions:
+  contents: read
+
+jobs:
+  oracle:
+    name: Oracle (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      # One system failing must not hide what the other one says.
+      fail-fast: false
+      matrix:
+        include:
+          # Chromium needs system libraries on Linux; Playwright installs them with `--with-deps`.
+          - os: ubuntu-latest
+            playwright-install: "--with-deps --only-shell chromium"
+          - os: windows-latest
+            playwright-install: "--only-shell chromium"
+    steps:
+      # The oracle reads the whole history: no commit may carry a co-author trailer and the
+      # private folder must never have been tracked. With the default depth of 1 those checks
+      # would pass having looked at a single commit.
+      - name: Check out the repository with its whole history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # uv installs Python: `python-version` sets UV_PYTHON, the version `backend/.python-version`
+      # and `pyproject.toml` ask for.
+      - name: Install uv and choose Python
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.12.13"
+          python-version: "3.12"
+          enable-cache: false
+
+      # Node.js 24.18.0 brings npm 11.16.0, the one `frontend/package.json` names.
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.18.0"
+          package-manager-cache: false
+
+      - name: Install the frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install the browser of Playwright
+        working-directory: frontend
+        run: npx playwright install ${{ matrix.playwright-install }}
+
+      - name: Run the oracle with the end-to-end tests
+        run: uv run scripts/check.py --e2e
