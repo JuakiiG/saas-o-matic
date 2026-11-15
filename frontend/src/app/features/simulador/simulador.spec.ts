@@ -7,6 +7,7 @@ import {
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { of } from 'rxjs';
 
 import { BACKEND_BASE_URL } from '../../core/backend-api';
@@ -141,6 +142,29 @@ function open(routeId = '7', meta: 'answered' | 'failed' = 'answered'): Page {
   const fixture = TestBed.createComponent(Simulador);
   fixture.detectChanges();
   return { fixture, element: fixture.nativeElement as HTMLElement, controller };
+}
+
+interface RoutedPage {
+  readonly harness: RouterTestingHarness;
+  readonly controller: HttpTestingController;
+}
+
+/** Opens the simulator by its address, so its id is the segment the router has decoded. */
+async function openThroughRouter(url: string): Promise<RoutedPage> {
+  TestBed.configureTestingModule({
+    providers: [
+      provideRouter([{ path: 'clientes/:id/simulacion', component: Simulador }]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
+    ],
+  });
+  const controller = TestBed.inject(HttpTestingController);
+  TestBed.inject(MetaStore).load();
+  for (const request of controller.match(META_URL)) {
+    request.flush(META);
+  }
+  const harness = await RouterTestingHarness.create(url);
+  return { harness, controller };
 }
 
 function customerRequests(page: Page): TestRequest[] {
@@ -742,7 +766,7 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
   });
 });
 
-// CA-17: the rows of SPEC-04, 5.7, in the simulator. Only the first one reaches a projection.
+// CA-17: the rows of SPEC-04, 5.7, in the simulator. Only those of customer 1 reach a projection.
 describe('Simulador · el id de la ruta · SPEC-04/E-15, E-47 (CA-17, CA-16)', () => {
   it('should ask for the customer with the text of the route and then for its projection', () => {
     const page = open('1');
@@ -753,6 +777,25 @@ describe('Simulador · el id de la ruta · SPEC-04/E-15, E-47 (CA-17, CA-16)', (
     expect(request.request.urlWithParams).toBe(`${CUSTOMERS_URL}1`);
     expect(only(quoteRequests(page)).request.body).toEqual({ customer_id: 1, active_users: 10 });
   });
+
+  // The filter sees the segment the router has already decoded, so an encoded digit is that
+  // digit and a matrix parameter is not part of the id. These two go through the real router.
+  it.each(['/clientes/%31/simulacion', '/clientes/1;x=y/simulacion'])(
+    'should ask for /customers/1 and then for its projection when the route is %s',
+    async (url) => {
+      const { harness, controller } = await openThroughRouter(url);
+
+      const request = only(controller.match((sent) => sent.url.startsWith(CUSTOMERS_URL)));
+      request.flush({ ...CUSTOMER, id: 1 });
+      harness.detectChanges();
+
+      expect(request.request.urlWithParams).toBe(`${CUSTOMERS_URL}1`);
+      expect(only(controller.match(QUOTE_URL)).request.body).toEqual({
+        customer_id: 1,
+        active_users: 10,
+      });
+    },
+  );
 
   it.each([
     'abc',

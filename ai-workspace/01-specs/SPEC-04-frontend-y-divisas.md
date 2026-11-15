@@ -52,6 +52,17 @@ ese texto en número** para pedir el cliente:
 3. Si la cumple, pide `GET /customers/` seguido de ese mismo texto, y la
    respuesta del backend decide (2.4).
 
+**El filtro se aplica al segmento ya descodificado por el router**, no al
+texto de la barra de direcciones. Antes de dar el `id`, el router
+descodifica lo escrito con `%` y separa del segmento los parámetros de
+matriz (lo que sigue a un `;`). Por eso `/clientes/%31` pide el cliente 1,
+igual que `/clientes/1`, y `/clientes/1;x=y` también: el parámetro de
+matriz no forma parte del `id` (5.7). *Por qué no se mira el texto sin
+descodificar*: `%31` y `1` son dos formas de escribir la misma dirección,
+también para el backend, que responde con el cliente 1 a
+`GET /customers/%31` (sondeado el 2026-11-15 con el cliente de test); y el
+parámetro de matriz es sintaxis del router, que la aplicación no usa.
+
 *Por qué no se convierte*: en la API un cliente tiene una sola dirección
 (índice de specs, «Identificadores»), y JavaScript convierte `01`, `+1`,
 `1.0` o un `1` con un espacio en el número 1: el cliente 1 tendría varias
@@ -926,8 +937,9 @@ genéricos. Los avisos son los de la tabla de 2.7.
 ### 5.7 El `id` de la ruta
 
 Cada fila vale para el detalle (`/clientes/…`) y para el simulador
-(`/clientes/…/simulacion`). En el simulador, además, solo la primera fila
-llega a pedir una proyección.
+(`/clientes/…/simulacion`). En el simulador, además, solo las tres
+primeras filas, las que cargan el cliente 1, llegan a pedir una
+proyección.
 
 Lo que responde el backend a `1`, `999`, `abc`, `01`, `+1`, `1.0`, `1_0`,
 el `1` con un espacio, `0` y `-1` está en SPEC-01, 5.10. Los demás textos
@@ -940,6 +952,8 @@ clientes que no existen.
 | Ruta | Peticiones del cliente | Interfaz |
 |---|---|---|
 | `/clientes/1` (existe) | 1, a `/customers/1` | El detalle del cliente 1 |
+| `/clientes/%31` (el `1` escrito con `%`) | 1, a `/customers/1` | El detalle del cliente 1: el filtro ve el segmento ya descodificado por el router (2.1) |
+| `/clientes/1;x=y` (con un parámetro de matriz) | 1, a `/customers/1` | El detalle del cliente 1: el parámetro de matriz no forma parte del `id` (2.1) |
 | `/clientes/999` (el backend responde `404` `customer_not_found`) | 1, a `/customers/999` | «Cliente no encontrado» |
 | `/clientes/abc` | 0 | «Cliente no encontrado» |
 | `/clientes/01` | 0 | «Cliente no encontrado»: el cliente 1 solo tiene una dirección, `/clientes/1` |
@@ -1095,3 +1109,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-14 | Cambio mandado por el Tech Lead al revisar la parada 3 del frontend (sesión 07, precisión AA-07): **la fila de 5.2 del cuerpo que no es JSON dice que el estado es de error y que su `code` puede ser `invalid_rates` o `unknown_error`**, con una nota bajo la tabla. Sin cambios en requisitos, criterios ni tests. Motivo: las utilidades de test entregan el cuerpo como texto y lo rechaza la validación; en un navegador, el cliente HTTP puede fallar antes, al leer el JSON. En los dos casos la interfaz es la misma |
 | 2026-11-15 | Cambio mandado por el Tech Lead al empezar la fase de QA (sesión 08): **CA-15 deja de pedir «capturas manuales» y pide «capturas generadas con Playwright y revisadas por el Tech Lead»**, guardadas en `04-calidad/capturas/`; la nota bajo la tabla de criterios dice lo mismo y nombra la orden que las genera. Sin cambios en requisitos ni en casos. D-09 y ADR-005 siguen diciendo «capturas manuales»: son el registro de lo que se decidió el día 12 y no se han tocado. Motivo: unas capturas que salen de una orden se pueden repetir y son las mismas para quien revise; la revisión sigue siendo de una persona |
 | 2026-11-15 | Cambio mandado por el Tech Lead al revisar la parada 1 de la fase de QA (sesión 08, precisión AC-11). **La nota bajo la tabla de criterios** deja de dar CA-13 y CA-14 por pendientes de implementar: dice que están en `frontend/e2e/`, que se ejecutan con `npm run e2e` y que el oráculo los pasa con `--e2e`; y precisa que la API de divisas se responde con el protocolo de depuración de Chromium y no con `page.route()`, por lo que las pruebas solo funcionan en Chromium. **CA-15 nombra las dos capturas añadidas**, el simulador con otra divisa y la cabecera con el aviso del fallo de los tipos. **D-09 no se reescribe**: lleva al lado una nota fechada. Sin cambios en requisitos ni en casos. Motivo: la nota decía de CA-13 y CA-14 algo que dejó de ser cierto al implementarlos; «la intercepta» no decía cómo, y el cómo decide si CA-14 comprueba el CORS del backend (con `page.route()`, Playwright responde las comprobaciones previas y una cabecera de más no hacía fallar la prueba); y CA-15 pedía menos capturas de las que hay |
+| 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-01 de la evaluación independiente del frontend (`04-calidad/evaluacion-frontend-01.md`), sin tocar el código. **El filtro del `id` se aplica al segmento ya descodificado por el router** (2.1), y 5.7 gana dos filas: `/clientes/%31` pide el cliente 1, y `/clientes/1;x=y` también, porque el parámetro de matriz no forma parte del `id`. La frase de 5.7 sobre el simulador dice «las tres primeras filas» donde decía «la primera». Sin requisitos ni criterios nuevos; los dos casos, en los tests de 5.7 del detalle y del simulador. Motivo: la spec decía que el cliente 1 tiene una sola dirección en el frontend y no decía qué pasa con las dos formas que el router reduce a `1` antes de que la aplicación vea el texto |

@@ -331,6 +331,22 @@ describe('Detalle · SPEC-04/E-12 a E-15, E-35, E-40, E-47 (CA-07, CA-16, CA-17)
     expect(link(page, 'Volver al panel')).toBe('/');
   });
 
+  // SPEC-04, 5.7: the filter sees the segment the router has already decoded, so an encoded
+  // digit is that digit and a matrix parameter is not part of the id.
+  it.each(['/clientes/%31', '/clientes/1;x=y'])(
+    'should ask for /customers/1 and show its detail when the route is %s',
+    async (url) => {
+      const page = await open(url);
+
+      const request = onlyCustomerRequest(page);
+      request.flush(CUSTOMER);
+      page.harness.detectChanges();
+
+      expect(request.request.urlWithParams).toBe(`${CUSTOMERS_URL}1`);
+      expect(clean(page.element.querySelector('.customer h2')?.textContent)).toBe('Ejemplo Uno SL');
+    },
+  );
+
   it.each(['999', '9007199254740991'])(
     'should ask for /customers/%s, with that exact text, and show «Cliente no encontrado» on its 404',
     async (id) => {
