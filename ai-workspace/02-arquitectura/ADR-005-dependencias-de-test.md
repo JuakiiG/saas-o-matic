@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Estado** | `aceptado` (2026-11-12); ampliado el 2026-11-13 con el apartado 3 |
+| **Estado** | `aceptado` (2026-11-12); ampliado el 2026-11-13 con el apartado 3 y el 2026-11-15 con la nota del apartado 2 |
 | **Decide** | Tech Lead |
 | **Requisitos** | R-04, R-11, R-12 |
 | **Specs** | SPEC-01 (D-15, CA-19) · SPEC-04 (D-09, CA-13, CA-14) |
@@ -58,6 +58,32 @@ complemento (CA-15).
 - La prueba de principio a fin intercepta la API de divisas con la
   respuesta de SPEC-04 (4.2); no depende de la red (ADR-003).
 
+**Nota del 2026-11-15, al implementarlo en la fase de QA** (decisiones del
+Tech Lead de las sesiones 07 y 08; lo de arriba se conserva como se
+escribió):
+
+- **Son cuatro grupos de pruebas, no dos**: a CA-14 y CA-13 se suman el
+  caso de frontera de la limitación conocida L-09 y la fila de la zona
+  horaria de SPEC-04, 5.5. CA-13 comprueba además la cabecera con el aviso
+  del fallo de los tipos.
+- **Los dos proyectos los arranca Playwright** (`webServer`) en sus puertos
+  por defecto, 8000 y 4200, sin reutilizar un servidor ya arrancado, y la
+  base de datos va en una carpeta temporal que se borra al acabar
+  (`CLAUDE.md`, regla 8). No hay una configuración del frontend propia de
+  las pruebas.
+- **Las capturas de CA-15 las genera Playwright** y las revisa el Tech
+  Lead; ya no son manuales.
+- **La API de divisas no se intercepta con `page.route()`**, sino con el
+  protocolo de depuración de Chromium, solo para su URL. *Por qué*: con
+  una ruta puesta, Playwright 1.65.0 responde él mismo a toda comprobación
+  previa de CORS, admitiendo lo que se le pida, y la prueba de CA-14 no
+  comprobaría el CORS del backend. Se vio con una mutación (una cabecera
+  propia en cada `POST`), que con `page.route()` no hacía fallar la prueba.
+  Consecuencia: las pruebas solo funcionan en Chromium.
+- **Solo se descarga el *headless shell* de Chromium**
+  (`npx playwright install --only-shell chromium`), que es lo que usan las
+  pruebas; no permite verlas con ventana.
+
 ## 3. Cliente HTTP de los tests de integración
 
 Añadido el 2026-11-13, al crear el backend. Los tests de integración llaman
@@ -86,7 +112,7 @@ por el aviso; con `httpx2` 2.16.0 pasa sin ningún aviso. Ningún módulo de
 |---|---|---|---|
 | `python-stdnum` | 2.2 (publicada el 2026-01-04) | **Fijada e instalada** el 2026-11-13 | `backend/pyproject.toml` y `uv.lock` |
 | `httpx2` | 2.16.0 (publicada el 2026-10-21) | **Fijada e instalada** el 2026-11-13 | `backend/pyproject.toml` y `uv.lock` |
-| `@playwright/test` | 1.65.0 era la última el 2026-11-12, `node >=20` (`npm view`) | Sin instalar | `package-lock.json`, en la fase de QA |
+| `@playwright/test` | 1.65.0 (publicada el 2026-11-05), `node >=20`. Trae `playwright` y `playwright-core`, las dos en 1.65.0 y de ese mismo día | **Fijada e instalada** el 2026-11-15 | `frontend/package.json` y `package-lock.json` |
 
 La versión exacta se fija al añadir cada dependencia, con el margen de
 ADR-007.
@@ -94,8 +120,10 @@ ADR-007.
 ## No verificado
 
 - `python-stdnum` y `httpx2` están instalados desde el 2026-11-13. Con
-  `python-stdnum` no se ha ejecutado nada todavía. Playwright no se ha
-  instalado.
+  `python-stdnum` no se ha ejecutado nada todavía. ~~Playwright no se ha
+  instalado.~~ Playwright está instalado desde el 2026-11-15 y sus pruebas
+  pasan en Windows 11 con Node 24.18.0; **en macOS y en Linux no se han
+  ejecutado**.
 - Qué declara `fastapi` en sus extras: solo se ha leído el extra `full` de
   `starlette`.
 - **Qué acepta `python-stdnum` para el CIF.** SPEC-01 espera que acepte todo
@@ -106,8 +134,8 @@ ADR-007.
   `httpx2` solo se ha leído su ficha en PyPI (repositorio
   `github.com/pydantic/httpx2`) y se ha consultado que la versión 2.16.0 no
   tiene avisos de seguridad en PyPI ni en OSV.
-- Que Playwright funcione con la combinación de Node 24 y Angular de
-  ADR-001.
+- ~~Que Playwright funcione con la combinación de Node 24 y Angular de
+  ADR-001.~~ Comprobado el 2026-11-15 en Windows 11.
 
 ## Consecuencias
 
@@ -122,7 +150,7 @@ En contra, y cómo se trata:
 |---|---|
 | Dos dependencias más que mantener | Solo de desarrollo, con la versión fijada; ninguna llega al código de la aplicación |
 | La prueba diferencial compara con otra convención, no con una norma | Se dice así en SPEC-01 (2.7) y en `requisitos.md` (R-04); no se presenta como verificación oficial |
-| Las pruebas de Playwright son lentas y necesitan los dos proyectos levantados | Solo dos pruebas, en la fase de QA |
+| Las pruebas de Playwright son lentas y necesitan los dos proyectos levantados | Solo dos pruebas, en la fase de QA. Medido el 2026-11-15: las catorce pruebas de los cuatro grupos, con el arranque de los dos servidores, tardan unos 20 s en el equipo de desarrollo; los levanta y los para Playwright |
 
 ## Cuándo habría que revisarla
 
