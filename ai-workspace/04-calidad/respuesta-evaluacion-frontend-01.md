@@ -82,8 +82,33 @@ No son hallazgos del informe: salen de leerlo y de compararlo.
 
 ## 4. Decisión del Tech Lead
 
-Pendiente. Esta respuesta se entrega en la parada 2 de la sesión 08 sin
-aplicar nada.
+~~Pendiente. Esta respuesta se entrega en la parada 2 de la sesión 08 sin
+aplicar nada.~~
+
+**Decidido el 2026-11-15, a las 13:11, al aprobar la parada 2 de la sesión
+08.** El informe no se toca. Los apartados 1 a 3 y el 5 se quedan como se
+entregaron; lo que sigue es la decisión y dónde quedó aplicada. Cada
+hallazgo, en un commit, con el oráculo con `--e2e` en verde antes.
+
+| # | Decisión del Tech Lead | Commit |
+|---|---|---|
+| H-01 | La recomendada: no se toca el código. SPEC-04 2.1 dice que el filtro se aplica al segmento ya descodificado por el router, y 5.7 gana dos filas (`%31` y `1;x=y` piden el cliente 1). Los dos casos, en los tests de 5.7 del detalle y del simulador | `35d482a` |
+| H-02 | Se corrige. Anillo de foco: el azul de acento, `#1d4ed8`, **no el `#b45309`**, que se parece demasiado al color de error y haría que un campo enfocado pareciera un campo con error. Borde de los campos: `#7c8698`, **en una variable nueva solo para los controles**; las tarjetas, los avisos y la cabecera conservan el suyo. Una frase en SPEC-04 2.8, un criterio nuevo (CA-19) y una prueba de Playwright que lee los colores que pinta el navegador. Capturas regeneradas y una nueva del alta con un campo enfocado | `72f8544` |
+| H-03 | **Solo el título por ruta**, con la opción `title` del router y el nombre de la aplicación detrás (requisito nuevo E-57). El anuncio del resultado de la búsqueda y el foco al navegar **no se hacen**: sin lector de pantalla no se pueden comprobar, y un atributo ARIA sin probar puede empeorar lo que hay. Son la limitación conocida L-10 | `8a16e2e` |
+| H-04 | **Solo en el alta**: los mensajes de campo dejan de llevar `role="alert"`. En el simulador se quedan, porque ahí el foco no se mueve y el mensaje sale mientras se escribe. SPEC-04 2.7 dice qué lo lleva y qué no. L-10 dice que nada de esto se ha probado con lector de pantalla | `64f5e7b` |
+| H-05 | A SPEC-04 tal como está el código: el `409` y el aviso general de un `422` no ofrecen «Reintentar», un `created_at` que no es una fecha se muestra como llega y la fila «Error» de la tabla de 2.5 recoge la excepción | `b33ea2e` |
+| H-06 | Se corrige el comentario de `core/limits.ts`. Los textos con la cifra se quedan, y L-09 dice que son tres y que hay que cambiarlos a mano | `04404af` |
+| H-07 | Se corrige la cita en `rate-date.spec.ts`. Los commits no se reescriben: nota en la bitácora | `3728349` |
+| H-08 | La recomendada: las capturas salen a `playwright.capturas.config.ts` y `npm run e2e:capturas` lo usa con `-c` | `f6d0d04` |
+| H-09 | La recomendada: el test del tiempo agotado en `meta-store.spec.ts`, con su mutación | `596f1ec` |
+| H-10 | **No se pone política de contenido ahora.** Limitación conocida L-11, con cómo se cerraría en un despliegue | `13351c9` |
+| B-01 | **El carácter de la línea 43 no se restaura.** La diferencia ya está dicha aquí y en la bitácora, y la propia línea nombra el U+00A0. No se abre una excepción a la regla de no escribir desde la terminal por un carácter invisible | — |
+| B-02 | Nada | — |
+| B-03 | **Sí, una segunda evaluación**, con todo lo anterior aplicado: CA-04, CA-05, CA-08 y CA-16 fila a fila, el contrato de SPEC-01 a SPEC-03 contra `core/models.ts` y los cambios de este día. Su informe, en `evaluacion-frontend-02.md` | — |
+| B-04 | Nada | — |
+
+Lo que la IA añadió o dejó sin hacer al aplicarlas (precisiones AE-01 en
+adelante) está en la bitácora de la sesión 08, apartado 3.
 
 ## 5. Lo que esta respuesta no demuestra
 
