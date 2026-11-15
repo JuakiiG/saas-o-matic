@@ -623,6 +623,27 @@ describe('Simulador · proyección · SPEC-04/E-17 a E-22, E-35, E-38, E-40, E-4
     },
   );
 
+  // SPEC-04, 2.7: here the focus does not move and the message comes out while the user writes,
+  // so, unlike in the sign-up, the message of a field is an alert; its field points at it too.
+  it.each([
+    [USERS, 'abc'],
+    [STORAGE, '-1'],
+    [CALLS, '1,5'],
+  ])(
+    'should announce the message of #%s as an alert, described by its field, when it is «%s»',
+    (id, text) => {
+      const page = openWithProjection();
+
+      write(page, id, text);
+      wait(page, 1000);
+
+      const message = page.element.querySelector(`#${id}-error`);
+      expect(clean(message?.textContent)).not.toBe('');
+      expect(message?.getAttribute('role')).toBe('alert');
+      expect(input(page, id)?.getAttribute('aria-describedby')).toBe(`${id}-error`);
+    },
+  );
+
   it('should start with 10 users, no storage and no calls, in text boxes for numbers', () => {
     const page = openWithProjection();
 
