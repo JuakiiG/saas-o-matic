@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-15 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | **Parada 2 alcanzada (12:43): evaluación independiente del frontend.** Antes, la parada 1 aprobada a las 12:04 y sus cinco cambios, un commit cada uno (`e75ea0b` a `377233c`): la regla 7, los tipos de `e2e/` dentro de `npm run lint` (sin ningún error de tipos), SPEC-04, las reglas del frontend y las capturas sin foco. **El evaluador** (subagente, Opus 5.5, de 12:23 a 12:32, en solo lectura): CA-12 cumple; los 56 requisitos cumplen; de los 18 criterios, 17 cumplen (cuatro por muestreo) y CA-15 queda sin demostrar porque no puede leer las capturas; **10 hallazgos, uno medio (H-02, el contraste del anillo de foco y del borde de los campos) y nueve bajos**. Informe en `c149ca0` y respuesta de la IA, sin aplicar nada, en `be9fef7`. **Lo que el Tech Lead tiene que conocer**: (1) el informe guardado difiere del mensaje del evaluador en un carácter, un U+00A0 de la línea 43, que la IA no ha restaurado (AD-06); (2) dos hallazgos son errores de la IA de esta sesión: la prueba de la fecha cita E-27 y es E-29 (H-07), y `npx playwright test` sin opciones reescribiría las capturas (H-08); (3) el evaluador revisó cuatro criterios por muestreo y no leyó enteras las specs del backend. Quedan sin aprobar AD-01 a AD-10 y sin decidir H-01 a H-10 y B-01 a B-04. · **Antes, parada 1 alcanzada (11:37): Playwright y las capturas de CA-15.** `@playwright/test` 1.65.0 instalado y catorce pruebas en `frontend/e2e/` (CA-14, CA-13 con la cabecera del aviso, L-09 y la fila de la zona horaria), en un commit (`895f55d`); el oráculo sale con código 0 con `--e2e` (24 correctas, 0 inactivas) y sin él sigue como ayer (23 y 1 inactiva). Las pruebas tardan unos 20 s con el arranque de los dos servidores. Doce capturas en `04-calidad/capturas/` y CA-15 cambiado en SPEC-04. **Lo que el Tech Lead tiene que conocer**: (1) **la primera mutación de CA-14 sobrevivió**: con la API de divisas interceptada con `page.route()`, Playwright respondía él mismo a las comprobaciones previas de CORS y la prueba no comprobaba el CORS del backend; se cambió el mecanismo (protocolo de depuración de Chromium, solo para la URL de los tipos) y la mutación muere (AC-03); (2) la IA ha hecho los commits sin que se le pidiera cada uno (AC-01); (3) son catorce pruebas, no cuatro, y L-09 cubre todos los límites y no un campo (AC-08); (4) los ficheros de `e2e/` no los compila nadie con tipos (AC-09). Quedan sin aprobar las precisiones AC-01 a AC-18. **El paso 3 (evaluador) no se ha empezado**: espera la aprobación de esta parada. · Antes, sesión abierta a las 10:46 |
+| **Resultado** | **Parada 3 alcanzada (14:20): los hallazgos de la primera evaluación, aplicados, y una segunda evaluación acotada.** La parada 2 se aprobó a las 13:11, con AD-01 a AD-10 admitidas y cada hallazgo decidido. **Diez commits, uno por hallazgo** (`35d482a` a `13351c9`), cada uno con el oráculo con `--e2e` en código 0: H-01 (el `id` ya descodificado, en la spec y en los tests), H-02 (anillo de foco azul y borde de los campos en una variable propia, con una prueba de Playwright del contraste, CA-19, y catorce capturas), H-03 (título por ruta, E-57), H-04 (los mensajes de campo del alta sin `role="alert"`), H-05 (tres reglas a la spec), H-06, H-07, H-08 (las capturas, en su propia configuración de Playwright), H-09 y H-10; limitaciones nuevas L-10 y L-11. **Rojo visto por aserción** en H-02 (dos veces), H-03 y H-04; **mutación** en H-01 y H-09. **La segunda evaluación** (subagente, Opus 5.5, de 14:00 a 14:08, en solo lectura; informe en `8045884`, idéntico a su mensaje, y respuesta de la IA, sin aplicar nada, en `5eb8d8a`): las 109 filas de 5.3 a 5.6 tienen test, pero **CA-04, CA-05, CA-08 y CA-16 salen `NO CUMPLE`** porque varios tests no comprueban todo lo que el criterio pide; ninguna diferencia en el contrato; los diez cambios se sostienen; **9 hallazgos, dos medios y siete bajos**, ninguno por un comportamiento que falle salvo N-07. **Lo que el Tech Lead tiene que conocer**: (1) la mutación de H-01 solo mata la mitad de los casos: el de `%31` lo resuelve el router de Angular (AE-02); (2) la página «no encontrada» no tiene título y conserva el de la vista anterior (AE-08, N-06): falta su decisión; (3) **N-07**: la frase que la IA escribió hoy en 2.8 no es cierta para cualquier texto, porque `Date` lee `Ejemplo 7` como una fecha; (4) un test de la sesión 07 no puede fallar (`panel.spec.ts:304`, N-04); (5) al menos quince números de línea del segundo informe son erróneos (AE-17); (6) las capturas que hay que mirar son las de `f6d0d04` (AE-12). Quedan sin aprobar AE-01 a AE-18 y sin decidir N-01 a N-09 y C-01 a C-05. · **Antes, parada 2 alcanzada (12:43): evaluación independiente del frontend.** Antes, la parada 1 aprobada a las 12:04 y sus cinco cambios, un commit cada uno (`e75ea0b` a `377233c`): la regla 7, los tipos de `e2e/` dentro de `npm run lint` (sin ningún error de tipos), SPEC-04, las reglas del frontend y las capturas sin foco. **El evaluador** (subagente, Opus 5.5, de 12:23 a 12:32, en solo lectura): CA-12 cumple; los 56 requisitos cumplen; de los 18 criterios, 17 cumplen (cuatro por muestreo) y CA-15 queda sin demostrar porque no puede leer las capturas; **10 hallazgos, uno medio (H-02, el contraste del anillo de foco y del borde de los campos) y nueve bajos**. Informe en `c149ca0` y respuesta de la IA, sin aplicar nada, en `be9fef7`. **Lo que el Tech Lead tiene que conocer**: (1) el informe guardado difiere del mensaje del evaluador en un carácter, un U+00A0 de la línea 43, que la IA no ha restaurado (AD-06); (2) dos hallazgos son errores de la IA de esta sesión: la prueba de la fecha cita E-27 y es E-29 (H-07), y `npx playwright test` sin opciones reescribiría las capturas (H-08); (3) el evaluador revisó cuatro criterios por muestreo y no leyó enteras las specs del backend. Quedan sin aprobar AD-01 a AD-10 y sin decidir H-01 a H-10 y B-01 a B-04. · **Antes, parada 1 alcanzada (11:37): Playwright y las capturas de CA-15.** `@playwright/test` 1.65.0 instalado y catorce pruebas en `frontend/e2e/` (CA-14, CA-13 con la cabecera del aviso, L-09 y la fila de la zona horaria), en un commit (`895f55d`); el oráculo sale con código 0 con `--e2e` (24 correctas, 0 inactivas) y sin él sigue como ayer (23 y 1 inactiva). Las pruebas tardan unos 20 s con el arranque de los dos servidores. Doce capturas en `04-calidad/capturas/` y CA-15 cambiado en SPEC-04. **Lo que el Tech Lead tiene que conocer**: (1) **la primera mutación de CA-14 sobrevivió**: con la API de divisas interceptada con `page.route()`, Playwright respondía él mismo a las comprobaciones previas de CORS y la prueba no comprobaba el CORS del backend; se cambió el mecanismo (protocolo de depuración de Chromium, solo para la URL de los tipos) y la mutación muere (AC-03); (2) la IA ha hecho los commits sin que se le pidiera cada uno (AC-01); (3) son catorce pruebas, no cuatro, y L-09 cubre todos los límites y no un campo (AC-08); (4) los ficheros de `e2e/` no los compila nadie con tipos (AC-09). Quedan sin aprobar las precisiones AC-01 a AC-18. **El paso 3 (evaluador) no se ha empezado**: espera la aprobación de esta parada. · Antes, sesión abierta a las 10:46 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -144,6 +144,11 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 13:55 | `596f1ec` | **H-09**, 13:54:07. Test nuevo en `meta-store.spec.ts`: a los 10 s sin respuesta el almacén queda en error con `timeout`, la petición se cancela y un reintento vuelve a pedir. **Nace en verde** (13:50:22). **Dos mutaciones**, cada una con los 546 tests: el almacén descarta el estado de error por tiempo agotado (13:50:50: falla solo el test nuevo); y `/meta` espera 20 s en `BackendApi` (13:51:24: fallan el nuevo y el de `BackendApi` que ya había). Deshechas; `git diff` sin nada fuera del test. Oráculo con `--e2e` de 13:51:59 a 13:54:07, código 0 |
 | 13:58 | `13351c9` | **H-10**, 13:57:01. Fila **L-11** en `limitaciones-conocidas.md`: sin política de contenido, y cómo se cerraría en un despliegue. Ningún código. Oráculo con `--e2e` de 13:54:56 a 13:57:01, código 0 |
 | 13:58 | *(el siguiente)* | **Apartado 4 de la respuesta** a la primera evaluación: la decisión del Tech Lead sobre H-01 a H-10 y B-01 a B-04, con el commit de cada una; el «Pendiente» anterior, tachado. El informe no se toca. Va en un commit con esta bitácora en otro, los dos tras una sola pasada del oráculo (AE-13). **Después, la segunda evaluación** (B-03), con el árbol limpio |
+| 14:20 | `d44f18f`, `7f8c974` | Fila escrita a las 14:20, como las cuatro que siguen: **mientras el evaluador trabajaba la IA no tocó el repositorio** (AE-14). Los dos commits anteriores, a las 13:59:32 según `git log`, tras el oráculo con `--e2e` de 13:57:29 a 13:59:32, código 0. **14:00:08**: árbol limpio en `7f8c974` y nada en escucha en el 8000, el 4200 ni en ningún 80xx. **Lanzado el subagente `evaluador`** con el encargo acotado de B-03 (apartado 3) |
+| 14:20 | — | **14:11:32**: llega el informe (su cabecera dice de 14:00:55 a 14:08:44). `git status` vacío, `HEAD` en `7f8c974`, nada en escucha en el 8000, el 4200, el 18765 (el de su backend) ni en ningún 80xx y ninguna carpeta temporal. **14:13:47**: informe escrito con `Write` en `04-calidad/evaluacion-frontend-02.md`, quitando solo la sangría, y comparado con el mensaje del registro: **362 líneas y 34.340 caracteres los dos, ninguna línea distinta y ningún carácter invisible** |
+| 14:20 | — | **14:14 a 14:17**: la IA repite en solo lectura lo que afirman los nueve hallazgos (los nueve se reproducen), cuenta las filas de las cuatro tablas y contrasta los números de línea del informe, y escribe su respuesta en `04-calidad/respuesta-evaluacion-frontend-02.md`. **No aplica nada** |
+| 14:20 | `8045884`, `5eb8d8a` | El informe y la respuesta, un commit cada uno, los dos a las 14:19:18 según `git log`, tras el oráculo con `--e2e` de 14:17:12 a 14:19:17, código 0, 24 correctas; puertos libres y sin carpeta temporal después |
+| 14:20 | *(este commit)* | Cierre de esta bitácora para la **parada 3**. La IA para aquí: el Tech Lead decide N-01 a N-09 y C-01 a C-05 y revisa AE-01 a AE-18. La hora de este commit se ve con `git log` |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -405,7 +410,8 @@ un fichero y su código en 0 antes. Las filas se añaden al acabar cada uno.
 | H-08 | `f6d0d04` | Ninguno: es configuración. Comprobado con `--list` en los tres sentidos y generando las capturas con la orden nueva | `playwright.config.ts`, `playwright.capturas.config.ts`, `package.json`, `tsconfig.e2e.json`, `.claude/rules/frontend.md` y cuatro capturas |
 | H-09 | `596f1ec` | **Mutación**, dos: el almacén descarta el error por tiempo agotado (falla solo el test nuevo, 1 de 546) y `/meta` espera 20 s (fallan el nuevo y el de `BackendApi`) | `meta-store.spec.ts` |
 | H-10 | `13351c9` | Ninguno: una fila de documentación | La fila L-11 de `limitaciones-conocidas.md` |
-| Apartado 4 de la respuesta | *(ver cronología)* | — | `respuesta-evaluacion-frontend-01.md` |
+| Apartado 4 de la respuesta | `d44f18f` | — | `respuesta-evaluacion-frontend-01.md` |
+| Esta bitácora | `7f8c974` | — | — |
 
 Precisiones de la IA sobre estos cambios, **sin aprobar**:
 
@@ -424,6 +430,32 @@ Precisiones de la IA sobre estos cambios, **sin aprobar**:
 | AE-11 | De las tres reglas de H-05, **la del `409` sin «Reintentar» no la fija ningún test de la vista**: la IA no ha encontrado ninguno que afirme que ese aviso no trae el botón. La del aviso general de un `422` la fija `api-error.spec.ts` (`retryable: false`) y la de `created_at`, dos tests de `format.spec.ts`. La IA no ha añadido el test, porque el encargo de H-05 es solo la spec. Y en 2.3 ha escrito además que un `422` sin ninguna entrada que mostrar sí lleva «Reintentar», que es lo que ya decía más abajo | Una regla de la spec sin test es justo lo que H-05 señalaba al revés. Es un test de pocas líneas, con su mutación, si el Tech Lead lo quiere |
 | AE-12 | En H-08, **la configuración por defecto se queda sin proyectos** (el navegador va en `use`), así que `--project=pruebas` deja de existir; y la de las capturas copia la primera con el operador de propagación, sin la combinación de configuraciones de Playwright. **Para probar la orden nueva la IA generó otra vez las capturas, y cuatro ficheros cambiaron y van en el commit**: las dos del detalle, que llevan la hora de creación, y `simulador-1280.png` y `simulador-usd-1280.png`, **sin que la IA sepa por qué**; ha mirado la primera y se ve igual. El Tech Lead tiene que mirar las capturas de este commit, no las de H-02 | Dos proyectos era justo lo que permitía ejecutar las capturas sin querer. Que dos capturas sin fecha cambien entre dos pasadas dice que no son idénticas bit a bit de una ejecución a otra, y no se había visto |
 | AE-13 | El apartado 4 de la respuesta y esta bitácora van en dos commits tras **una sola pasada del oráculo**, no una cada uno. Y la fila L-11 dice, además de lo mandado, lo que la aplicación sí hace (no inserta HTML de fuera, no carga nada de terceros y solo llama a dos sitios), tomado del propio hallazgo y contrastado con una búsqueda en `frontend/src` | Los dos son documentación y el segundo es la propia bitácora; se hizo igual a las 12:42 |
+
+**Nota de las 14:20 sobre AE-11**: decía que la regla de `created_at` la
+fijan «dos tests de `format.spec.ts`». **Es uno**, el de la línea 64; el de
+la 80 es de la fecha del tipo de cambio. La IA los encontró con una búsqueda
+y no abrió el fichero. Lo vio al responder a N-07 (fila C-04 de la
+respuesta). La fila se deja como se escribió.
+
+### Segunda evaluación independiente, acotada (B-03) (14:00–14:19)
+
+| Hora | Qué |
+|---|---|
+| 14:00 | Lanzado el subagente `evaluador` con el árbol limpio en `7f8c974`. El encargo: las tres partes que dictó el Tech Lead (CA-04, CA-05, CA-08 y CA-16 fila a fila y sin muestreo; el contrato de SPEC-01 a SPEC-03 contra `core/models.ts` y contra lo que el frontend hace con cada código; y los cambios de hoy), las restricciones de la primera vez y la regla 8, los caracteres no imprimibles por su código y el informe en su mensaje final |
+| 14:11 | Informe recibido. Las 109 filas de 5.3 a 5.6 emparejadas con un test (24, 40, 29 y 16), 77 con «Sí» y 32 con «Parcial»; **CA-04, CA-05, CA-08 y CA-16, `NO CUMPLE`**, por lo que los tests dejan sin comprobar; el contrato, sin diferencias; los diez cambios, «se sostiene» o «correcto»; **9 hallazgos: dos medios (N-01 y N-02) y siete bajos**. Ejecutó el oráculo con y sin `--e2e`, los tests unitarios (546) y `npm run e2e` (18), todos con código 0, y arrancó un backend propio en el 18765, que paró por su PID |
+| 14:13 | Guardado y comparado con el registro del subagente: idéntico. Las 96 respuestas del registro llevan el modelo `claude-opus-5-5`; 45 órdenes de terminal y 12 lecturas |
+| 14:17 | Respuesta de la IA escrita. **De acuerdo con los nueve.** Dos ya estaban dichos (N-01 es AE-11 y N-06 es AE-08); N-07 corrige una frase que la IA escribió hoy en la spec; seis son huecos de tests de la sesión 07. Cinco casos más, C-01 a C-05. Nada aplicado |
+| 14:19 | Commits `8045884` (informe) y `5eb8d8a` (respuesta) |
+
+Precisiones de la IA sobre la segunda evaluación, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| AE-14 | Las filas de la cronología de las 14:00 a las 14:19 se escribieron a las 14:20, no al momento | Mientras el evaluador trabajaba, cualquier edición habría ensuciado su `git status` final, como en AD-08. Las horas salen de `date` y de `git log` |
+| AE-15 | **El encargo al evaluador lo redactó la IA.** Para la tercera parte le describió los diez cambios de hoy, porque no puede leer la historia de git ni `04-calidad/`: se los dio como «lo que afirma quien los hizo», pidiéndole buscar dónde no se sostienen. Le resumió además L-09, L-10 y L-11, le pidió numerar los hallazgos como `N-xx` y añadió tres prohibiciones que el Tech Lead no dictó (instalar o descargar, ejecutar las capturas y arrancar `npm start` por su cuenta) | Un evaluador al que se le cuenta qué se hizo tiende a confirmarlo: los diez cambios le salen bien, y eso vale lo que vale. El texto completo consta en el registro del subagente |
+| AE-16 | **Los cuatro criterios pasan de «CUMPLE (muestreo)» a `NO CUMPLE`** entre un informe y otro sin que el código haya cambiado en eso: el primero miró una muestra y el segundo, fila a fila y contra la letra del criterio. Los tests son de la sesión 07, que la IA cerró dando esos criterios por cubiertos | Es lo que B-03 quería saber, y hay que decirlo tal cual |
+| AE-17 | **Al menos quince números de línea del segundo informe son erróneos** (fila C-01 de la respuesta): lo que afirman es cierto, pero en otra línea. Parecen posiciones dentro de una salida con varios ficheros seguidos. El informe no se toca | Quien siga una referencia del informe puede no encontrarla. No pasó en el primero, que la IA sepa |
+| AE-18 | La IA **no ha repetido la parte B** (el contrato) ni ha abierto los tests de las 77 filas marcadas «Sí» | La respuesta dice de acuerdo con los hallazgos, no con todo el informe |
 
 ## 4. Comprobaciones hechas en la sesión
 
@@ -471,7 +503,65 @@ Paso 3:
 | Lo que afirman los hallazgos | Apartado 2 de la respuesta (12:37 a 12:40) | Los diez se reproducen en lo que se puede comprobar sin navegador |
 | Oráculo antes de los commits del paso 3 | `uv run scripts/check.py` con la salida a un fichero (12:42) | Código 0: 23 correctas y 1 inactiva |
 
+Cambios de la revisión de la parada 2:
+
+| Qué | Cómo | Resultado |
+|---|---|---|
+| Estado al empezar | `git status --short`, `git log -1` y `netstat` (13:11:49) | Limpio, `ccafe3d`; nada en escucha en el 8000 ni en el 4200 |
+| **Oráculo antes de cada commit** | `uv run scripts/check.py --e2e`, con la salida a un fichero y el commit solo con código 0; desde H-03, encadenado en la misma orden. Doce pasadas, de las 13:19 a las 14:19 | Código 0 en las doce: 24 correctas, 0 con fallo y 0 inactivas. Unos dos minutos cada una |
+| Puertos y carpetas tras cada ejecución de Playwright | `netstat` y un listado de la carpeta temporal del sistema, después de las doce pasadas del oráculo, las seis ejecuciones sueltas y los tres listados | Siempre: ninguno en escucha y ninguna carpeta `saas-o-matic-e2e-*` |
+| Las mutaciones están deshechas | `git diff --stat -- backend frontend/src`, sin contar los `.spec.ts`, tras H-01 (13:18:47) y tras H-09 (13:51) | Vacío las dos veces |
+| H-01, verde y mutación | `npx ng test --watch=false`, los dos ficheros (13:17:28) y los 539 tests con la mutación (13:17:56) | 119 en verde; con la mutación, 2 fallos y 537 en verde |
+| H-02, rojo y verde | `npx playwright test contrast.spec.ts` (13:23:40, 13:24:07 y 13:24:33) | 4 fallos por el anillo (2,15); 4 fallos por el borde (1,58); 4 en verde |
+| H-02 y H-08, capturas | `npm run e2e:capturas` (13:25:09 y, con la configuración nueva, 13:46:53) | Código 0 las dos; 4 pruebas en 12,9 s y en 13,0 s; catorce ficheros. En la segunda cambian cuatro (AE-12) |
+| H-03, rojo y verde | `npx ng test`, `app.routes.spec.ts` (13:29:14 y 13:29:37) | 4 fallos de 10 por aserción; 10 en verde |
+| H-04, rojo y verde | `npx ng test`, `alta.spec.ts` (13:33:52 y 13:34:18) | 2 fallos de 67 por aserción; 67 en verde |
+| H-08, qué enumera cada orden | `npx playwright test --list`, lo mismo con `-c playwright.capturas.config.ts` y lo mismo pidiendo `e2e/capturas` (13:46:22) | 18 pruebas en 5 ficheros, ninguna de capturas; 4 en 1 fichero; 0 |
+| H-08, tipos | `npx tsc --noEmit -p tsconfig.e2e.json` (13:46) | Código 0 |
+| H-09, verde y mutaciones | `npx ng test`, `meta-store.spec.ts` (13:50:22) y los 546 tests con cada mutación (13:50:50 y 13:51:24) | 13 en verde; 1 fallo y 545 en verde; 2 fallos y 544 en verde |
+| Los tres textos con la cifra (H-06) | Búsqueda en `frontend/src/app`, sin los tests (13:40) | `alta-help.ts:29` y `panel.html:20` y `:68` |
+| L-11 dice lo que el código hace | Búsqueda de `innerHTML`, `bypassSecurity` y `DomSanitizer` en `frontend/src`, y lectura de `index.html` (13:55) | Ninguna aparición; `index.html` no carga nada de fuera |
+
+Segunda evaluación:
+
+| Qué | Cómo | Resultado |
+|---|---|---|
+| Antes de lanzar el evaluador | `git status --short`, `git log -1` y `netstat` (14:00:08) | Limpio, `7f8c974`; nada en escucha en el 8000, el 4200 ni en ningún 80xx |
+| Después del evaluador | Lo mismo, y la carpeta temporal del sistema (14:11:32) | Limpio, `7f8c974`; nada en escucha, tampoco en el 18765; ninguna carpeta `saas-o-matic-e2e-*` |
+| Qué agente y qué modelo | Fichero de metadatos y registro del subagente, con un script de solo lectura fuera del repositorio (14:12) | `agentType` `evaluador`; 96 respuestas, todas con el modelo `claude-opus-5-5`; 45 órdenes de terminal y 12 lecturas |
+| **Informe, intacto** | Comparación del fichero con el mensaje del registro (14:13:47) | 362 líneas y 34.340 caracteres los dos; **ninguna línea distinta**; ningún carácter de control ni separador raro en el mensaje |
+| Lo que afirman los hallazgos | Apartado 2 de la respuesta (14:14 a 14:17) | Los nueve se reproducen. `new Date('Ejemplo 7')` da una fecha con Node 24.18.0 |
+| Las filas de las tablas | Recuento de las líneas de tabla de 5.3 a 5.6 (14:14) | 24, 40, 29 y 16: las del informe |
+| Los números de línea del informe | Longitud de cada fichero citado y búsqueda de lo citado (14:14 y 14:16) | Quince referencias erróneas (AE-17) |
+| Oráculo antes de los commits del informe y de la respuesta | `uv run scripts/check.py --e2e` (14:17:12 a 14:19:17) | Código 0: 24 correctas |
+
 ## 5. No verificado
+
+Al llegar a la parada 3 (14:20), además de lo de las paradas 1 y 2, que
+sigue debajo:
+
+- **Nada de lo que propone la segunda respuesta está aplicado.**
+- **El caso `%31` de H-01 con una mutación**: ninguna del código de la
+  aplicación lo mata (AE-02). Y **H-01 en un navegador** sigue sin verse:
+  qué queda en la barra de direcciones.
+- **El anillo azul sobre un botón azul** (AE-06) y el contraste del
+  control deslizante, que CA-19 no mira.
+- **Los títulos de H-03 en un navegador**, y cómo lee un lector de pantalla
+  el separador « · » (AE-09). **La página «no encontrada» con el título
+  anterior** (N-06) sale de leer el código del router, no de verlo.
+- **H-04 con un lector de pantalla**: que el mensaje se lea con su campo y
+  que deje de anunciarse cinco veces.
+- **Las reglas de H-05 con tests de vista**: la del `409` no tiene ninguno
+  (AE-11, N-01).
+- **Por qué cambian dos capturas del simulador** entre dos pasadas
+  seguidas (AE-12). **Doce de las catorce capturas de `f6d0d04`**: la IA ha
+  mirado las dos del alta con foco (las de `72f8544`, que no cambiaron
+  después) y `simulador-1280.png`.
+- **La parte B del segundo informe** y las 77 filas «Sí» de su parte A
+  (AE-18).
+- **N-07 en un navegador**: comprobado con Node, que usa el mismo motor.
+- **`npx playwright test` sin opciones, ejecutado de verdad**: se ha visto
+  con `--list` y a través de `npm run e2e`, que es esa misma orden.
 
 Al llegar a la parada 2 (12:43), además de lo de la parada 1, que sigue
 debajo:
@@ -538,8 +628,11 @@ Al llegar a la parada 1 (11:37):
 | **Probar a mano una ejecución interrumpida con Ctrl+C** (puertos y carpeta temporal después) | Del Tech Lead |
 | **Para el README de la raíz**, de lo no comprobado de la parada 1: las pruebas de principio a fin solo funcionan en Chromium; solo se han ejecutado en Windows; dos ejecuciones a la vez se estorban; y qué pasa con una ejecución interrumpida | Cuando se escriba el README |
 | ~~Paso 3: evaluación independiente del frontend~~ | Hecho: informe en `c149ca0` y respuesta en `be9fef7` |
-| **Parada 2: el Tech Lead decide cada hallazgo**, H-01 a H-10, y los casos B-01 a B-04 de la respuesta; en particular, si se restaura el U+00A0 de la línea 43 del informe (B-01). Y las precisiones AD-01 a AD-10 | Ahora |
-| Mirar las capturas generadas sin foco | Del Tech Lead |
-| **Parada 2** | Al acabar el paso 3 |
+| ~~**Parada 2: el Tech Lead decide cada hallazgo**, H-01 a H-10, y los casos B-01 a B-04 de la respuesta; en particular, si se restaura el U+00A0 de la línea 43 del informe (B-01). Y las precisiones AD-01 a AD-10~~ | Aprobada a las 13:11: todo decidido y aplicado (`35d482a` a `d44f18f`); el U+00A0 no se restaura |
+| ~~Mirar las capturas generadas sin foco~~ | Sustituidas dos veces desde entonces |
+| ~~**Parada 2**~~ | Alcanzada a las 12:43 |
+| ~~Segunda evaluación acotada (B-03)~~ | Hecha: informe en `8045884` y respuesta en `5eb8d8a` |
+| **Parada 3: el Tech Lead decide** N-01 a N-09 y los casos C-01 a C-05 de la segunda respuesta, y revisa las precisiones AE-01 a AE-18. En particular: el título de la página «no encontrada» (AE-08, N-06), qué es «una fecha» en `created_at` (N-07), qué se hace con `panel.spec.ts:304` (N-04) y si CA-05 y CA-08 se cumplen o se precisan (N-03) | Ahora |
+| **Mirar las catorce capturas de `f6d0d04`**, en especial las dos del alta con un campo enfocado | Del Tech Lead |
 | README, documento de pruebas manuales e integración continua | Después, según el Tech Lead |
 | Pendientes heredados que esta sesión no toca: los del apartado 6 de la sesión 07 que no son de la fase de QA (L-07, el oráculo y las fechas del fichero de bloqueo, los de la sesión 06) | A decidir por el Tech Lead |
