@@ -63,6 +63,22 @@ al tocar esa parte del repo.
    `grep` había encontrado texto (AA-03).*
 8. **Procesos**: un proceso que la IA arranca se para por su PID, nunca por
    nombre. *Por qué: parar por nombre mata también procesos ajenos.*
+   **Los servidores de comprobación de la IA nunca usan el puerto 8000 ni
+   el 4200**: antes de arrancar se mira el puerto con `netstat`, y la
+   espera comprueba el PID que escucha. *Por qué: son los puertos del
+   Tech Lead; en la sesión 07 un backend de la IA no llegó a arrancar en
+   el 8000 y sus peticiones de prueba escribieron en la base de datos
+   local del Tech Lead (Z-14).* **Única excepción: los dos servidores que
+   arranca Playwright** (`webServer`) para las pruebas de `frontend/e2e/`,
+   que usan el 8000 y el 4200 con `reuseExistingServer: false` escrito de
+   forma explícita y con `DATABASE_PATH` en una carpeta temporal, fuera de
+   `backend/data/`, que se crea y se borra en cada ejecución. Con un
+   puerto ocupado la prueba falla sin tocar nada; nunca se reutiliza un
+   servidor ya arrancado. La excepción solo vale para lo que arranca
+   Playwright. *Por qué: CA-14 de SPEC-04 pide el backend real con su CORS
+   por defecto, y así se prueba exactamente lo que ejecutará quien revise,
+   sin una tercera configuración del frontend que la spec no nombra
+   (decisión del Tech Lead en la sesión 08).*
 9. **Edición del código**: los ficheros de `backend/` y `frontend/` se editan
    con las herramientas de edición, no con `sed` ni con scripts. *Por qué:
    el hook del control de specs solo ve esas herramientas.* **Excepción,
