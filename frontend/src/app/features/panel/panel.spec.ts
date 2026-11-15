@@ -485,14 +485,20 @@ describe('Panel · SPEC-04/E-11, E-32, E-33, E-42, E-43 (CA-16)', () => {
     page.fixture.detectChanges();
 
     expect(alert(page)).toContain(OFFLINE);
+    press(page, 'Reintentar');
+    expect(onlySearch(page).request.urlWithParams).toBe(CUSTOMERS_URL);
   });
 
   it('should show the timeout notice when 10 s pass without a response', () => {
     const page = open();
+    const abandoned = onlySearch(page);
 
     wait(page, 10_000);
 
     expect(alert(page)).toContain(TOO_SLOW);
+    expect(abandoned.cancelled).toBe(true);
+    press(page, 'Reintentar');
+    expect(onlySearch(page).request.urlWithParams).toBe(CUSTOMERS_URL);
   });
 
   it('should not change when only the text of the error changes: the code decides', () => {

@@ -500,6 +500,8 @@ describe('Simulador · proyección · SPEC-04/E-17 a E-22, E-35, E-38, E-40, E-4
 
     expect(amounts(page)).toEqual({});
     expect(textOf(page, PROJECTION_NOTICE)).toContain(OFFLINE);
+    press(page, 'Reintentar', PROJECTION_NOTICE);
+    expect(only(quoteRequests(page)).request.body).toEqual({ customer_id: 7, active_users: 15 });
   });
 
   it('should take the amounts away and show the timeout notice when the projection takes 10 s', () => {
@@ -723,6 +725,20 @@ describe('Simulador · guardar · SPEC-04/E-23 a E-25, E-37, E-48, E-49, E-55 (C
     expect(clean(notice?.querySelector('button')?.textContent)).toBe('Reintentar');
     expect(notice?.querySelector('a')?.getAttribute('href')).toBe('/clientes/7');
     expect(written(page)).toEqual(['10', '500', '250000']);
+  });
+
+  it('should show the connection notice with a retry, keep the values and stay, when saving gets no response', () => {
+    const page = openAndSave();
+    const navigate = spyOnNavigation();
+
+    only(simulationRequests(page)).error(new ProgressEvent('error'));
+    page.fixture.detectChanges();
+
+    expect(textOf(page, SAVE_NOTICE)).toContain(OFFLINE);
+    expect(written(page)).toEqual(['10', '500', '250000']);
+    expect(navigate).not.toHaveBeenCalled();
+    press(page, 'Reintentar', SAVE_NOTICE);
+    expect(only(simulationRequests(page)).request.body).toEqual(SAVED_BODY);
   });
 
   it('should offer no link to the detail in the notice of an error that is not a timeout', () => {
