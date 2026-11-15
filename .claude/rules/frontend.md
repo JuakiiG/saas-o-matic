@@ -98,3 +98,8 @@ frontend/src/app/
   ejecuta las pruebas. El oráculo no ejecuta las capturas. *Por qué:
   llevan la fecha del día y cambiarían los ficheros versionados de
   `04-calidad/capturas/` en cada pasada.*
+- **Las capturas no se regeneran sin motivo.** Se generan cuando cambia lo
+  que se ve, y entonces van en el commit de ese cambio. *Por qué: entre
+  dos pasadas seguidas cambian unos pocos píxeles aunque nada haya
+  cambiado; es ruido del dibujado, de 1 o 2 niveles sobre 255, que no se
+  ve, pero ensucia el árbol y el historial (sesión 08, AE-12).*
