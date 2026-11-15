@@ -581,6 +581,43 @@ describe('Alta · SPEC-04/E-05 a E-11, E-40 a E-46 (CA-05, CA-06, CA-16)', () =>
 });
 
 // The rows of the focus of SPEC-04, 5.4.
+// SPEC-04, 2.7: the message next to a field of the sign-up is read with its field, which points
+// at it; as an alert, an empty form would announce its five messages at once.
+describe('Alta · los mensajes de campo no son alertas · SPEC-04 2.7', () => {
+  const FIELDS = Object.keys(CONTROL_IDS) as (keyof Values)[];
+
+  it('should show the five messages without role="alert", each one described by its field, when the form is sent empty', () => {
+    const page = open();
+
+    press(page, 'Guardar');
+
+    for (const field of FIELDS) {
+      const message = page.element.querySelector(`#${CONTROL_IDS[field]}-error`);
+      expect(message?.textContent?.trim()).toBeTruthy();
+      expect(message?.getAttribute('role')).toBeNull();
+      expect(control(page, field)?.getAttribute('aria-invalid')).toBe('true');
+      expect(control(page, field)?.getAttribute('aria-describedby')).toBe(
+        `${CONTROL_IDS[field]}-error`,
+      );
+    }
+    expect(page.element.querySelectorAll('[role="alert"]').length).toBe(0);
+  });
+
+  it('should show the 422 of the backend next to its field without role="alert"', () => {
+    const page = open();
+    send(page);
+
+    reject(page, 422, invalid([BAD_PLAN]));
+
+    const message = page.element.querySelector(`#${CONTROL_IDS.plan}-error`);
+    expect(message?.textContent?.trim()).toBe(BAD_PLAN.message);
+    expect(message?.getAttribute('role')).toBeNull();
+    expect(control(page, 'plan')?.getAttribute('aria-describedby')).toBe(
+      `${CONTROL_IDS.plan}-error`,
+    );
+  });
+});
+
 describe('Alta · el foco tras un envío con errores · SPEC-04/E-56 (CA-05)', () => {
   function focused(): string {
     return document.activeElement?.id ?? '';

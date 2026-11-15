@@ -1,5 +1,7 @@
 <h1>Nuevo cliente</h1>
 
+<!-- The message of a field is not an alert (SPEC-04, 2.7): it is read with its field, which
+     points at it with `aria-describedby`, when the focus gets there (E-56). -->
 <app-meta-gate>
   <form class="alta-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
     <div class="field">
@@ -14,7 +16,7 @@
         [attr.aria-describedby]="fields().company_name.errorId"
       />
       @if (fields().company_name.error; as message) {
-        <p id="alta-name-error" class="field-error" role="alert">{{ message }}</p>
+        <p id="alta-name-error" class="field-error">{{ message }}</p>
       }
     </div>
 
@@ -30,7 +32,7 @@
         [attr.aria-describedby]="fields().tax_id.errorId"
       />
       @if (fields().tax_id.error; as message) {
-        <p id="alta-tax-id-error" class="field-error" role="alert">{{ message }}</p>
+        <p id="alta-tax-id-error" class="field-error">{{ message }}</p>
       }
     </div>
 
@@ -48,7 +50,7 @@
         [attr.aria-describedby]="fields().contact_email.errorId"
       />
       @if (fields().contact_email.error; as message) {
-        <p id="alta-email-error" class="field-error" role="alert">{{ message }}</p>
+        <p id="alta-email-error" class="field-error">{{ message }}</p>
       }
     </div>
 
@@ -66,7 +68,7 @@
         }
       </select>
       @if (fields().country.error; as message) {
-        <p id="alta-country-error" class="field-error" role="alert">{{ message }}</p>
+        <p id="alta-country-error" class="field-error">{{ message }}</p>
       }
     </div>
 
@@ -84,7 +86,7 @@
         }
       </select>
       @if (fields().plan.error; as message) {
-        <p id="alta-plan-error" class="field-error" role="alert">{{ message }}</p>
+        <p id="alta-plan-error" class="field-error">{{ message }}</p>
       }
     </div>
 

@@ -482,7 +482,16 @@ contenido, **sin códigos sueltos**; «Reintentar» repite la petición de
   de divisas. Pasado ese tiempo el estado es «error».
 - Todo error ofrece una salida: «Reintentar» o un enlace al panel.
 - Los indicadores de carga llevan `role="status"` y los avisos de error
-  `role="alert"`.
+  `role="alert"`. **Qué lleva `role="alert"`**: los avisos generales (el de
+  una carga o un envío que falla y el del fallo de los tipos en la
+  cabecera) y los mensajes junto a un campo que salen mientras se escribe,
+  sin que el foco se mueva: los de los tres campos del simulador y el del
+  campo de búsqueda del panel. **Qué no lo lleva**: los mensajes junto a un
+  campo del alta. Salen al enviar, hasta cinco a la vez, y el foco va
+  entonces al primer campo con error (E-56): cada uno se lee con su campo,
+  que lo señala con `aria-describedby` y `aria-invalid`. Con `role="alert"`
+  se anunciarían todos de golpe. Nada de esto se ha probado con un lector
+  de pantalla (limitación conocida L-10).
 - Los errores no se tragan: el servicio los convierte en un estado de error
   con el `code` de la API cuando existe, y en `network_error` o `timeout`
   cuando no hay respuesta.
@@ -1131,3 +1140,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-01 de la evaluación independiente del frontend (`04-calidad/evaluacion-frontend-01.md`), sin tocar el código. **El filtro del `id` se aplica al segmento ya descodificado por el router** (2.1), y 5.7 gana dos filas: `/clientes/%31` pide el cliente 1, y `/clientes/1;x=y` también, porque el parámetro de matriz no forma parte del `id`. La frase de 5.7 sobre el simulador dice «las tres primeras filas» donde decía «la primera». Sin requisitos ni criterios nuevos; los dos casos, en los tests de 5.7 del detalle y del simulador. Motivo: la spec decía que el cliente 1 tiene una sola dirección en el frontend y no decía qué pasa con las dos formas que el router reduce a `1` antes de que la aplicación vea el texto |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-02 de la evaluación independiente del frontend. **El anillo de foco y el borde de los campos de formulario tienen un contraste de 3:1 o más sobre el blanco y sobre el fondo de la página** (2.8 y criterio nuevo CA-19, una prueba de Playwright que lee los colores que pinta el navegador). El anillo pasa del naranja `#f59e0b` al azul de acento, `#1d4ed8`; el borde de los campos, de `#c9ced8` a `#7c8698`, y el de las tarjetas, los avisos y la cabecera no cambia. **CA-15 nombra una captura más**, el alta con un campo enfocado. Sin requisitos nuevos. Motivo: el anillo tenía un contraste de 2,15 sobre el blanco y el borde de los campos, de 1,58; con menos de 3:1, quien ve poco no distingue qué campo tiene el foco ni dónde empieza un campo |
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-03 de la evaluación independiente del frontend. **Cada una de las cuatro vistas pone su título en el documento**, con la opción `title` del router y el nombre de la aplicación detrás: «Clientes», «Nuevo cliente», «Detalle del cliente» y «Simulador» (2.1, requisito nuevo E-57 y CA-11). El anuncio del resultado de la búsqueda y el foco al navegar, que el mismo hallazgo señalaba, no se hacen: son la limitación conocida L-10. Motivo: con un solo título para toda la aplicación, un lector de pantalla anuncia igual todas las vistas; lo demás no se puede comprobar sin un lector de pantalla |
+| 2026-11-15 | Decisión del Tech Lead sobre el hallazgo H-04 de la evaluación independiente del frontend. **2.7 dice qué lleva `role="alert"` y qué no**: lo llevan los avisos generales y los mensajes junto a un campo que salen mientras se escribe (los del simulador y el del buscador); **los mensajes junto a un campo del alta dejan de llevarlo** y se leen con su campo, por `aria-describedby` y `aria-invalid`. Sin requisitos nuevos. Motivo: un envío del alta con los cinco campos vacíos anunciaba cinco alertas a la vez, además de leerse cada mensaje con su campo; en el simulador el foco no se mueve y el mensaje sale mientras se escribe, así que allí se quedan. No se ha probado con un lector de pantalla (L-10) |
