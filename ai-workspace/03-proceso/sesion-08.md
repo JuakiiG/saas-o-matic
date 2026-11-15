@@ -120,6 +120,13 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 11:37 | — | **Paso 2, capturas** (11:35:00 a 11:35:14): `npm run e2e:capturas` escribe doce ficheros en `04-calidad/capturas/`. La IA ha mirado tres. CA-15 cambiado en SPEC-04, con su fila de historial, y una nota fechada en ADR-005 (AC-11 y AC-12) |
 | 11:43 | `949b414`, `f5a1254`, `6123e69` | Tres commits, a las 11:42:50 y 11:42:51 según `git log`: el generador con las doce capturas, CA-15 en SPEC-04 y ADR-005. Antes, con todo añadido, oráculo sin `--e2e` (11:39:00 a 11:40:33) y con `--e2e` (11:40:33 a 11:42:29), los dos con código 0. Después, `netstat`: ninguno de los dos puertos en escucha y ninguna carpeta temporal |
 | 11:43 | *(este commit)* | Cierre de esta bitácora para la **parada 1**. La IA para aquí: el Tech Lead revisa las pruebas, las mutaciones, las capturas y las precisiones AC-01 a AC-18. **El paso 3 no se empieza sin su aprobación.** La hora de este commit se ve con `git log` |
+| 12:05 | — | El commit anterior es `409a393` (11:44:40 según `git log`). **El Tech Lead aprueba la parada 1** (mensaje leído a las 12:04:34): ha revisado las doce capturas y son correctas, admite AC-01 a AC-18 y responde que sí a las tres preguntas, con matices. Manda cinco cambios, un commit cada uno con el oráculo en código 0, y después el paso 3 sin parar otra vez (apartado 3). `git status` limpio; nada escucha en el 8000 ni en el 4200 |
+| 12:14 | `e75ea0b` | **Cambio 1 (AC-01)**, 12:06:40 según `git log`: la regla 7 de `CLAUDE.md` dice que un encargo con pasos autoriza un commit por paso, con el oráculo en verde, y que el `push` es solo del Tech Lead. Oráculo con código 0 antes |
+| 12:14 | `596dede` | **Cambio 2 (AC-09)**, 12:13:54: `@types/node` 24.19.2 (12:06:55), `tsconfig.e2e.json`, su referencia en `tsconfig.json` y `tsc --noEmit -p tsconfig.e2e.json` al final de `npm run lint`. **Ningún error de tipos**: `tsc` salió con 0 a la primera (12:07:38) sobre los once ficheros. Para saber que mira algo, la IA puso un error a propósito en `e2e/support/rates.ts` (12:07:54: `TS2322`, código 2) y lo deshizo. Dos entradas nuevas en el fichero de bloqueo, dentro del margen (apartado 4). Filas de `@types/node` y de Playwright en la tabla de dependencias de ADR-001. Oráculo con código 0 sin `--e2e` y con él (12:08:19 a 12:11:52) y otra vez sin él tras tocar ADR-001 |
+| 12:21 | `d76f52b` | **Cambio 3 (AC-11)**, 12:16:18: SPEC-04. La nota bajo los criterios dice dónde están CA-13 y CA-14, cómo se ejecutan y que la API de divisas se responde con el protocolo de depuración de Chromium y no con `page.route()`; CA-15 nombra las dos capturas añadidas; nota fechada junto a D-09; fila de historial. Oráculo con código 0 antes |
+| 12:21 | `6f653fc` | **Cambio 4 (AC-17)**, 12:18:15: apartado «Pruebas de principio a fin (`e2e/`)» en `.claude/rules/frontend.md`, con los cuatro puntos mandados. Oráculo con código 0 antes |
+| 12:21 | `377233c` | **Cambio 5 (capturas)**, 12:20:38: `capture` quita el foco del elemento activo antes de cada captura. Generadas de nuevo (12:18:31 a 12:18:45; 4 pruebas en 12,8 s): cambian nueve de los doce ficheros; los tres que no cambian son las dos de la cabecera con el aviso y el panel a 375 px, que no tenían foco ni hora. La IA ha mirado dos (el simulador a 375 px y el alta a 1280 px): sin anillo. Oráculo con código 0 antes; puertos libres y sin carpeta temporal después |
+| 12:21 | *(este commit)* | Esta bitácora, con la revisión de la parada 1 y sus cinco cambios. **Después, el paso 3**: el evaluador independiente |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -266,6 +273,32 @@ dicen ser. Dos cosas que se ven en ellas y decide el Tech Lead: en el
 simulador sale el anillo de foco del último campo escrito; y en
 escritorio el enlace «Panel» queda centrado entre el nombre y el selector.
 
+### Revisión de la parada 1 por el Tech Lead (12:04)
+
+**Parada 1 aprobada.** El Tech Lead ha revisado las doce capturas (lo
+afirma él) y son correctas. **Admitidas AC-01 a AC-18.** A las tres
+preguntas de la IA, sí, con estos cambios, un commit cada uno y con el
+oráculo en verde por su código de salida:
+
+| # | Sobre | Decisión del Tech Lead | Frente a lo que hizo o propuso la IA |
+|---|---|---|---|
+| 1 | AC-01, los commits | Admitido: **un encargo con pasos autoriza un commit por paso, con el oráculo en verde**. Se escribe en la regla 7 de `CLAUDE.md`, para que la regla diga lo que se hace. El `push` sigue siendo solo suyo | La IA lo había leído así sin que la regla lo dijera |
+| 2 | AC-09, los tipos de `e2e/` | Sí a `@types/node`: de desarrollo, versión exacta, dentro del margen y con las fechas comprobadas. Un `tsconfig` que cubra `e2e/` y `playwright.config.ts`. **El `tsc --noEmit` va dentro de `npm run lint`, no al principio de `npm run e2e`**. Por qué: el oráculo ejecuta `lint` siempre y `e2e` solo con `--e2e`. No se toca `scripts/`. Los errores de tipos que salgan se corrigen y se anotan | **Cambiado**: la IA proponía ponerlo en `npm run e2e`, donde solo se comprobaría con `--e2e` |
+| 3 | AC-11, SPEC-04 | Sí, con historial: la nota bajo los criterios deja de decir «pendientes de implementar» y dice dónde están CA-13 y CA-14 y cómo se ejecutan; precisa que la API de divisas se responde con el protocolo de depuración de Chromium y no con `page.route()`, con su porqué, y que por eso las pruebas solo funcionan en Chromium; CA-15 nombra las dos capturas añadidas; y D-09 no se reescribe: una nota fechada a su lado | La IA lo había dejado sin tocar y a su decisión |
+| 4 | AC-17 | Un apartado corto sobre `e2e/` en `.claude/rules/frontend.md`: dónde van las pruebas, que comparten una base de datos por ejecución y cada una trae su identificador fiscal, que no se usa `page.route()` y por qué, y que las capturas no las ejecuta el oráculo | La IA no lo había tocado |
+| 5 | Capturas | **Se quita el foco antes de cada captura**: el anillo naranja sobre el último campo parece un aviso de error. Se vuelven a generar. El enlace «Panel» centrado en escritorio se queda como está | **Defecto de las capturas** que la IA había visto y dejado a su decisión |
+| 6 | Lo no comprobado | Se queda anotado como está. Irá al README cuando toque: solo Chromium, solo probado en Windows, dos ejecuciones a la vez se estorban y qué pasa con una ejecución interrumpida, que **el Tech Lead prueba a mano con Ctrl+C** | — |
+
+**Paso 3, con dos añadidos al encargo original**: el evaluador revisa
+también `frontend/e2e/` y `playwright.config.ts` (pruebas que no comprueban
+lo que dicen y si alguna puede tocar algo fuera de su carpeta temporal); y
+para ejecutar la aplicación vale la regla 8: puede ejecutar `npm run e2e` y
+los tests unitarios, y arrancar el backend en otro puerto con
+`DATABASE_PATH` temporal para llamarlo directamente; no arranca nada en el
+8000 ni en el 4200 fuera de Playwright, y lo que necesite ver en un
+navegador y Playwright no cubra lo anota como no comprobado. **Parada 2**
+como estaba prevista.
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -290,6 +323,17 @@ escritorio el enlace «Panel» queda centrado entre el nombre y el selector.
 | **Oráculo con `--e2e`** | `uv run scripts/check.py --e2e` (11:28:10 a 11:30:07, y otra vez con todo añadido, 11:32:04 a 11:33:59) | Código 0 las dos: 24 correctas, 0 con fallo y 0 inactivas. Tarda unos dos minutos |
 | Las capturas | `npm run e2e:capturas` (11:35:00 a 11:35:14) | Código 0; 4 pruebas en 12,7 s; doce ficheros PNG |
 
+Cambios de la revisión de la parada 1:
+
+| Qué | Cómo | Resultado |
+|---|---|---|
+| **Entradas nuevas del fichero de bloqueo** (ADR-007) | `git diff` de `package-lock.json` y `npm view <paquete> time` (12:07:29) | Dos entradas y ninguna otra línea cambiada: `@types/node` 24.19.2 (2026-10-09; es la última de su línea 24) y `undici-types` 7.24.6 (2026-03-25), que trae la primera. **Las dos, anteriores a `2026-11-07T00:00:00Z`.** La suma de comprobación del registro coincide en las dos. Ninguna declara scripts de instalación. `npm audit`, 27 avisos moderados, como antes |
+| Los tipos de `e2e/` | `npx tsc --noEmit -p tsconfig.e2e.json` (12:07:38) y `--listFilesOnly` | Código 0, sin errores. Cubre once ficheros: los diez de `e2e/` y `playwright.config.ts` |
+| La comprobación de tipos mira algo | Un error puesto a propósito en `e2e/support/rates.ts` (12:07:54) | `error TS2322: Type 'string' is not assignable to type 'number'`, código 2. Deshecho |
+| `npm run lint` con `tsc` | En `frontend/` (12:08) | Código 0 |
+| Oráculo antes de cada commit | `uv run scripts/check.py` con la salida a un fichero, antes de los cinco commits de las 12:06 a las 12:20; con `--e2e` además en el cambio 2 | Código 0 en todos: 23 correctas y 1 inactiva sin `--e2e`; 24 y 0 con él |
+| Las capturas, otra vez | `npm run e2e:capturas` (12:18:31 a 12:18:45) | Código 0; 4 pruebas en 12,8 s |
+
 ## 5. No verificado
 
 Al llegar a la parada 1 (11:37):
@@ -308,7 +352,8 @@ Al llegar a la parada 1 (11:37):
   se ha visto en ejecuciones que acaban solas, en verde o en rojo.
 - **El aviso de «petición a un servicio externo»** de las pruebas no ha
   saltado nunca: ninguna mutación lo ha provocado.
-- **Los tipos de `e2e/`**: nadie los compila (AC-09).
+- ~~**Los tipos de `e2e/`**: nadie los compila (AC-09).~~ Desde las 12:13
+  los comprueba `npm run lint` (`596dede`).
 - **CA-13 mide el ancho del documento**. Un elemento que tuviera su propio
   desplazamiento horizontal interior, o un contenido recortado, no lo
   detectaría. Y cada vista se mira en los estados que la prueba prepara, no
@@ -335,8 +380,10 @@ Al llegar a la parada 1 (11:37):
 | ~~Paso 1: Playwright, las cuatro pruebas y sus mutaciones~~ | Hecho (`895f55d`) |
 | ~~**Descarga del navegador de Playwright**~~ | Hecha a las 11:07, con el sí del Tech Lead: solo el *headless shell* |
 | ~~Paso 2: capturas de CA-15 y cambio de CA-15 en SPEC-04~~ | Hecho |
-| **Parada 1: la revisa el Tech Lead.** Las doce capturas de `04-calidad/capturas/`; las precisiones AC-01 a AC-18; y qué hacer con AC-09 (los tipos de `e2e/`) y AC-11 (las frases de SPEC-04 y de D-09 que ya no son ciertas) | Ahora |
-| Paso 3: evaluación independiente del frontend | Solo con la parada 1 aprobada |
+| ~~**Parada 1: la revisa el Tech Lead.**~~ | Aprobada a las 12:04, con AC-01 a AC-18 admitidas y sus cinco cambios aplicados |
+| **Probar a mano una ejecución interrumpida con Ctrl+C** (puertos y carpeta temporal después) | Del Tech Lead |
+| **Para el README de la raíz**, de lo no comprobado de la parada 1: las pruebas de principio a fin solo funcionan en Chromium; solo se han ejecutado en Windows; dos ejecuciones a la vez se estorban; y qué pasa con una ejecución interrumpida | Cuando se escriba el README |
+| Paso 3: evaluación independiente del frontend | En curso desde las 12:21 |
 | **Parada 2** | Al acabar el paso 3 |
 | README, documento de pruebas manuales e integración continua | Después, según el Tech Lead |
 | Pendientes heredados que esta sesión no toca: los del apartado 6 de la sesión 07 que no son de la fase de QA (L-07, el oráculo y las fechas del fichero de bloqueo, los de la sesión 06) | A decidir por el Tech Lead |
