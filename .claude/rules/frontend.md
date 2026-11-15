@@ -76,3 +76,21 @@ frontend/src/app/
 - Las llamadas HTTP se simulan con las utilidades de test de `HttpClient`;
   ningún test sale a la red.
 - De cada servicio de API se prueban los tres estados (carga, error, datos).
+
+## Pruebas de principio a fin (`e2e/`)
+
+- Van en `frontend/e2e/`, con Playwright y solo en Chromium, y cada una
+  cita su requisito. `npm run e2e` arranca el backend y el frontend
+  (`CLAUDE.md`, regla 8) y el oráculo las ejecuta con `--e2e`. Sus tipos
+  los comprueba `npm run lint`.
+- **Comparten una base de datos por ejecución**, temporal, y van una
+  detrás de otra. Cada prueba trae su propio identificador fiscal: uno
+  repetido sería un `409`.
+- **No se usa `page.route()` ni `context.route()`.** *Por qué: con una ruta
+  puesta, Playwright responde él mismo las comprobaciones previas de CORS
+  y ninguna llega al backend, que es justo lo que CA-14 comprueba.* La API
+  de divisas la responde `e2e/support/fixtures.ts`, de donde las pruebas
+  importan `test` y `expect`.
+- **Las capturas de CA-15** (`e2e/capturas/`) se generan con
+  `npm run e2e:capturas`. El oráculo no las ejecuta. *Por qué: llevan la
+  fecha del día y cambiarían doce ficheros versionados en cada pasada.*
