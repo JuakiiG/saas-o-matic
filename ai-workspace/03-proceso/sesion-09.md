@@ -4,7 +4,7 @@
 |---|---|
 | **Fecha** | 2026-11-15 |
 | **Participantes** | Tech Lead (persona) · IA: Claude Code, modelo Claude Fable 5.2 |
-| **Resultado** | **Parada 1 alcanzada (16:55): los cinco pasos, hechos, cada uno en su commit y con el oráculo en código 0 antes; pasada final con `--e2e` en código 0 (24 correctas).** No ha cambiado nada en `backend/` ni en `frontend/`. **Paso 1** (`4ab6986`): `04-calidad/trazabilidad.md`, generada con `uv run scripts/traceability.py`; de 140 requisitos EARS, 139 tienen algún test que los cita y **uno no, SPEC-04/E-16**, cubierto por CA-13; nada corregido. **Paso 2** (`69d2b3b`): `04-calidad/pruebas-manuales.md`, 30 pasos, con la columna de resultados vacía. **Paso 3** (`d7cb4af`): `.github/workflows/ci.yml`, en Linux y en Windows, con tres acciones fijadas por el SHA de su commit; **no se ha ejecutado ni se puede antes del `push`**. **Paso 4** (`1c0ab2e` y `8cbcc25`): el README de la raíz. **Paso 5** (`a7684a1`): `ai-workspace/README.md`. **Lo que el Tech Lead tiene que conocer**: (1) la matriz la genera un script nuevo en `scripts/`, con 21 tests, que el encargo no pedía (AG-01); (2) en SPEC-04 la cita va casi siempre en el `describe`: solo 10 de sus 57 requisitos tienen un test que los cite en su propio título, y 21 tests del frontend citan un apartado y no un requisito (AG-03 a AG-05); (3) la IA no ha ejecutado el guion en un navegador (AG-06); (4) leyendo el código para el guion: tras recargar el panel con el backend parado hacen falta dos «Reintentar», y SPEC-04 no lo dice (AG-07); (5) dos órdenes del README, las de arranque, no las ha ejecutado la IA tal cual, por la regla 8: las ejecuta Playwright (AG-08); (6) para el margen de una semana la IA consultó además la API pública de GitHub (AG-09); (7) ningún analizador ha leído la sintaxis del workflow. Quedan sin aprobar AG-01 a AG-12. · Antes, sesión abierta a las 16:14 |
+| **Resultado** | **Sesión cerrada en la parada 2 (17:56): los tres cambios de la revisión de la parada 1, aplicados.** La parada 1 se aprobó a las 17:40, con AG-01 a AG-12 admitidas; el script de la trazabilidad se queda y el Tech Lead ha comprobado los tres SHA del workflow. **Tres commits**, cada uno con el oráculo en código 0 antes, con `--e2e` los dos que tocan `frontend/`: **E-16** (`426be86`), la prueba del detalle a 375 px lo cita en su título y la matriz queda en **140 de 140**; **AG-07** (`eaed046`), SPEC-04 dice que «Reintentar» de `/meta` repite solo `/meta`, sin cambiar el comportamiento, con una fila en 5.3 y un test nuevo en el panel que nace en verde y matan dos mutaciones, la primera **solo él** (1 de 566); y el **README** (`59b0a00`), con una captura y la frase del `npm ci`. El frontend acaba con **566 tests unitarios y 18 de Playwright**. **Lo que el Tech Lead tiene que conocer**: (1) **en el detalle y en el simulador pasa lo mismo que en el panel con la carga del cliente, y en el simulador también con la proyección**; está dicho en SPEC-04 (2.1) y **ningún test lo fija** (no se ha añadido); (2) la IA tocó además la frase de 2.5, que decía lo mismo sin condición (AH-02); (3) para mirarlo escribió tres tests temporales y los borró (AH-03); (4) la matriz se regeneró dos veces, porque el test nuevo cambia sus cifras (AH-04). Quedan sin aprobar AH-01 a AH-06. El guion de pruebas manuales sigue sin ejecutar y la integración continua, sin ejecutarse: la prueba en limpio y el `push` son del Tech Lead. · **Antes, parada 1 alcanzada (16:55): los cinco pasos, hechos, cada uno en su commit y con el oráculo en código 0 antes; pasada final con `--e2e` en código 0 (24 correctas).** No ha cambiado nada en `backend/` ni en `frontend/`. **Paso 1** (`4ab6986`): `04-calidad/trazabilidad.md`, generada con `uv run scripts/traceability.py`; de 140 requisitos EARS, 139 tienen algún test que los cita y **uno no, SPEC-04/E-16**, cubierto por CA-13; nada corregido. **Paso 2** (`69d2b3b`): `04-calidad/pruebas-manuales.md`, 30 pasos, con la columna de resultados vacía. **Paso 3** (`d7cb4af`): `.github/workflows/ci.yml`, en Linux y en Windows, con tres acciones fijadas por el SHA de su commit; **no se ha ejecutado ni se puede antes del `push`**. **Paso 4** (`1c0ab2e` y `8cbcc25`): el README de la raíz. **Paso 5** (`a7684a1`): `ai-workspace/README.md`. **Lo que el Tech Lead tiene que conocer**: (1) la matriz la genera un script nuevo en `scripts/`, con 21 tests, que el encargo no pedía (AG-01); (2) en SPEC-04 la cita va casi siempre en el `describe`: solo 10 de sus 57 requisitos tienen un test que los cite en su propio título, y 21 tests del frontend citan un apartado y no un requisito (AG-03 a AG-05); (3) la IA no ha ejecutado el guion en un navegador (AG-06); (4) leyendo el código para el guion: tras recargar el panel con el backend parado hacen falta dos «Reintentar», y SPEC-04 no lo dice (AG-07); (5) dos órdenes del README, las de arranque, no las ha ejecutado la IA tal cual, por la regla 8: las ejecuta Playwright (AG-08); (6) para el margen de una semana la IA consultó además la API pública de GitHub (AG-09); (7) ningún analizador ha leído la sintaxis del workflow. Quedan sin aprobar AG-01 a AG-12. · Antes, sesión abierta a las 16:14 |
 
 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre al empezar
 la sesión y cada revisión se anota en el momento en que ocurre (acuerdo f4 de
@@ -139,6 +139,16 @@ de los commits se toman de `git log --format=%ci` después de hacerlos.
 | 16:55 | — | **Pasada final con `--e2e`**, de 16:50:49 a 16:52:45, sobre `a7684a1`: **código 0, 24 correctas, 0 con fallo y 0 inactivas**. Después, nada en escucha en el 8000 ni en el 4200, ninguna carpeta `saas-o-matic-e2e-*` y `backend/data/saas-o-matic.db` igual. Es además la primera pasada completa después del `npm ci` de las 16:34 |
 | 16:55 | `8cbcc25` | **Tres erratas del README**, 16:54:59, que la IA vio al releerlo ya en su commit: «país y importes»; «una sola orden» seguida de dos; y «el nombre y el email son libres», cuando el email tiene que tener forma de email. Commit aparte, sin enmendar. Antes, oráculo sin `--e2e` de 16:53:20 a 16:54:59, código 0. **Después de la pasada con `--e2e` solo han cambiado este README y esta bitácora** |
 | 16:55 | *(este commit)* | Cierre de esta bitácora para la **parada 1**. La IA para aquí: el Tech Lead revisa los cinco pasos y las precisiones AG-01 a AG-12. La prueba en limpio y el `push` son suyos. La hora de este commit se ve con `git log` |
+| 17:42 | — | El commit anterior es `f82184e` (16:57:20 según `git log`), tras el oráculo sin `--e2e` de 16:55:43 a 16:57:20, código 0. **El Tech Lead aprueba la parada 1** (mensaje leído a las 17:40:41): admite AG-01 a AG-12, se queda el script de la trazabilidad, ha comprobado los tres SHA contra sus etiquetas y coinciden, y manda tres cambios, un commit cada uno, con el oráculo en código 0 y con `--e2e` donde se toque `frontend/`; después, **parada 2** y cierre de la bitácora (apartado 3). `git status` limpio; nada escucha en el 8000 ni en el 4200 |
+| 17:42 | — | **Cambio 1 (E-16)**, sin commit todavía. El título de la prueba del detalle de `frontend/e2e/responsive.spec.ts` acaba en `(SPEC-04/CA-13, E-16)`; `npx playwright test --list` lo enseña. Matriz regenerada a las 17:41:33: **140 de 140**; E-16 tiene un test, citado en su propio título, y en SPEC-04 son 11, no 10, los requisitos con una cita directa. `trazabilidad.md`: cabecera, apartados 2 y 3 y el apartado 4, que es la salida nueva, comparada byte a byte con otra ejecución. `ai-workspace/README.md`: «140 de 140» |
+| 17:51 | `426be86` | **Cambio 1 (E-16)**, 17:45:03 según `git log`. Antes, oráculo con `--e2e` de 17:42:45 a 17:45:03, código 0: 24 correctas, 0 con fallo y 0 inactivas; puertos libres y sin carpeta temporal después |
+| 17:51 | — | **Cambio 2 (AG-07), el test.** Un test nuevo en `panel.spec.ts`: `/meta` falla con un `500` y la lista con un `503`, para distinguir un aviso del otro; tras «Reintentar» de `/meta` con éxito, ninguna petición a `/customers`, el buscador a la vista y un solo aviso, el de la lista, con su «Reintentar»; al pulsarlo, una petición sin `q`, ninguna a `/meta`, y la lista con nombres. **Nace en verde** (17:45:41; 36 tests en el fichero). **Dos mutaciones**, cada una con los 566 tests. La primera, el panel repite la búsqueda cuando `/meta` se recupera de un error: **falla solo el test nuevo** (17:46:40; 1 de 566, «expected 1 to be 0» en las peticiones a `/customers`). Un primer intento, a las 17:46:08, era demasiado grueso (repetía cualquier búsqueda fallida, también con `/meta` bien) y rompía 11; se rehízo (AH-01). La segunda, el «Reintentar» de la lista reintenta `/meta`: 6 fallos, el nuevo entre ellos (17:47:10). Deshechas; `git diff` sin nada en `frontend/src` fuera del test |
+| 17:51 | — | **Cambio 2, el detalle y el simulador** (17:48:20 y 17:48:54): **pasa lo mismo con el cliente, y en el simulador también con la proyección.** Visto con tres tests temporales, uno al final de `detalle.spec.ts` y dos al final de `simulador.spec.ts`, **borrados después**; los dos ficheros quedan idénticos a como estaban, comparados byte a byte con una copia hecha antes (AH-03). **Ningún test lo fija y no se ha añadido ninguno** (apartado 3) |
+| 17:51 | — | **Cambio 2, los documentos.** SPEC-04: un párrafo nuevo en 2.1, la frase de 2.2, una condición en la de 2.5 (AH-02), una fila en 5.3 y su fila de historial. El paso 22 del guion ya no pide anotar: dice que hacen falta las dos pulsaciones. **La matriz, regenerada otra vez** (17:50:37), porque el test nuevo cambia sus cifras: 250 declaraciones del frontend, 566 casos y E-40 con 103; sigue en 140 de 140 (AH-04). Sin commit todavía |
+| 17:51 | — | **Cambio 3 (README)**, sin commit todavía: la captura `simulador-usd-1280.png` bajo la descripción, enlazada desde `ai-workspace/04-calidad/capturas/` y sin copiar; la frase de que el oráculo necesita antes el `npm ci` del frontend; y «566 del frontend» (AH-04). La IA ha mirado la captura: el simulador con 15 usuarios en USD, con 155,95, 32,75 y 188,69 USD, que es el caso del céntimo |
+| 17:56 | `eaed046` | **Cambio 2 (AG-07)**, 17:53:51 según `git log`. Antes, oráculo con `--e2e` de 17:51:52 a 17:53:51, código 0: 24 correctas, 0 con fallo y 0 inactivas, con los 566 tests del frontend. Puertos libres y sin carpeta temporal después. **Es la última pasada con `--e2e` de la sesión y el último commit que toca `frontend/`** |
+| 17:56 | `59b0a00` | **Cambio 3 (README)**, 17:55:28. Antes, oráculo sin `--e2e` de 17:53:52 a 17:55:28, código 0: 23 correctas y 1 inactiva. `backend/data/saas-o-matic.db`, igual que al empezar |
+| 17:56 | *(este commit)* | **Cierre de esta bitácora en la parada 2.** La IA para aquí: el Tech Lead revisa los tres cambios y las precisiones AH-01 a AH-06. La prueba en limpio y el `push` son suyos. La hora de este commit se ve con `git log` |
 
 ## 3. Revisiones y decisiones del Tech Lead
 
@@ -275,6 +285,69 @@ encuentre o descargue (AG-10). Los sistemas son `ubuntu-latest` y
 `windows-latest`, que cambian con el tiempo. Sin caché, sin secretos, con
 `contents: read` y 20 minutos de máximo por job.
 
+### Revisión de la parada 1 por el Tech Lead (17:40)
+
+**Parada 1 aprobada. Admitidas AG-01 a AG-12.**
+
+| Precisión | Decisión del Tech Lead |
+|---|---|
+| AG-01 (el script de la trazabilidad) | **Se queda**: tiene tests y el oráculo los ejecuta |
+| Los tres SHA del workflow | **Comprobados por el Tech Lead contra sus etiquetas: coinciden** (lo afirma él) |
+| AG-03 a AG-05 (los 21 tests que citan un apartado y las citas en el `describe`) | **Se queda como está**: la matriz ya lo explica |
+| AG-10 (decisiones del workflow) | **Se quedan**, sin subir trazas. Si falla en Linux, lo reproduce él en local |
+| AG-11 (el README no nombra la integración continua) | **Se queda** así hasta que él la vea ejecutarse |
+| AG-08 (las tres frases del README que la IA no ha visto) | Las comprueba él en la prueba en limpio |
+
+**Tres cambios**, un commit cada uno, con el oráculo en verde por su código
+de salida y con `--e2e` donde se toque `frontend/`:
+
+| # | Cambio |
+|---|---|
+| 1 | **E-16.** La prueba de Playwright del detalle a 375 px cita también `SPEC-04/E-16` en su título, además de CA-13. Regenerar la matriz y poner al día sus apartados 2 y 3 y la cifra de `ai-workspace/README.md`: 140 de 140 |
+| 2 | **AG-07, los dos «Reintentar» del panel. No se cambia el comportamiento**: se escribe en SPEC-04 tal como está el código, con historial. La frase de 2.2 deja de decir que «la lista ya está» sin condición: si la lista también falló, tras reintentar `/meta` con éxito se ve el aviso de la lista, con su propio «Reintentar». *Por qué*: son dos peticiones y cada aviso reintenta la suya. Una fila en 5.3 y un test en el panel que lo fije; nace en verde, así que con mutación. Mirar si en el detalle y en el simulador pasa lo mismo con la carga del cliente: si pasa, decirlo en 2.1 y decir si hay test que lo fije, **sin añadirlo**. Poner al día el paso 22 del guion |
+| 3 | **README de la raíz, dos retoques.** Una captura bajo la descripción: el simulador en otra divisa a 1280 px, enlazada desde `ai-workspace/04-calidad/capturas/`, sin copiar el fichero. Y en «Tests y oráculo», una frase: el oráculo necesita antes el `npm ci` del frontend |
+
+Después, **parada 2** y cierre de esta bitácora.
+
+### Cambios de la revisión de la parada 1 · lo hecho (desde las 17:41)
+
+| # | Commit | Rojo visto o mutación | Qué toca |
+|---|---|---|---|
+| 1 · E-16 | `426be86` | Ninguno: solo cambia el título de una prueba | `frontend/e2e/responsive.spec.ts`, `04-calidad/trazabilidad.md` y `ai-workspace/README.md` |
+| 2 · AG-07 | `eaed046` | **Mutación**, dos: el panel repite la búsqueda cuando `/meta` se recupera (**la mata solo el test nuevo**, 1 de 566) y el «Reintentar» de la lista reintenta `/meta` (6 fallos, el nuevo entre ellos) | `panel.spec.ts`, SPEC-04 (2.1, 2.2, 2.5, 5.3 e historial), `04-calidad/pruebas-manuales.md`, `04-calidad/trazabilidad.md` y `ai-workspace/README.md` |
+| 3 · README | `59b0a00` | — | `README.md` |
+
+**Tests del frontend al cerrar**: 566 unitarios (eran 565: uno más, el del
+panel) y 18 de Playwright, más las 4 capturas.
+
+**Qué pasa en el detalle y en el simulador** (cambio 2). Lo mismo que en
+el panel. Las dos vistas piden el cliente por su cuenta, sin esperar a
+`/meta`, y «Reintentar» de `/meta` solo repite `/meta`:
+
+| Vista | Qué falla, además de `/meta` | Tras reintentar `/meta` con éxito | Al pulsar el segundo «Reintentar» | ¿Hay test que lo fije? |
+|---|---|---|---|---|
+| Panel | El listado inicial | El buscador y el aviso de la lista, con su «Reintentar»; ninguna petición a `/customers` | 1 a `/customers`, sin `q`; ninguna a `/meta`; la lista | **Sí, desde hoy** (`panel.spec.ts`) |
+| Detalle | El cliente | El aviso del cliente, con su «Reintentar»; ninguna petición del cliente | 1 del cliente; ninguna a `/meta`; el detalle | **No** |
+| Simulador | El cliente | El aviso del cliente, con su «Reintentar»; ninguna petición del cliente ni de proyección | 1 del cliente y, al llegar, 1 de proyección; el simulador con su total | **No** |
+| Simulador | La primera proyección (el cliente llegó) | El simulador con el aviso de la proyección y su «Reintentar»; ninguna petición | 1 de proyección; el total | **No** |
+
+Lo que sí tiene test en esas dos vistas es el caso contrario: `/meta`
+falla y lo demás llega (el del detalle, «should show the error of /meta
+with a retry…», y el del simulador, «should ask for the customer and its
+first projection all the same, and appear loaded when /meta comes back»).
+**No se ha añadido ninguno.**
+
+Precisiones de la IA sobre estos cambios, **sin aprobar**:
+
+| # | Precisión | Motivo |
+|---|---|---|
+| AH-01 | **El primer intento de la primera mutación era demasiado grueso** (17:46:08): repetía la búsqueda con cualquier fallo de la lista, también con `/meta` bien, y rompía 11 tests. Se rehízo para que solo la repita cuando `/meta` pasa de error a datos, que es justo el comportamiento que el Tech Lead ha decidido no tener. No se cuenta. Con la rehecha, los otros 565 tests seguían en verde: el hueco era real | Como el intento descartado de N-04 en la sesión 08: una mutación que lo rompe todo no demuestra nada |
+| AH-02 | **En SPEC-04 la IA ha tocado dos cosas que el encargo no nombraba**: la frase de 2.5 («al reintentar `/meta` el simulador aparece ya cargado»), que gana la condición «si esas dos peticiones salieron bien (2.1)»; y, en el párrafo de 2.1, además del cliente, **la proyección del simulador**, que es una tercera petición con su propio aviso | La frase de 2.5 decía sin condición lo mismo que se acaba de corregir en 2.2. Lo de la proyección salió del sondeo: no estaba en la pregunta, pero es el mismo caso |
+| AH-03 | **Para mirar el detalle y el simulador la IA escribió tres tests temporales dentro de sus `.spec.ts` y los borró.** Al borrarlos con la herramienta de edición los dos ficheros perdieron el salto de línea final; se restauró y se comparó cada fichero, byte a byte, con una copia hecha antes fuera del repositorio | El encargo pedía mirar si pasa, sin añadir test. Leer el código ya lo decía (AG-07); el sondeo lo enseña. Un fichero sin su salto de línea final habría cambiado sin motivo |
+| AH-04 | **La matriz se ha regenerado dos veces**, una en cada commit que cambia un test: en el cambio 1, por E-16, y en el 2, porque el test nuevo sube en uno las cifras del frontend (250 declaraciones, 566 casos, E-40 con 103). La cifra de `ai-workspace/README.md` va en el cambio 2. **La del README de la raíz («566 del frontend») va en el commit del cambio 3**: ese fichero ya tenía los dos retoques sin añadir, así que entre los dos commits decía 565 | El documento lleva la fecha y el commit de su generación; dejarlo atrás un commit lo habría hecho falso. Lo del README es una consecuencia del orden |
+| AH-05 | **El test nuevo no cita un requisito en su título**: hereda los del `describe` del panel (E-40 entre ellos) y su comentario nombra 2.2 y 5.3. Usa dos errores distintos, un `500` para `/meta` y un `503` para la lista | Es como citan los demás tests del panel. Con el mismo error en las dos peticiones, los dos avisos tendrían el mismo texto y el test no sabría cuál está viendo |
+| AH-06 | **La frase del README dice solo lo pedido**: que el oráculo necesita antes el `npm ci` del frontend. La IA no ha ejecutado el oráculo sin `frontend/node_modules`. **La captura no se ha visto dibujada en el README**: el enlace es relativo, a un fichero que existe | Borrar `node_modules` para verlo fallar no merecía el riesgo; lo verá el Tech Lead en la prueba en limpio |
+
 ## 4. Comprobaciones hechas en la sesión
 
 | Qué | Cómo | Resultado |
@@ -347,7 +420,43 @@ Oráculo:
 | La base local del Tech Lead | Listado de `backend/data/` al empezar, tras el sondeo y al acabar | Igual las tres veces: 28.672 bytes, 2026-11-14 18:37 |
 | `backend/` y `frontend/` no han cambiado en la sesión | `git diff --stat 7845574 HEAD -- backend frontend` (al cerrar) | Vacío |
 
+Cambios de la revisión de la parada 1:
+
+| Qué | Cómo | Resultado |
+|---|---|---|
+| Estado al empezar | `git status --short`, `git log -1` y `netstat` (17:40:41) | Limpio, `f82184e`; nada en escucha en el 8000 ni en el 4200 |
+| El título nuevo de la prueba del detalle | `npx playwright test --list` (17:41:33) | Una prueba, y solo una, con `E-16` en su título |
+| La matriz, tras el cambio 1 | `uv run scripts/traceability.py` (17:41:33) y `cmp` con el apartado 4 del documento | Código 0. «Requisitos sin ningún test que los cite: Ninguno.» E-16: 1 test, en su propio título. Idénticos |
+| El test nuevo del panel, en verde | `npx ng test --watch=false --include …/panel.spec.ts` (17:45:41) | 36 en verde |
+| Mutación 1, primer intento | `npx ng test --watch=false`, los 566 tests (17:46:08) | 11 fallos: demasiado gruesa (AH-01) |
+| **Mutación 1** | Lo mismo (17:46:40) | **1 fallo y 565 en verde**: el test nuevo, por aserción |
+| **Mutación 2** | Lo mismo (17:47:10) | 6 fallos y 560 en verde; el nuevo, entre ellos |
+| Las mutaciones están deshechas | `git status --short` y `git diff --stat -- frontend/src`, sin contar los `.spec.ts` (17:47) | Solo `panel.spec.ts` cambiado |
+| **El detalle y el simulador** | Tres tests temporales, con las utilidades de sus `.spec.ts` (17:48:20 y 17:48:54) | Tabla del apartado 3 |
+| Los tests temporales, borrados | `cmp` de `detalle.spec.ts` y de `simulador.spec.ts` con su copia de antes (17:49:41) | Idénticos los dos, tras restaurar el salto de línea final |
+| Formato y lint del test nuevo | `npx prettier --check` y `npx eslint --max-warnings 0` sobre `panel.spec.ts` (17:51) | Código 0 los dos |
+| La matriz, tras el cambio 2 | `uv run scripts/traceability.py` (17:50:37) y `cmp` con el apartado 4 | Código 0. 250 declaraciones del frontend, en 19 ficheros; E-40, 103; ningún requisito sin cita. Idénticos |
+| La captura del README | Lectura de `04-calidad/capturas/simulador-usd-1280.png` (17:44) | El simulador con 15 usuarios en USD: 155,95, 32,75 y 188,69 USD, y «Total en EUR» 169,40 EUR |
+| **Oráculo antes de cada commit** | `uv run scripts/check.py`, con `--e2e` en los cambios 1 y 2, que tocan `frontend/`; la salida, a un fichero, y el commit en la misma orden, solo con código 0 | Código 0 en todas (cronología) |
+| Puertos y carpeta temporal tras cada pasada con `--e2e` | `netstat` y un listado de la carpeta temporal del sistema | Ninguno en escucha y ninguna carpeta `saas-o-matic-e2e-*` |
+
 ## 5. No verificado
+
+Al llegar a la parada 2 (cierre de la sesión), además de lo de la parada
+1, que sigue debajo:
+
+- **Los dos «Reintentar» en un navegador**: en el panel, en el detalle y
+  en el simulador se han visto en tests, no en pantalla. Es el paso 22 del
+  guion.
+- **El detalle y el simulador no tienen test** de ese caso: lo que dice el
+  párrafo nuevo de 2.1 sobre ellos sale de tres tests temporales que ya no
+  existen (AH-03).
+- **La captura, dibujada en el README**, y el oráculo sin
+  `frontend/node_modules` (AH-06).
+- **Ningún evaluador ha mirado los cambios de esta sesión.**
+- Lo que el Tech Lead ha dicho que comprueba él: los tres SHA (ya
+  comprobados, según su mensaje), las tres frases de AG-08 y la
+  integración continua tras el `push`.
 
 Al llegar a la parada 1:
 
@@ -396,10 +505,11 @@ Al llegar a la parada 1:
 | ~~Paso 3: `.github/workflows/ci.yml`~~ | Hecho (`d7cb4af`). **Sin ejecutar** |
 | ~~Paso 4: `README.md` de la raíz~~ | Hecho (`1c0ab2e` y `8cbcc25`) |
 | ~~Paso 5: `ai-workspace/README.md`~~ | Hecho (`a7684a1`) |
-| **Parada 1: la revisa el Tech Lead.** Las precisiones AG-01 a AG-12 | Ahora |
-| **Decidir SPEC-04/E-16**, el único requisito sin test que lo cite: nombrarlo en el título de la prueba del detalle de `responsive.spec.ts`, o dejarlo cubierto por CA-13 | Del Tech Lead |
-| **Decidir lo que la matriz deja ver y no se ha tocado**: los 21 tests del frontend que citan un apartado y no un requisito; E-06 y E-19, citados solo dentro de un rango; y si las citas del frontend deben bajar del `describe` a cada test | Del Tech Lead |
-| **Decidir los dos «Reintentar» del panel** tras recargarlo con el backend parado (AG-07): regla que falta en SPEC-04 (2.2) o comportamiento que cambiar | Del Tech Lead, tras verlo en el paso 22 del guion |
+| ~~**Parada 1: la revisa el Tech Lead.** Las precisiones AG-01 a AG-12~~ | Aprobada a las 17:40, con AG-01 a AG-12 admitidas y sus tres cambios aplicados (`426be86`, `eaed046` y `59b0a00`) |
+| ~~**Decidir SPEC-04/E-16**, el único requisito sin test que lo cite~~ | Decidido y hecho (`426be86`): la prueba del detalle lo cita en su título. 140 de 140 |
+| ~~**Decidir lo que la matriz deja ver y no se ha tocado**: los 21 tests del frontend que citan un apartado y no un requisito; E-06 y E-19; y si las citas del frontend deben bajar del `describe` a cada test~~ | Decidido a las 17:40: se queda como está; la matriz ya lo explica |
+| ~~**Decidir los dos «Reintentar» del panel** (AG-07)~~ | Decidido y hecho (`eaed046`): no cambia el comportamiento; escrito en SPEC-04, con un test en el panel |
+| **Parada 2: el Tech Lead revisa** los tres cambios y las precisiones AH-01 a AH-06. En particular, **si el detalle y el simulador deben tener un test del caso de los dos «Reintentar»**: hoy está dicho en SPEC-04 (2.1) y no lo fija ninguno | Ahora |
 | **Ejecutar el guion de pruebas manuales** y rellenar su columna de resultados, con fecha, navegador y commit. Incluye la ejecución interrumpida con Ctrl+C y la pasada con el tabulador, heredadas de la sesión 08 | Del Tech Lead |
 | **Prueba en limpio y `push`**. Tras el `push`, ver el primer resultado de la integración continua en Linux y en Windows y corregir lo que falle | Del Tech Lead; la corrección, en una sesión nueva |
 | Poner al día `ai-workspace/README.md` («Estado») y el README de la raíz («solo se ha probado en Windows 11») cuando la integración continua y el guion tengan resultado | Entonces |
