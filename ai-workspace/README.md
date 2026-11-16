@@ -125,7 +125,8 @@ decide con las dos cosas delante.
 
 ## Estado
 
-A 2026-11-16, al cerrar la sesión 10:
+A 2026-11-16, al cerrar la sesión 12 (las sesiones 11 y 12 solo han cambiado
+documentación):
 
 - **Specs**: las cuatro, `aprobadas` (el bloque backend el 2026-11-13 y
   SPEC-04 el 2026-11-14).

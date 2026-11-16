@@ -146,7 +146,10 @@ bitácora de la [sesión 09](../03-proceso/sesion-09.md).
 **Lo ejecutó el Tech Lead el 16/11/2026**, sobre `06a6314`: los 30 pasos,
 en OK. Los datos de la pasada están en la tabla de cabecera; lo que vio en
 cada paso, en la columna «Resultado»; y lo que cierra, en la bitácora de la
-[sesión 10](../03-proceso/sesion-10.md).
+[sesión 10](../03-proceso/sesion-10.md). **Los resultados los anotó, al
+dictado del Tech Lead mientras lo ejecutaba, la sesión de IA que audita**:
+quién es y qué hace está en
+[«Dos sesiones de IA y una persona»](../README.md#dos-sesiones-de-ia-y-una-persona).
 
 Si un paso no sale como dice, puede estar mal el paso y no la aplicación:
 anotar lo visto y decidir después.
