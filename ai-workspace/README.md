@@ -57,13 +57,13 @@ sitios:
 
 ## Estado
 
-A 2026-11-15, al cerrar la sesión 09:
+A 2026-11-16, al cerrar la sesión 10:
 
 - **Specs**: las cuatro, `aprobadas` (el bloque backend el 2026-11-13 y
   SPEC-04 el 2026-11-14).
 - **Código**: backend y frontend implementados sobre ellas. El oráculo
   (`uv run scripts/check.py --e2e`, desde la raíz) ejecuta 741 tests del
-  backend, 566 del frontend, 18 pruebas de Playwright y 96 de los propios
+  backend, 569 del frontend, 18 pruebas de Playwright y 96 de los propios
   scripts.
 - **Evaluaciones independientes**: siete (tres de las specs, dos del
   backend y dos del frontend), todas respondidas y con cada hallazgo
@@ -73,11 +73,16 @@ A 2026-11-15, al cerrar la sesión 09:
 - **Trazabilidad**: los 140 requisitos EARS tienen algún test que los
   cita, 140 de 140 ([`trazabilidad.md`](04-calidad/trazabilidad.md), que
   dice también lo que esa cifra no demuestra).
+- **Pruebas manuales**: el
+  [guion](04-calidad/pruebas-manuales.md), **ejecutado por el Tech Lead el
+  16/11/2026**, de 12:39 a 13:55, sobre el commit `06a6314`, en Google
+  Chrome 157 y Windows 11, con una base de datos nueva: **los 30 pasos, en
+  OK**. Lo que vio en cada uno está en su columna de resultados. Los tres
+  tests del frontend añadidos después no cambian el código de la
+  aplicación.
 
 **Pendiente**, y por tanto sin comprobar:
 
-- El [guion de pruebas manuales](04-calidad/pruebas-manuales.md) está
-  escrito y **sin ejecutar**: su columna de resultados está vacía.
 - La integración continua (`.github/workflows/ci.yml`) está escrita y **no
   se ha ejecutado nunca**: solo puede hacerlo tras subir el repositorio.
   Sería la primera ejecución fuera de Windows.

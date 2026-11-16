@@ -99,7 +99,7 @@ npx playwright install --only-shell chromium
   nada.
 - **Solo funcionan en Chromium.**
 
-Tests que hay hoy (2026-11-15): 741 del backend, 566 del frontend, 18 de
+Tests que hay hoy (2026-11-16): 741 del backend, 569 del frontend, 18 de
 Playwright y 96 de los propios scripts. Por separado:
 `uv run --locked pytest` en `backend/`; `npm run test:ci` y `npm run e2e`
 en `frontend/`.
