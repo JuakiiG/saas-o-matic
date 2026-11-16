@@ -420,6 +420,38 @@ describe('Detalle · SPEC-04/E-12 a E-15, E-35, E-40, E-47 (CA-07, CA-16, CA-17)
     expect(clean(page.element.textContent)).not.toContain('professional');
   });
 
+  // SPEC-04, 2.1: `/meta` and the customer are two requests, and each notice retries its own.
+  // The two fail with different errors here, to tell one notice from the other.
+  it('should show the notice of the customer, with its own retry, when the customer failed too and the retry of /meta succeeds', async () => {
+    const page = await open('/clientes/1', 'failed');
+    reject(page, 503, { code: 'service_unavailable' });
+    expect(clean(page.element.querySelector('[role="alert"]')?.textContent)).toContain(UNEXPECTED);
+
+    press(page, 'Reintentar');
+    const retries = page.controller.match(META_URL);
+    retries.forEach((request) => request.flush(META));
+    page.harness.detectChanges();
+
+    expect(retries.length).toBe(1);
+    expect(customerRequests(page).length).toBe(0);
+    expect(page.element.querySelector('.customer')).toBeNull();
+    const notices = page.element.querySelectorAll('[role="alert"]');
+    expect(notices.length).toBe(1);
+    expect(clean(notices[0].textContent)).toContain(UNAVAILABLE);
+    expect(clean(notices[0].querySelector('button')?.textContent)).toBe('Reintentar');
+
+    press(page, 'Reintentar');
+
+    expect(page.controller.match(META_URL).length).toBe(0);
+    const request = onlyCustomerRequest(page);
+    request.flush(CUSTOMER);
+    page.harness.detectChanges();
+    expect(request.request.urlWithParams).toBe(`${CUSTOMERS_URL}1`);
+    expect(page.element.querySelector('[role="alert"]')).toBeNull();
+    expect(clean(page.element.querySelector('.customer h2')?.textContent)).toBe('Ejemplo Uno SL');
+    expect(facts(page.element.querySelector('.customer'))['País']).toBe('España');
+  });
+
   it('should load the other customer when the route changes to it', async () => {
     const page = await openWith(CUSTOMER);
 

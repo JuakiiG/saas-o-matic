@@ -111,8 +111,8 @@ Si esa petición salió bien, al llegar `/meta` la vista aparece ya cargada.
 esa petición, con su propio «Reintentar», que es el que la repite: el de
 la lista en el panel (2.2 y 5.3); el del cliente en el detalle y en el
 simulador; y, en el simulador, el de la proyección cuando el cliente llegó
-y fue ella la que falló. *Por qué*: son peticiones distintas y cada aviso
-reintenta la suya.
+y fue ella la que falló (los dos casos del simulador, en 5.5). *Por qué*:
+son peticiones distintas y cada aviso reintenta la suya.
 
 ### 2.2 Panel y buscador
 
@@ -949,6 +949,8 @@ Con un cliente de `ES`; los importes son los de la tabla 5.1 de SPEC-02.
 | Abrir el simulador | 1, con 10 usuarios | Total 121,00 EUR; se muestra «España», no `ES` |
 | Abrir el simulador y el cliente tarda 500 ms en responder | 0 mientras no llega el cliente; 1, con 10 usuarios, cuando llega | Estado de carga hasta entonces |
 | `/meta` falla | — | Error con «Reintentar» en lugar del simulador; no se muestra el código del país |
+| `/meta` falla y el cliente también; después, «Reintentar» de `/meta` con éxito | 0, y ninguna del cliente | En lugar del simulador, el aviso del error del cliente, con su propio «Reintentar». Al pulsarlo: 1 del cliente, ninguna a `/meta` y, cuando el cliente llega, 1 con 10 usuarios; el simulador con «España» y total 121,00 EUR |
+| `/meta` falla y la primera proyección también (el cliente llegó); después, «Reintentar» de `/meta` con éxito | 0, y ninguna del cliente | El simulador, con «España» y sin importes, con el aviso del error de la proyección y su propio «Reintentar»; «Guardar» desactivado. Al pulsarlo: 1 con 10 usuarios, ninguna a `/meta` ni del cliente; total 121,00 EUR, sin el aviso, y «Guardar» activo |
 | Arrastrar el control de 10 a 15 pasando por 11–14 en menos de 200 ms | 1, con 15 | Total 169,40 EUR |
 | Con el total de 10 usuarios a la vista, mover a 15, y la respuesta tarda | 1, en curso | Mientras llega, los importes de 10 usuarios siguen a la vista marcados como «actualizando» y «Guardar» está desactivado; al llegar, total 169,40 EUR y «Guardar» activo |
 | Mover a 51 mientras la de 15 sigue en curso | La de 15 se cancela | Solo se muestra la de 51: 514,25 EUR |
@@ -1188,3 +1190,4 @@ registrarlos y mostrarlos en la simulación. La consulta está cerrada
 | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo N-09 de la segunda evaluación independiente del frontend. **CA-08 dice qué dos filas de 5.5 se reproducen fuera de los tests del simulador**: la de la zona horaria, en `e2e/rate-date.spec.ts`, y «la simulación nueva es la primera», en la prueba de CA-14. Sin cambios en 5.5, en los requisitos ni en los tests. Motivo: el criterio decía que los tests del simulador reproducen cada fila, y esas dos ya se reproducían en otro sitio, que es donde se pueden comprobar |
 | 2026-11-15 | Decisión del Tech Lead sobre el caso C-02 de la respuesta a la segunda evaluación (`04-calidad/respuesta-evaluacion-frontend-02.md`): el título del párrafo que sigue a la tabla de criterios nombra también CA-19, del que el párrafo ya hablaba. Sin cambios en el contenido |
 | 2026-11-15 | Decisión del Tech Lead sobre la precisión AG-07 de la sesión 09 (`03-proceso/sesion-09.md`), escrita **tal como está el código, sin cambiar el comportamiento**. **«Reintentar» de `/meta` repite solo `/meta`**: si lo que la vista pidió por su cuenta también falló, tras reintentar `/meta` con éxito se ve el aviso de esa petición, con su propio «Reintentar» (2.1). La frase de 2.2 deja de decir sin condición que «la lista ya está»; la de 2.5, que el simulador «aparece ya cargado»; y 5.3 gana la fila de `/meta` y el listado inicial fallando a la vez, con su test en el panel. En el detalle y en el simulador ocurre lo mismo con el cliente, y en el simulador también con la proyección: está dicho en 2.1 y **no tiene test que lo fije**. Sin requisitos nuevos. Motivo: son peticiones distintas y cada aviso reintenta la suya; la spec decía que tras reintentar `/meta` la lista ya estaba, y eso solo es cierto si su petición salió bien |
+| 2026-11-16 | Decisión del Tech Lead al aprobar la parada 2 de la sesión 09, después de ejecutar el guion de pruebas manuales (`03-proceso/sesion-10.md`): hacen falta las dos pulsaciones de «Reintentar» y **el comportamiento se queda como está**. **Los tres casos que 2.1 decía sin test pasan a tenerlo**: el cliente en el detalle, el cliente en el simulador y la primera proyección en el simulador. 5.5 gana dos filas, las de `/meta` fallando a la vez que el cliente y a la vez que la primera proyección, y 2.1 remite a ellas. El detalle no tiene tabla de casos: su test reproduce lo que dice 2.1. Sin requisitos nuevos, sin cambios en los criterios y sin cambios en el código. Motivo: la entrada anterior dejaba escrito que esos tres casos no tenían test que los fijara |

@@ -1018,4 +1018,63 @@ describe('Simulador · /meta en error · SPEC-04/E-38, E-40 (2.5)', () => {
     expect(amounts(page)['Total']).toBe('121,00 EUR');
     expect(quoteRequests(page).length).toBe(0);
   });
+
+  // SPEC-04, 2.1 and 5.5: `/meta`, the customer and the projection are three requests, and each
+  // notice retries its own. `/meta` fails with a 500 and the other with a 503, to tell the
+  // notices apart.
+  it('should show the notice of the customer, with its own retry, when the customer failed too and the retry of /meta succeeds', () => {
+    const page = open('7', 'failed');
+    flush(page, only(customerRequests(page)), { code: 'service_unavailable' }, 503);
+    expect(textOf(page, '[role="alert"]')).toContain(UNEXPECTED);
+
+    press(page, 'Reintentar', '[role="alert"]');
+    flush(page, only(page.controller.match(META_URL)), META);
+
+    expect(customerRequests(page).length).toBe(0);
+    expect(quoteRequests(page).length).toBe(0);
+    expect(page.element.querySelector('form')).toBeNull();
+    expect(page.element.querySelectorAll('[role="alert"]').length).toBe(1);
+    expect(textOf(page, '[role="alert"]')).toContain(UNAVAILABLE);
+
+    press(page, 'Reintentar', '[role="alert"]');
+
+    expect(page.controller.match(META_URL).length).toBe(0);
+    const customer = only(customerRequests(page));
+    flush(page, customer, CUSTOMER);
+    const projection = only(quoteRequests(page));
+    flush(page, projection, OF_10);
+    expect(customer.request.urlWithParams).toBe(`${CUSTOMERS_URL}7`);
+    expect(projection.request.body).toEqual({ customer_id: 7, active_users: 10 });
+    expect(page.element.querySelector('[role="alert"]')).toBeNull();
+    expect(textOf(page, '.simulator-customer')).toBe('Ejemplo Uno SL · España');
+    expect(amounts(page)['Total']).toBe('121,00 EUR');
+  });
+
+  it('should show the notice of the projection, with its own retry, when the first projection failed too and the retry of /meta succeeds', () => {
+    const page = open('7', 'failed');
+    arrive(page);
+    flush(page, only(quoteRequests(page)), { code: 'service_unavailable' }, 503);
+    expect(textOf(page, '[role="alert"]')).toContain(UNEXPECTED);
+
+    press(page, 'Reintentar', '[role="alert"]');
+    flush(page, only(page.controller.match(META_URL)), META);
+
+    expect(customerRequests(page).length).toBe(0);
+    expect(quoteRequests(page).length).toBe(0);
+    expect(textOf(page, '.simulator-customer')).toBe('Ejemplo Uno SL · España');
+    expect(amounts(page)).toEqual({});
+    expect(textOf(page, PROJECTION_NOTICE)).toContain(UNAVAILABLE);
+    expect(saveButton(page)?.disabled).toBe(true);
+
+    press(page, 'Reintentar', PROJECTION_NOTICE);
+
+    expect(page.controller.match(META_URL).length).toBe(0);
+    expect(customerRequests(page).length).toBe(0);
+    const projection = only(quoteRequests(page));
+    flush(page, projection, OF_10);
+    expect(projection.request.body).toEqual({ customer_id: 7, active_users: 10 });
+    expect(page.element.querySelector(PROJECTION_NOTICE)).toBeNull();
+    expect(amounts(page)['Total']).toBe('121,00 EUR');
+    expect(saveButton(page)?.disabled).toBe(false);
+  });
 });
