@@ -1,0 +1,1437 @@
+ ▐▛███▛█   Claude Code v2.1.325
+▝▜██████▀  Fable 5.2 · Claude Max
+ ▝▝   ▝▝   Z:\saas-o-matic
+
+
+❯ Sesión 10: cierre tras la pasada manual. Antes de nada lee CLAUDE.md, los
+  pendientes de 03-proceso/sesion-09.md y 04-calidad/pruebas-manuales.md. Abre
+  03-proceso/sesion-10.md con el mismo formato que las anteriores.
+
+  Parada 2 de la sesión 09 aprobada. Admitidas AH-01 a AH-06.
+
+  He ejecutado yo el guion de pruebas manuales hoy, 16/11, de 12:39 a 13:55,
+  sobre 06a6314, en Chrome 157 y Windows 11, con una base de datos nueva. Los
+  30 pasos, OK. Mis resultados están escritos en pruebas-manuales.md, sin
+  commit. No cambies la columna «Resultado» ni la tabla de cabecera. Lo que vi,
+  para la bitácora:
+  - Paso 5: el anillo azul se distingue sobre el botón «Guardar». El pendiente
+  AE-06 de la sesión 08 queda cerrado.
+  - Paso 17: con el tipo 1,1054, la base y el impuesto suman 187,26 USD y el
+  total dice 187,25 USD. Es lo esperado.
+  - Paso 22: hacen falta las dos pulsaciones y lo veo aceptable. El
+  comportamiento se queda como está.
+  - Paso 24: tras abrir /clientes/%31, la barra de direcciones queda en
+  /clientes/1.
+  - Pasos 29 y 30: tras Ctrl+C a mitad de npm run e2e, los puertos 8000 y 4200
+  libres, ninguna carpeta temporal y la base de datos sin tocar. El pendiente
+  del Ctrl+C queda cerrado.
+
+  Tres cambios, un commit cada uno, con el oráculo en verde por su código de
+  salida; con --e2e donde se toque frontend/.
+
+  1. El guion. Commit de pruebas-manuales.md con mis resultados tal como están.
+  Tres retoques tuyos en el texto, sin tocar los resultados:
+  - La introducción dice «unos 15 minutos». La pasada llevó 75, con pausas: pon
+  una cifra honrada.
+  - Las órdenes del paso 30 dicen que se lanzan desde la raíz del repositorio:
+  la tercera usa una ruta relativa y desde frontend/ falla.
+  - El apartado final dice que la IA no lo ha ejecutado en un navegador. Sigue
+  siendo cierto: añade que lo ejecutó el Tech Lead el 16/11, con los 30 pasos
+  en OK.
+
+  2. Los dos «Reintentar» en el detalle y en el simulador. Añade los tres tests
+  que hoy solo dice la spec (2.1): el cliente en el detalle, el cliente en el
+  simulador y la primera proyección en el simulador. Nacen en verde: cada uno
+  con su mutación, deshecha y anotada. Si SPEC-04 necesita una fila en sus
+  tablas para ellos, con historial.
+  3. Puesta al día. Regenera la matriz de trazabilidad. Corrige las cifras de
+  tests en README.md y en ai-workspace/README.md. En el «Estado» de
+  ai-workspace/README.md, el guion pasa de pendiente a ejecutado, con su fecha
+  y su resultado. La integración continua y el clon limpio siguen pendientes.
+
+  PARA ahí (parada 1) y cierra la bitácora de la sesión 10. Dime qué cambió,
+  qué mutación mató cada test nuevo, cuántos tests hay y qué no has podido
+  comprobar. La prueba en limpio y el push los hago yo.
+
+● Empiezo por leer lo que pides antes de tocar nada.
+
+  Searched for 3 patterns, read 5 files, ran 5 shell commands (ctrl+o to expand)
+  ⎿  Loaded .claude\rules\frontend.md
+
+● Ya revisé el guion, los pendientes de la sesión 09, SPEC-04 y los specs del
+  detalle y del simulador; ahora reviso el código de ambas vistas y abro la
+  bitácora de la sesión 10. · summary
+
+  Searched for 1 pattern, read 4 files, ran 4 shell commands (ctrl+o to expand)
+
+● Lecturas hechas. Abro ahora la bitácora de la sesión 10 y la confirmo antes de
+  empezar con el guion.
+
+● Write(ai-workspace\03-proceso\sesion-10.md)
+  ⎿  Wrote 134 lines to ai-workspace\03-proceso\sesion-10.md
+       1 # Sesión 10 · Cierre tras la pasada manual
+       2
+       3 | | |
+       4 |---|---|
+       5 | **Fecha** | 2026-11-16 |
+       6 | **Participantes** | Tech Lead (persona) · IA: Claude Code, mod
+         elo Claude Fable 5.2 |
+       7 | **Resultado** | Sesión abierta a las 14:02 |
+       8
+       9 Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abre
+     … +126 lines (~7 KB) (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Apertura confirmada (9e8a650, oráculo en código 0). Voy con el cambio 1: los
+  tres retoques del guion.
+
+● Update(ai-workspace\04-calidad\pruebas-manuales.md)
+  ⎿  Added 2 lines, removed 1 line
+      1  # Pruebas manuales
+      2
+      3 -Guion para recorrer la aplicación a mano, en unos 15 minutos. Lo
+        - ejecuta
+      3 +Guion para recorrer la aplicación a mano, en algo más de una hor
+        +a: la
+      4 +pasada del 16/11/2026 llevó 75 minutos, con pausas. Lo ejecuta
+      5  una persona; **la columna «Resultado» se deja vacía hasta entonc
+         es**. Cada
+      6  paso dice qué hacer, qué se debe ver y de qué requisito o criter
+         io sale.
+      7
+
+● Update(ai-workspace\04-calidad\pruebas-manuales.md)
+  ⎿  Added 3 lines, removed 1 line
+      114  | 29 | **Parar el backend y el frontend.** Apuntar la fecha de
+            modificación de `backend/data/saas-o-matic.db`. En `frontend/
+           `, ejecutar `npm run e2e` y, **cuando hayan pasado tres o cuat
+           ro pruebas, pulsar Ctrl+C** | La ejecución se corta | `CLAUDE.
+           md`, regla 8; pendiente de la sesión 08 | OK |
+      115  | 30 | Comprobar los puertos y la carpeta temporal, con las ór
+           denes de abajo | **Nada escucha en el 8000 ni en el 4200. No q
+           ueda ninguna carpeta `saas-o-matic-e2e-…`** en la carpeta temp
+           oral del sistema. `backend/data/saas-o-matic.db` conserva la f
+           echa apuntada | `CLAUDE.md`, regla 8; pendiente de la sesión 0
+           8 | OK. Las dos primeras órdenes no escriben nada; la tercera,
+            lanzada desde la raíz del repositorio, da 14/11/2026 18:37:20
+            |
+      116
+      117 -Órdenes del paso 30. Las dos primeras no deben escribir nada.
+      117 +Órdenes del paso 30. **Se lanzan desde la raíz del repositorio
+          +**, no desde
+      118 +`frontend/`, donde acaba el paso 29: la tercera usa una ruta r
+          +elativa y
+      119 +desde allí falla. Las dos primeras no deben escribir nada.
+      120
+      121  En Windows (PowerShell):
+      122
+
+● Update(ai-workspace\04-calidad\pruebas-manuales.md)
+  ⎿  Added 5 lines
+      143  `http://localhost:4200`. Lo que sí ha comprobado, y lo que no,
+            está en la
+      144  bitácora de la [sesión 09](../03-proceso/sesion-09.md).
+      145
+      146 +**Lo ejecutó el Tech Lead el 16/11/2026**, sobre `06a6314`: lo
+          +s 30 pasos,
+      147 +en OK. Los datos de la pasada están en la tabla de cabecera; l
+          +o que vio en
+      148 +cada paso, en la columna «Resultado»; y lo que cierra, en la b
+          +itácora de la
+      149 +[sesión 10](../03-proceso/sesion-10.md).
+      150 +
+      151  Si un paso no sale como dice, puede estar mal el paso y no la
+           aplicación:
+      152  anotar lo visto y decidir después.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Cambio 1 confirmado (dd4d58d). Ahora el cambio 2: escribo los tres tests, los
+  veo en verde y hago la mutación de cada uno.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(frontend\src\app\features\detalle\detalle.spec.ts)
+  ⎿  Added 32 lines
+      420      expect(clean(page.element.textContent)).not.toContain('pro
+           fessional');
+      421    });
+      422
+      423 +  // SPEC-04, 2.1: `/meta` and the customer are two requests,
+          +and each notice retries its own.
+      424 +  // The two fail with different errors here, to tell one noti
+          +ce from the other.
+      425 +  it('should show the notice of the customer, with its own ret
+          +ry, when the customer failed too and the retry of /meta succee
+          +ds', async () => {
+      426 +    const page = await open('/clientes/1', 'failed');
+      427 +    reject(page, 503, { code: 'service_unavailable' });
+      428 +    expect(clean(page.element.querySelector('[role="alert"]')?
+          +.textContent)).toContain(UNEXPECTED);
+      429 +
+      430 +    press(page, 'Reintentar');
+      431 +    const retries = page.controller.match(META_URL);
+      432 +    retries.forEach((request) => request.flush(META));
+      433 +    page.harness.detectChanges();
+      434 +
+      435 +    expect(retries.length).toBe(1);
+      436 +    expect(customerRequests(page).length).toBe(0);
+      437 +    expect(page.element.querySelector('.customer')).toBeNull()
+          +;
+      438 +    const notices = page.element.querySelectorAll('[role="aler
+          +t"]');
+      439 +    expect(notices.length).toBe(1);
+      440 +    expect(clean(notices[0].textContent)).toContain(UNAVAILABL
+          +E);
+      441 +    expect(clean(notices[0].querySelector('button')?.textConte
+          +nt)).toBe('Reintentar');
+      442 +
+      443 +    press(page, 'Reintentar');
+      444 +
+      445 +    expect(page.controller.match(META_URL).length).toBe(0);
+      446 +    const request = onlyCustomerRequest(page);
+      447 +    request.flush(CUSTOMER);
+      448 +    page.harness.detectChanges();
+      449 +    expect(request.request.urlWithParams).toBe(`${CUSTOMERS_UR
+          +L}1`);
+      450 +    expect(page.element.querySelector('[role="alert"]')).toBeN
+          +ull();
+      451 +    expect(clean(page.element.querySelector('.customer h2')?.t
+          +extContent)).toBe('Ejemplo Uno SL');
+      452 +    expect(facts(page.element.querySelector('.customer'))['Paí
+          +s']).toBe('España');
+      453 +  });
+      454 +
+      455    it('should load the other customer when the route changes to
+            it', async () => {
+      456      const page = await openWith(CUSTOMER);
+      457
+
+● Update(frontend\src\app\features\simulador\simulador.spec.ts)
+  ⎿  Added 59 lines
+      1018      expect(amounts(page)['Total']).toBe('121,00 EUR');
+      1019      expect(quoteRequests(page).length).toBe(0);
+      1020    });
+      1021 +
+      1022 +  // SPEC-04, 2.1 and 5.5: `/meta`, the customer and the proj
+           +ection are three requests, and each
+      1023 +  // notice retries its own. `/meta` fails with a 500 and the
+           + other with a 503, to tell the
+      1024 +  // notices apart.
+      1025 +  it('should show the notice of the customer, with its own re
+           +try, when the customer failed too and the retry of /meta succ
+           +eeds', () => {
+      1026 +    const page = open('7', 'failed');
+      1027 +    flush(page, only(customerRequests(page)), { code: 'servic
+           +e_unavailable' }, 503);
+      1028 +    expect(textOf(page, '[role="alert"]')).toContain(UNEXPECT
+           +ED);
+      1029 +
+      1030 +    press(page, 'Reintentar', '[role="alert"]');
+      1031 +    flush(page, only(page.controller.match(META_URL)), META);
+      1032 +
+      1033 +    expect(customerRequests(page).length).toBe(0);
+      1034 +    expect(quoteRequests(page).length).toBe(0);
+      1035 +    expect(page.element.querySelector('form')).toBeNull();
+      1036 +    expect(page.element.querySelectorAll('[role="alert"]').le
+           +ngth).toBe(1);
+      1037 +    expect(textOf(page, '[role="alert"]')).toContain(UNAVAILA
+           +BLE);
+      1038 +
+      1039 +    press(page, 'Reintentar', '[role="alert"]');
+      1040 +
+      1041 +    expect(page.controller.match(META_URL).length).toBe(0);
+      1042 +    const customer = only(customerRequests(page));
+      1043 +    flush(page, customer, CUSTOMER);
+      1044 +    const projection = only(quoteRequests(page));
+      1045 +    flush(page, projection, OF_10);
+      1046 +    expect(customer.request.urlWithParams).toBe(`${CUSTOMERS_
+           +URL}7`);
+      1047 +    expect(projection.request.body).toEqual({ customer_id: 7,
+           + active_users: 10 });
+      1048 +    expect(page.element.querySelector('[role="alert"]')).toBe
+           +Null();
+      1049 +    expect(textOf(page, '.simulator-customer')).toBe('Ejemplo
+           + Uno SL · España');
+      1050 +    expect(amounts(page)['Total']).toBe('121,00 EUR');
+      1051 +  });
+      1052 +
+      1053 +  it('should show the notice of the projection, with its own
+           +retry, when the first projection failed too and the retry of
+           +/meta succeeds', () => {
+      1054 +    const page = open('7', 'failed');
+      1055 +    arrive(page);
+      1056 +    flush(page, only(quoteRequests(page)), { code: 'service_u
+           +navailable' }, 503);
+      1057 +    expect(textOf(page, '[role="alert"]')).toContain(UNEXPECT
+           +ED);
+      1058 +
+      1059 +    press(page, 'Reintentar', '[role="alert"]');
+      1060 +    flush(page, only(page.controller.match(META_URL)), META);
+      1061 +
+      1062 +    expect(customerRequests(page).length).toBe(0);
+      1063 +    expect(quoteRequests(page).length).toBe(0);
+      1064 +    expect(textOf(page, '.simulator-customer')).toBe('Ejemplo
+           + Uno SL · España');
+      1065 +    expect(amounts(page)).toEqual({});
+      1066 +    expect(textOf(page, PROJECTION_NOTICE)).toContain(UNAVAIL
+           +ABLE);
+      1067 +    expect(saveButton(page)?.disabled).toBe(true);
+      1068 +
+      1069 +    press(page, 'Reintentar', PROJECTION_NOTICE);
+      1070 +
+      1071 +    expect(page.controller.match(META_URL).length).toBe(0);
+      1072 +    expect(customerRequests(page).length).toBe(0);
+      1073 +    const projection = only(quoteRequests(page));
+      1074 +    flush(page, projection, OF_10);
+      1075 +    expect(projection.request.body).toEqual({ customer_id: 7,
+           + active_users: 10 });
+      1076 +    expect(page.element.querySelector(PROJECTION_NOTICE)).toB
+           +eNull();
+      1077 +    expect(amounts(page)['Total']).toBe('121,00 EUR');
+      1078 +    expect(saveButton(page)?.disabled).toBe(false);
+      1079 +  });
+      1080  });
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Los tres nacen en verde (14:10; 127 tests en los dos ficheros). Primera
+  mutación, en el detalle: al recuperarse /meta, la vista repite también la
+  petición del cliente que había fallado.
+
+● Update(frontend\src\app\features\detalle\detalle.ts)
+  ⎿  Added 8 lines, removed 1 line
+       1 -import { ChangeDetectionStrategy, Component, computed, inject }
+         - from '@angular/core';
+       1 +import {
+       2 +  ChangeDetectionStrategy,
+       3 +  Component,
+       4 +  computed,
+       5 +  effect,
+       6 +  inject,
+       7 +  untracked,
+       8 +} from '@angular/core';
+       9  import { RouterLink } from '@angular/router';
+      10
+      11  import { CustomerLoader } from '../../core/customer-loader';
+
+● Update(frontend\src\app\features\detalle\detalle.ts)
+  ⎿  Added 18 lines
+      119    /** In another currency each total is also shown in euros, t
+           he exact one (E-29). */
+      120    protected readonly converted = computed(() => this.display.c
+           urrent().code !== 'EUR');
+      121
+      122 +  // MUTATION (session 10): when /meta recovers, the customer
+          +that failed is asked for again.
+      123 +  constructor() {
+      124 +    let metaFailed = false;
+      125 +    effect(() => {
+      126 +      const status = this.meta.state().status;
+      127 +      if (status === 'error') {
+      128 +        metaFailed = true;
+      129 +      } else if (status === 'data' && metaFailed) {
+      130 +        metaFailed = false;
+      131 +        untracked(() => {
+      132 +          if (this.loader.state().status === 'error') {
+      133 +            this.loader.retry();
+      134 +          }
+      135 +        });
+      136 +      }
+      137 +    });
+      138 +  }
+      139 +
+      140    /** «Reintentar»: asks again for the customer of the route.
+           */
+      141    protected retry(): void {
+      142      this.loader.retry();
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Update(frontend\src\app\features\detalle\detalle.ts)
+  ⎿  Removed 18 lines
+      119    /** In another currency each total is also shown in euros, t
+           he exact one (E-29). */
+      120    protected readonly converted = computed(() => this.display.c
+           urrent().code !== 'EUR');
+      121
+      122 -  // MUTATION (session 10): when /meta recovers, the customer
+          -that failed is asked for again.
+      123 -  constructor() {
+      124 -    let metaFailed = false;
+      125 -    effect(() => {
+      126 -      const status = this.meta.state().status;
+      127 -      if (status === 'error') {
+      128 -        metaFailed = true;
+      129 -      } else if (status === 'data' && metaFailed) {
+      130 -        metaFailed = false;
+      131 -        untracked(() => {
+      132 -          if (this.loader.state().status === 'error') {
+      133 -            this.loader.retry();
+      134 -          }
+      135 -        });
+      136 -      }
+      137 -    });
+      138 -  }
+      139 -
+      122    /** «Reintentar»: asks again for the customer of the route.
+           */
+      123    protected retry(): void {
+      124      this.loader.retry();
+
+● Update(frontend\src\app\features\detalle\detalle.ts)
+  ⎿  Added 1 line, removed 8 lines
+       1 -import {
+       2 -  ChangeDetectionStrategy,
+       3 -  Component,
+       4 -  computed,
+       5 -  effect,
+       6 -  inject,
+       7 -  untracked,
+       8 -} from '@angular/core';
+       1 +import { ChangeDetectionStrategy, Component, computed, inject }
+         + from '@angular/core';
+       2  import { RouterLink } from '@angular/router';
+       3
+       4  import { CustomerLoader } from '../../core/customer-loader';
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Mutación del detalle: falla solo el test nuevo (1 de 569, «expected 1 to be 0»
+  en las peticiones del cliente); deshecha y comparada byte a byte. Ahora las
+  dos del simulador.
+
+● Update(frontend\src\app\features\simulador\simulador.ts)  ⎿  Added 2 lines
+       3    Component,
+       4    DestroyRef,
+       5    computed,
+       6 +  effect,
+       7    inject,
+       8    signal,
+       9 +  untracked,
+      10  } from '@angular/core';
+      11  import { takeUntilDestroyed, toSignal } from '@angular/core/rxj
+          s-interop';
+      12  import { FormControl, FormGroup, ReactiveFormsModule } from '@a
+          ngular/forms';
+
+● Update(frontend\src\app\features\simulador\simulador.ts)
+  ⎿  Added 15 lines
+      129    protected readonly fields = computed(() => fieldViews(this.c
+           ounts(), this.errors()));
+      130
+      131    constructor() {
+      132 +    // MUTATION (session 10): when /meta recovers, the custome
+          +r that failed is asked for again.
+      133 +    let metaFailed = false;
+      134 +    effect(() => {
+      135 +      const status = this.meta.state().status;
+      136 +      if (status === 'error') {
+      137 +        metaFailed = true;
+      138 +      } else if (status === 'data' && metaFailed) {
+      139 +        metaFailed = false;
+      140 +        untracked(() => {
+      141 +          if (this.loader.state().status === 'error') {
+      142 +            this.loader.retry();
+      143 +          }
+      144 +        });
+      145 +      }
+      146 +    });
+      147      this.projector.start(this.customerId, this.usersBox);
+      148      this.usersBox.valueChanges
+      149        .pipe(takeUntilDestroyed())
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Segunda mutación: falla solo su test (1 de 569). La cambio por la tercera: al
+  recuperarse /meta, se repite la proyección que había fallado.
+
+● Update(frontend\src\app\features\simulador\simulador.ts)
+  ⎿  Added 3 lines, removed 3 lines
+      129    protected readonly fields = computed(() => fieldViews(this.c
+           ounts(), this.errors()));
+      130
+      131    constructor() {
+      132 -    // MUTATION (session 10): when /meta recovers, the custome
+          -r that failed is asked for again.
+      132 +    // MUTATION (session 10): when /meta recovers, the project
+          +ion that failed is asked for again.
+      133      let metaFailed = false;
+      134      effect(() => {
+      135        const status = this.meta.state().status;
+     ...
+      138        } else if (status === 'data' && metaFailed) {
+      139          metaFailed = false;
+      140          untracked(() => {
+      141 -          if (this.loader.state().status === 'error') {
+      142 -            this.loader.retry();
+      141 +          if (this.projectionError() !== null) {
+      142 +            this.projector.retry();
+      143            }
+      144          });
+      145        }
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(frontend\src\app\features\simulador\simulador.ts)
+  ⎿  Removed 15 lines
+      129    protected readonly fields = computed(() => fieldViews(this.c
+           ounts(), this.errors()));
+      130
+      131    constructor() {
+      132 -    // MUTATION (session 10): when /meta recovers, the project
+          -ion that failed is asked for again.
+      133 -    let metaFailed = false;
+      134 -    effect(() => {
+      135 -      const status = this.meta.state().status;
+      136 -      if (status === 'error') {
+      137 -        metaFailed = true;
+      138 -      } else if (status === 'data' && metaFailed) {
+      139 -        metaFailed = false;
+      140 -        untracked(() => {
+      141 -          if (this.projectionError() !== null) {
+      142 -            this.projector.retry();
+      143 -          }
+      144 -        });
+      145 -      }
+      146 -    });
+      132      this.projector.start(this.customerId, this.usersBox);
+      133      this.usersBox.valueChanges
+      134        .pipe(takeUntilDestroyed())
+
+● Update(frontend\src\app\features\simulador\simulador.ts)
+  ⎿  Removed 2 lines
+       3    Component,
+       4    DestroyRef,
+       5    computed,
+       6 -  effect,
+       6    inject,
+       7    signal,
+       9 -  untracked,
+       8  } from '@angular/core';
+       9  import { takeUntilDestroyed, toSignal } from '@angular/core/rxj
+          s-interop';
+      10  import { FormControl, FormGroup, ReactiveFormsModule } from '@a
+          ngular/forms';
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Update(ai-workspace\01-specs\SPEC-04-frontend-y-divisas.md)
+  ⎿  Added 2 lines
+      949  | Abrir el simulador | 1, con 10 usuarios | Total 121,00 EUR;
+           se muestra «España», no `ES` |
+      950  | Abrir el simulador y el cliente tarda 500 ms en responder |
+           0 mientras no llega el cliente; 1, con 10 usuarios, cuando lle
+           ga | Estado de carga hasta entonces |
+      951  | `/meta` falla | — | Error con «Reintentar» en lugar del simu
+           lador; no se muestra el código del país |
+      952 +| `/meta` falla y el cliente también; después, «Reintentar» de
+          + `/meta` con éxito | 0, y ninguna del cliente | En lugar del s
+          +imulador, el aviso del error del cliente, con su propio «Reint
+          +entar». Al pulsarlo: 1 del cliente, ninguna a `/meta` y, cuand
+          +o el cliente llega, 1 con 10 usuarios; el simulador con «Españ
+          +a» y total 121,00 EUR |
+      953 +| `/meta` falla y la primera proyección también (el cliente ll
+          +egó); después, «Reintentar» de `/meta` con éxito | 0, y ningun
+          +a del cliente | El simulador, con «España» y sin importes, con
+          + el aviso del error de la proyección y su propio «Reintentar»;
+          + «Guardar» desactivado. Al pulsarlo: 1 con 10 usuarios, ningun
+          +a a `/meta` ni del cliente; total 121,00 EUR, sin el aviso, y
+          +«Guardar» activo |
+      954  | Arrastrar el control de 10 a 15 pasando por 11–14 en menos d
+           e 200 ms | 1, con 15 | Total 169,40 EUR |
+      955  | Con el total de 10 usuarios a la vista, mover a 15, y la res
+           puesta tarda | 1, en curso | Mientras llega, los importes de 1
+           0 usuarios siguen a la vista marcados como «actualizando» y «G
+           uardar» está desactivado; al llegar, total 169,40 EUR y «Guard
+           ar» activo |
+      956  | Mover a 51 mientras la de 15 sigue en curso | La de 15 se ca
+           ncela | Solo se muestra la de 51: 514,25 EUR |
+
+● Update(ai-workspace\01-specs\SPEC-04-frontend-y-divisas.md)
+  ⎿  Added 2 lines, removed 2 lines
+      111  esa petición, con su propio «Reintentar», que es el que la rep
+           ite: el de
+      112  la lista en el panel (2.2 y 5.3); el del cliente en el detalle
+            y en el
+      113  simulador; y, en el simulador, el de la proyección cuando el c
+           liente llegó
+      114 -y fue ella la que falló. *Por qué*: son peticiones distintas y
+          - cada aviso
+      115 -reintenta la suya.
+      114 +y fue ella la que falló (los dos casos del simulador, en 5.5).
+          + *Por qué*:
+      115 +son peticiones distintas y cada aviso reintenta la suya.
+      116
+      117  ### 2.2 Panel y buscador
+      118
+
+● Update(ai-workspace\01-specs\SPEC-04-frontend-y-divisas.md)
+  ⎿  Added 1 line
+      1190  | 2026-11-15 | Decisión del Tech Lead sobre el hallazgo N-09
+            de la segunda evaluación independiente del frontend. **CA-08
+            dice qué dos filas de 5.5 se reproducen fuera de los tests de
+            l simulador**: la de la zona horaria, en `e2e/rate-date.spec.
+            ts`, y «la simulación nueva es la primera», en la prueba de C
+            A-14. Sin cambios en 5.5, en los requisitos ni en los tests.
+            Motivo: el criterio decía que los tests del simulador reprodu
+            cen cada fila, y esas dos ya se reproducían en otro sitio, qu
+            e es donde se pueden comprobar |
+      1191  | 2026-11-15 | Decisión del Tech Lead sobre el caso C-02 de l
+            a respuesta a la segunda evaluación (`04-calidad/respuesta-ev
+            aluacion-frontend-02.md`): el título del párrafo que sigue a
+            la tabla de criterios nombra también CA-19, del que el párraf
+            o ya hablaba. Sin cambios en el contenido |
+      1192  | 2026-11-15 | Decisión del Tech Lead sobre la precisión AG-0
+            7 de la sesión 09 (`03-proceso/sesion-09.md`), escrita **tal
+            como está el código, sin cambiar el comportamiento**. **«Rein
+            tentar» de `/meta` repite solo `/meta`**: si lo que la vista
+            pidió por su cuenta también falló, tras reintentar `/meta` co
+            n éxito se ve el aviso de esa petición, con su propio «Reinte
+            ntar» (2.1). La frase de 2.2 deja de decir sin condición que
+            «la lista ya está»; la de 2.5, que el simulador «aparece ya c
+            argado»; y 5.3 gana la fila de `/meta` y el listado inicial f
+            allando a la vez, con su test en el panel. En el detalle y en
+             el simulador ocurre lo mismo con el cliente, y en el simulad
+            or también con la proyección: está dicho en 2.1 y **no tiene
+            test que lo fije**. Sin requisitos nuevos. Motivo: son petici
+            ones distintas y cada aviso reintenta la suya; la spec decía
+            que tras reintentar `/meta` la lista ya estaba, y eso solo es
+             cierto si su petición salió bien |
+      1193 +| 2026-11-16 | Decisión del Tech Lead al aprobar la parada 2
+           +de la sesión 09, después de ejecutar el guion de pruebas manu
+           +ales (`03-proceso/sesion-10.md`): hacen falta las dos pulsaci
+           +ones de «Reintentar» y **el comportamiento se queda como está
+           +**. **Los tres casos que 2.1 decía sin test pasan a tenerlo**
+           +: el cliente en el detalle, el cliente en el simulador y la p
+           +rimera proyección en el simulador. 5.5 gana dos filas, las de
+           + `/meta` fallando a la vez que el cliente y a la vez que la p
+           +rimera proyección, y 2.1 remite a ellas. El detalle no tiene
+           +tabla de casos: su test reproduce lo que dice 2.1. Sin requis
+           +itos nuevos, sin cambios en los criterios y sin cambios en el
+           + código. Motivo: la entrada anterior dejaba escrito que esos
+           +tres casos no tenían test que los fijara |
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Tests, mutaciones deshechas y SPEC-04 (dos filas en 5.5 e historial) listos.
+  Lanzo el oráculo con --e2e para el commit del cambio 2.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Cambio 2 confirmado (2a422a9, oráculo con --e2e en código 0, 24 correctas;
+  puertos libres y base sin tocar después). Ahora el cambio 3: regenero la
+  matriz y saco las cifras de hoy.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Update(ai-workspace\04-calidad\trazabilidad.md)
+  ⎿  Added 2 lines, removed 2 lines
+       5
+       6  | | |
+       7  |---|---|
+       8 -| **Generada** | 2026-11-15, 17:50. Antes, el mismo día: a las
+         -16:24, sobre `f2379c4`, y a las 17:41, con el título de la prue
+         -ba del detalle a 375 px citando `SPEC-04/E-16` (`426be86`) |
+       9 -| **Sobre el commit** | `426be86`, más un cambio que entra en e
+         -l mismo commit que esta versión del documento: un test nuevo en
+         - `frontend/src/app/features/panel/panel.spec.ts`. Ningún otro c
+         -ambio en `backend/` ni en `frontend/` (`git status --short back
+         -end frontend`) |
+       8 +| **Generada** | 2026-11-16, 14:15. Antes, el 2026-11-15: a las
+         + 16:24, sobre `f2379c4`; a las 17:41, con el título de la prueb
+         +a del detalle a 375 px citando `SPEC-04/E-16` (`426be86`); y a
+         +las 17:50, con un test nuevo en el panel (`eaed046`) |
+       9 +| **Sobre el commit** | `2a422a9`, que añade tres tests al fron
+         +tend: uno en `detalle.spec.ts` y dos en `simulador.spec.ts`. Ni
+         +ngún cambio sin commit en `backend/` ni en `frontend/` (`git st
+         +atus --short backend frontend`) |
+      10  | **Orden** | `uv run scripts/traceability.py`, desde la raíz.
+          Solo lee; escribe la matriz en la salida estándar |
+      11  | **Qué es salida de la orden** | El apartado 4 entero, sin ret
+          ocar. Los apartados 1 a 3 los escribe la IA leyendo esa salida
+          |
+      12
+
+● Update(ai-workspace\04-calidad\trazabilidad.md)
+  ⎿  Added 1 line, removed 1 line
+      34  **Se cuentan declaraciones, no casos.** Un test parametrizado e
+          s una
+      35  declaración aunque el *runner* haga de él muchos casos. Por eso
+           las cifras
+      36  de la matriz son menores que las que dan los *runners* (salidas
+           del
+      37 -2026-11-15: 16:23 y, la del frontend, 17:46):
+      37 +2026-11-16: 14:15 y, la del frontend, 14:12):
+      38
+      39  | Grupo | Declaraciones (esta matriz) | Casos que ejecuta el *r
+          unner* |
+      40  |---|---|---|
+
+● Update(ai-workspace\04-calidad\trazabilidad.md)
+  ⎿  Added 1 line, removed 1 line
+      39  | Grupo | Declaraciones (esta matriz) | Casos que ejecuta el *r
+          unner* |
+      40  |---|---|---|
+      41  | Backend | 183, en 23 ficheros | 741 (`pytest --collect-only`)
+           |
+      42 -| Frontend | 250, en 19 ficheros | 566 (`ng test`) |
+      42 +| Frontend | 253, en 19 ficheros | 569 (`ng test`) |
+      43  | Playwright | 14, en 6 ficheros | 18 pruebas en 5 ficheros (`p
+          laywright test --list`) y 4 capturas en 1, con su propia config
+          uración |
+      44
+      45  **Las columnas.** `Backend`, `Frontend` y `Playwright`: cuántos
+           tests de
+
+● Update(ai-workspace\04-calidad\trazabilidad.md)
+  ⎿  Added 2 lines, removed 2 lines
+      66  - De los 57 requisitos de SPEC-04, **solo 11 tienen algún test
+          que los cite
+      67    en su propio título** (E-16, E-22, E-26, E-29, E-30, E-36, E-
+          39, E-41,
+      68    E-50, E-53 y E-57). **Los otros 46 se citan solo desde un `de
+          scribe`.**
+      69 -- El caso extremo es E-40, con 103 tests: son todos los de los
+         -bloques
+      70 -  que lo nombran en su título, en cinco ficheros, no 103 compro
+         -baciones de
+      69 +- El caso extremo es E-40, con 106 tests: son todos los de los
+         +bloques
+      70 +  que lo nombran en su título, en cinco ficheros, no 106 compro
+         +baciones de
+      71    `/meta` en error.
+      72  - Qué test comprueba qué requisito del frontend **no se puede l
+          eer de las
+      73    citas**. Lo que sí lo dice, fila a fila, son las tablas de ca
+          sos de
+
+● Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+       99    nada.
+      100  - **Solo funcionan en Chromium.**
+      101
+      102 -Tests que hay hoy (2026-11-15): 741 del backend, 566 del front
+          -end, 18 de
+      102 +Tests que hay hoy (2026-11-16): 741 del backend, 569 del front
+          +end, 18 de
+      103  Playwright y 96 de los propios scripts. Por separado:
+      104  `uv run --locked pytest` en `backend/`; `npm run test:ci` y `n
+           pm run e2e`
+      105  en `frontend/`.
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 1 line, removed 1 line
+      57
+      58  ## Estado
+      59
+      60 -A 2026-11-15, al cerrar la sesión 09:
+      60 +A 2026-11-16, al cerrar la sesión 10:
+      61
+      62  - **Specs**: las cuatro, `aprobadas` (el bloque backend el 2026
+          -11-13 y
+      63    SPEC-04 el 2026-11-14).
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 1 line, removed 1 line
+      63    SPEC-04 el 2026-11-14).
+      64  - **Código**: backend y frontend implementados sobre ellas. El
+          oráculo
+      65    (`uv run scripts/check.py --e2e`, desde la raíz) ejecuta 741
+          tests del
+      66 -  backend, 566 del frontend, 18 pruebas de Playwright y 96 de l
+         -os propios
+      66 +  backend, 569 del frontend, 18 pruebas de Playwright y 96 de l
+         +os propios
+      67    scripts.
+      68  - **Evaluaciones independientes**: siete (tres de las specs, do
+          s del
+      69    backend y dos del frontend), todas respondidas y con cada hal
+          lazgo
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 7 lines, removed 2 lines
+      73  - **Trazabilidad**: los 140 requisitos EARS tienen algún test q
+          ue los
+      74    cita, 140 de 140 ([`trazabilidad.md`](04-calidad/trazabilidad
+          .md), que
+      75    dice también lo que esa cifra no demuestra).
+      76 +- **Pruebas manuales**: el
+      77 +  [guion](04-calidad/pruebas-manuales.md), **ejecutado por el T
+         +ech Lead el
+      78 +  16/11/2026**, de 12:39 a 13:55, sobre el commit `06a6314`, en
+         + Google
+      79 +  Chrome 157 y Windows 11, con una base de datos nueva: **los 3
+         +0 pasos, en
+      80 +  OK**. Lo que vio en cada uno está en su columna de resultados
+         +. Los tres
+      81 +  tests del frontend añadidos después no cambian el código de l
+         +a
+      82 +  aplicación.
+      83
+      84  **Pendiente**, y por tanto sin comprobar:
+      85
+      79 -- El [guion de pruebas manuales](04-calidad/pruebas-manuales.md
+         -) está
+      80 -  escrito y **sin ejecutar**: su columna de resultados está vac
+         -ía.
+      86  - La integración continua (`.github/workflows/ci.yml`) está esc
+          rita y **no
+      87    se ha ejecutado nunca**: solo puede hacerlo tras subir el rep
+          ositorio.
+      88    Sería la primera ejecución fuera de Windows.
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Cambio 3 confirmado (27213b6). Solo queda cerrar la bitácora con lo hecho, las
+  mutaciones y lo no verificado.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\sesion-10.md)
+  ⎿  Added 1 line, removed 1 line
+       4  |---|---|
+       5  | **Fecha** | 2026-11-16 |
+       6  | **Participantes** | Tech Lead (persona) · IA: Claude Code, mo
+          delo Claude Fable 5.2 |
+       7 -| **Resultado** | Sesión abierta a las 14:02 |
+       7 +| **Resultado** | **Parada 1 alcanzada (14:18): los tres cambio
+         +s, hechos, cada uno en su commit y con el oráculo en código 0 a
+         +ntes; con `--e2e` el que toca `frontend/`.** No ha cambiado el
+         +código de la aplicación: en `backend/` y `frontend/` solo hay d
+         +os `.spec.ts` con tests nuevos. **Cambio 1** (`dd4d58d`): el gu
+         +ion de pruebas manuales con los resultados del Tech Lead, intac
+         +tos, y tres retoques en el texto. **Cambio 2** (`2a422a9`): tre
+         +s tests de los dos «Reintentar», uno en el detalle y dos en el
+         +simulador; **nacen en verde y a cada uno lo mata su mutación, s
+         +olo a él (1 de 569 las tres veces)**, deshechas; SPEC-04 gana d
+         +os filas en 5.5 y su fila de historial. **Cambio 3** (`27213b6`
+         +): la matriz regenerada (sigue en 140 de 140), las cifras de lo
+         +s dos README y el guion como ejecutado en el «Estado». El front
+         +end acaba con **569 tests unitarios** (eran 566) y 18 de Playwr
+         +ight; el backend, con 741; los scripts, con 96. **Lo que el Tec
+         +h Lead tiene que conocer**: (1) la sesión tiene cinco commits y
+         + no cuatro: la IA hizo uno de apertura de la bitácora, como en
+         +la sesión 09 (AI-01); (2) **que el segundo «Reintentar» no vuel
+         +ve a pedir `/meta` no lo demuestra ninguna mutación** (AI-02);
+         +(3) el detalle no tiene tabla de casos en SPEC-04 y **CA-07 no
+         +se ha tocado** (AI-03); (4) las filas de la cronología de los t
+         +res cambios se escribieron al cerrar, no en cada momento (AI-06
+         +). Quedan sin aprobar AI-01 a AI-07. La integración continua si
+         +gue sin ejecutarse: la prueba en limpio y el `push` son del Tec
+         +h Lead. · Antes, sesión abierta a las 14:02 |
+       8
+       9  Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abr
+          e al empezar
+      10  la sesión y cada revisión se anota en el momento en que ocurre
+          (acuerdo f4 de
+
+● Update(ai-workspace\03-proceso\sesion-10.md)
+  ⎿  Added 9 lines
+      82  | Hora | Commit | Qué |
+      83  |---|---|---|
+      84  | 14:05 | — | Mensaje recibido a las 14:02 (primera lectura del
+           reloj, 14:02:35). El último commit es `06a6314` (2026-11-15 17
+          :57:50), el último de la sesión 09. **`git status`: un solo fic
+          hero cambiado y sin commit, `04-calidad/pruebas-manuales.md`**,
+           con los resultados del Tech Lead; su `git diff` toca las cinco
+           filas de la tabla de cabecera y la columna «Resultado» de los
+          30 pasos, y nada más (35 líneas). **`netstat` a las 14:02:59: n
+          ada escucha en el 8000, el 4200, el 8011 ni el 4211.** `backend
+          /data/saas-o-matic.db`, del Tech Lead: 28.672 bytes, 2026-11-14
+           18:37; la IA no lo toca. Lecturas del encargo hechas, y además
+           SPEC-04 (2.1, 2.4, 2.5, 5.3, 5.5, 5.6, los criterios y el hist
+          orial), `detalle.spec.ts`, `simulador.spec.ts`, el test del pan
+          el de la sesión 09, `detalle.ts`, `simulador.ts`, `projector.ts
+          `, `meta-gate.ts`, `customer-loader.ts`, `meta-store.ts`, los d
+          os README y la cabecera de `trazabilidad.md`. Apertura de esta
+          bitácora |
+      85 +| 14:18 | `9e8a650` | **Apertura de la bitácora**, 14:07:35 seg
+         +ún `git log`, tras el oráculo sin `--e2e` de 14:06:01 a 14:07:3
+         +5, código 0 (23 correctas, 1 inactiva); la salida, a un fichero
+         +, y el commit, en la misma orden, solo con ese código. Solo ent
+         +ra `sesion-10.md`: el guion sigue sin commit. El encargo no nom
+         +braba este commit (AI-01) |
+      86 +| 14:18 | `dd4d58d` | **Cambio 1 (el guion)**, 14:09:33 según `
+         +git log`. Tres retoques con la herramienta de edición, fuera de
+         + las tablas: la introducción dice «en algo más de una hora: la
+         +pasada del 16/11/2026 llevó 75 minutos, con pausas»; el párrafo
+         + de las órdenes del paso 30 dice que se lanzan desde la raíz de
+         +l repositorio y por qué; y el apartado final añade que lo ejecu
+         +tó el Tech Lead el 16/11/2026, sobre `06a6314`, con los 30 paso
+         +s en OK. A las 14:07:53: la ruta relativa de la tercera orden e
+         +xiste desde la raíz y no desde `frontend/` (visto con la orden
+         +de Linux en Git Bash, no con la de PowerShell), y el `git diff`
+         + contra `06a6314` sigue teniendo las mismas 35 filas de tabla q
+         +ue antes de los retoques (AI-04). Antes del commit, oráculo sin
+         + `--e2e` de 14:08:07 a 14:09:33, código 0 |
+      87 +| 14:18 | — | **Cambio 2, los tests.** Copia de `detalle.ts`, `
+         +detalle.spec.ts`, `simulador.ts` y `simulador.spec.ts` fuera de
+         +l repositorio (14:09:57). Un test nuevo en `detalle.spec.ts` y
+         +dos en `simulador.spec.ts`, en el bloque «/meta en error». En l
+         +os tres, `/meta` falla con un `500` y la otra petición con un `
+         +503`, para distinguir un aviso del otro. **Nacen en verde** (14
+         +:10:19; 127 tests en los dos ficheros) |
+      88 +| 14:18 | — | **Cambio 2, las mutaciones**, cada una con los 56
+         +9 tests y en el código de la vista, con la herramienta de edici
+         +ón. **Detalle** (14:10:50): al recuperarse `/meta` de un error,
+         + la vista repite la petición del cliente que había fallado; **1
+         + fallo y 568 en verde, el test nuevo**, por aserción («expected
+         + 1 to be 0» en las peticiones del cliente). **Simulador, el cli
+         +ente** (14:11:30): lo mismo; **1 fallo y 568 en verde, su test*
+         +*, por la misma aserción. **Simulador, la proyección** (14:11:5
+         +2): al recuperarse `/meta`, la vista repite la proyección que h
+         +abía fallado; **1 fallo y 568 en verde, su test** («expected 1
+         +to be 0» en las peticiones de proyección). Deshechas: `detalle.
+         +ts` y `simulador.ts`, idénticos byte a byte a su copia (14:12:0
+         +3), y los 569 tests, en verde (14:12:15). Ningún intento descar
+         +tado (AI-02) |
+      89 +| 14:18 | — | **Cambio 2, SPEC-04**: dos filas en 5.5, las de `
+         +/meta` fallando a la vez que el cliente y a la vez que la prime
+         +ra proyección; una remisión a ellas en 2.1; y su fila de histor
+         +ial, con fecha de hoy. El detalle no tiene tabla de casos y CA-
+         +07 no se toca (AI-03) |
+      90 +| 14:18 | `2a422a9` | **Cambio 2**, 14:14:47 según `git log`: `
+         +detalle.spec.ts`, `simulador.spec.ts` y SPEC-04. Antes, `netsta
+         +t` a las 14:12:52: nada en el 8000 ni en el 4200; oráculo con `
+         +--e2e` de 14:13:04 a 14:14:47, código 0: **24 correctas, 0 con
+         +fallo y 0 inactivas**. Después, puertos libres, ninguna carpeta
+         + `saas-o-matic-e2e-*` y `backend/data/saas-o-matic.db` igual. *
+         +*Es la única pasada con `--e2e` de la sesión y el único commit
+         +que toca `frontend/`** |
+      91 +| 14:18 | — | **Cambio 3, la matriz y las cifras.** `uv run scr
+         +ipts/traceability.py` a las 14:15:03, sobre `2a422a9`, dos vece
+         +s: idénticas. Sustituye al apartado 4 de `trazabilidad.md`; res
+         +pecto de la anterior cambian 9 líneas: 253 declaraciones del fr
+         +ontend (eran 250) y siete requisitos con más tests, E-40 con 10
+         +6 (eran 103). **Sigue en 140 de 140.** Cabecera y apartados 1 y
+         + 2, al día. Cifras de hoy de los *runners* (14:12:15 y 14:15:05
+         +): 569, 741 y 18 más 4 capturas; los 96 de los scripts, de la s
+         +alida del oráculo. `README.md`: la fecha y «569 del frontend».
+         +`ai-workspace/README.md`: la fecha, la cifra y, en «Estado», el
+         + guion pasa de pendiente a ejecutado, con una frase que el enca
+         +rgo no pedía (AI-05) |
+      92 +| 14:18 | `27213b6` | **Cambio 3**, 14:17:35 según `git log`: `
+         +trazabilidad.md` y los dos README. Antes, oráculo sin `--e2e` d
+         +e 14:16:08 a 14:17:35, código 0: 23 correctas y 1 inactiva |
+      93 +| 14:18 | *(este commit)* | **Cierre de esta bitácora para la p
+         +arada 1.** Las ocho filas anteriores se han escrito ahora, a la
+         +s 14:18, con las horas de las salidas guardadas, no en el momen
+         +to de cada una (AI-06). La IA para aquí: el Tech Lead revisa lo
+         +s tres cambios y las precisiones AI-01 a AI-07. La prueba en li
+         +mpio y el `push` son suyos. La hora de este commit se ve con `g
+         +it log` |
+      94
+      95  ## 3. Revisiones y decisiones del Tech Lead
+      96
+
+● Update(ai-workspace\03-proceso\sesion-10.md)
+  ⎿  Added 41 lines
+      120  - **La columna «Resultado» y la tabla de cabecera del guion no
+            se tocan.**
+      121  - **La prueba en limpio y el `push` son del Tech Lead.**
+      122
+      123 +### Los tres cambios · lo hecho
+      124 +
+      125 +| # | Commit | Rojo visto o mutación | Qué toca |
+      126 +|---|---|---|---|
+      127 +| 1 · El guion | `dd4d58d` | — | `04-calidad/pruebas-manuales.
+          +md`: los resultados del Tech Lead, tal como estaban, y tres re
+          +toques en el texto |
+      128 +| 2 · Los dos «Reintentar» | `2a422a9` | **Mutación**, tres, u
+          +na por test; cada una la mata **solo su test** (1 de 569) | `d
+          +etalle.spec.ts`, `simulador.spec.ts` y SPEC-04 (2.1, 5.5 e his
+          +torial) |
+      129 +| 3 · Puesta al día | `27213b6` | — | `04-calidad/trazabilidad
+          +.md`, `README.md` y `ai-workspace/README.md` |
+      130 +
+      131 +**Los tres tests nuevos y la mutación que mata cada uno** (cam
+          +bio 2). Los
+      132 +tres nacen en verde, porque el comportamiento ya estaba:
+      133 +
+      134 +| Test | Qué fija | Mutación | Resultado, con los 569 tests |
+      135 +|---|---|---|---|
+      136 +| `detalle.spec.ts`: «should show the notice of the customer,
+          +with its own retry, when the customer failed too and the retry
+          + of /meta succeeds» | `/meta` y el cliente fallan. Tras «Reint
+          +entar» de `/meta` con éxito: 1 petición a `/meta`, ninguna del
+          + cliente, sin tarjeta y un solo aviso, el del cliente, con su
+          +«Reintentar». Al pulsarlo: ninguna a `/meta`, 1 a `/customers/
+          +1`, y el detalle con «España» y sin aviso | En `detalle.ts`: c
+          +uando `/meta` pasa de error a datos, la vista repite la petici
+          +ón del cliente si había fallado | **1 fallo, 568 en verde** (1
+          +4:10:50): este test, «expected 1 to be 0» en las peticiones de
+          +l cliente |
+      137 +| `simulador.spec.ts`: el mismo título, en el bloque «/meta en
+          + error» | Lo mismo en el simulador: ninguna petición del clien
+          +te ni de proyección, sin formulario y un solo aviso. Al pulsar
+          +lo: ninguna a `/meta`, 1 a `/customers/7` y, al llegar, 1 de p
+          +royección con 10 usuarios; «Ejemplo Uno SL · España» y total 1
+          +21,00 EUR | En `simulador.ts`: la misma, con el cliente | **1
+          +fallo, 568 en verde** (14:11:30): este test, por la misma aser
+          +ción |
+      138 +| `simulador.spec.ts`: «should show the notice of the projecti
+          +on, with its own retry, when the first projection failed too a
+          +nd the retry of /meta succeeds» | El cliente llega y fallan `/
+          +meta` y la primera proyección. Tras «Reintentar» de `/meta`: n
+          +inguna petición, el simulador con «España», sin importes, con
+          +el aviso de la proyección y «Guardar» desactivado. Al pulsar s
+          +u «Reintentar»: ninguna a `/meta` ni del cliente, 1 de proyecc
+          +ión con 10 usuarios; total 121,00 EUR, sin aviso y «Guardar» a
+          +ctivo | En `simulador.ts`: cuando `/meta` pasa de error a dato
+          +s, la vista repite la proyección si había fallado | **1 fallo,
+          + 568 en verde** (14:11:52): este test, «expected 1 to be 0» en
+          + las peticiones de proyección |
+      139 +
+      140 +Las tres mutaciones están deshechas: `detalle.ts` y `simulador
+          +.ts` son
+      141 +idénticos, byte a byte, a la copia hecha antes de tocarlos.
+      142 +
+      143 +**Tests al cerrar**, de salidas de hoy:
+      144 +
+      145 +| Grupo | Tests | De dónde sale |
+      146 +|---|---|---|
+      147 +| Backend | 741 | `uv run --locked pytest --collect-only -q` (
+          +14:15:05) |
+      148 +| Frontend | **569** (eran 566: uno más en el detalle y dos en
+          + el simulador) | `npx ng test --watch=false` (14:12:15) |
+      149 +| Playwright | 18 pruebas en 5 ficheros, más las 4 capturas |
+          +`npx playwright test --list`, con cada configuración (14:15:10
+          +) |
+      150 +| Scripts | 96 | Salida del oráculo (14:17:35) |
+      151 +
+      152 +Precisiones de la IA, **sin aprobar**:
+      153 +
+      154 +| # | Precisión | Motivo |
+      155 +|---|---|---|
+      156 +| AI-01 | **La sesión tiene cinco commits, no cuatro**: además
+          + de los tres cambios y de este cierre, la IA hizo uno de apert
+          +ura de la bitácora (`9e8a650`), con su pasada del oráculo. El
+          +encargo no lo nombraba | Es lo que se hizo en la sesión 09 (`f
+          +2379c4`), y el encargo pedía abrir la bitácora como las anteri
+          +ores. Así el commit del guion lleva solo el guion |
+      157 +| AI-02 | **Cada mutación es la del comportamiento que el Tech
+          + Lead ha decidido no tener** (que reintentar `/meta` repita ta
+          +mbién lo que falló), puesta en el código de la vista y solo pa
+          +ra la petición que había fallado. Ningún intento descartado. *
+          +*Lo que ninguna mutación demuestra**: que el segundo «Reintent
+          +ar» no vuelve a pedir `/meta`. Los tres tests lo comprueban («
+          +ninguna a `/meta`»), pero la IA no ha probado a romperlo: leye
+          +ndo `meta-store.ts`, su `retry()` no pide nada si `/meta` no e
+          +stá en error, así que la mutación directa (que el «Reintentar»
+          + del cliente llame también al de `/meta`) no cambiaría nada. T
+          +ampoco se ha visto qué habría roto la mutación sin la condició
+          +n «si había fallado» | Una mutación por test es lo que pedía e
+          +l encargo. La condición evita el caso de AH-01 de la sesión 09
+          +: sin ella, por lo que dice el código, caería también el test
+          +que ya existía en el simulador («appear loaded when /meta come
+          +s back»), y no se sabría qué mata el nuevo |
+      158 +| AI-03 | **En SPEC-04 solo el simulador gana filas** (dos, en
+          + 5.5, con CA-08, que pide un test por cada fila de 5.5) y 2.1
+          +remite a ellas. **El detalle no tiene tabla de casos**: lo suy
+          +o está en CA-07, que es una lista en un criterio y no nombra e
+          +ste caso. **CA-07 no se ha tocado.** Los tres tests no citan u
+          +n requisito en su título: heredan los de su bloque (E-40 entre
+          + ellos) y su comentario nombra 2.1 y, en el simulador, 5.5 | E
+          +l encargo hablaba de una fila en las tablas; cambiar la redacc
+          +ión de un criterio es otra cosa y lo decide el Tech Lead. Si l
+          +o quiere, es una frase en CA-07 («y `/meta` y el cliente en er
+          +ror a la vez») |
+      159 +| AI-04 | **En el guion, solo los tres retoques.** La IA no gu
+          +ardó una copia del fichero del Tech Lead antes de editarlo: qu
+          +e sus resultados siguen intactos sale de que el `git diff` con
+          +tra `06a6314` tiene las mismas 35 filas de tabla antes y despu
+          +és, y de que los tres retoques caen fuera de las tablas. De 12
+          +:39 a 13:55 van 76 minutos; el texto dice 75, la cifra del Tec
+          +h Lead. La frase «la columna «Resultado» se deja vacía hasta e
+          +ntonces» de la introducción se queda como estaba | El encargo
+          +mandaba no tocar los resultados ni la tabla de cabecera; el Te
+          +ch Lead tiene que saber con qué se ha comprobado |
+      160 +| AI-05 | **En el «Estado» de `ai-workspace/README.md` hay una
+          + frase que el encargo no pedía**: que los tres tests añadidos
+          +después de la pasada manual no cambian el código de la aplicac
+          +ión. Comprobado: entre `06a6314` y el último commit, en `backe
+          +nd/` y `frontend/` solo cambian `detalle.spec.ts` y `simulador
+          +.spec.ts`. En el README de la raíz solo cambian la fecha y la
+          +cifra; «solo se ha probado en Windows 11» se queda | La pasada
+          + manual es sobre `06a6314` y el estado se escribe tres commits
+          + después: sin esa frase no se sabe si los 30 pasos valen para
+          +lo que hay ahora |
+      161 +| AI-06 | **Las filas de la cronología de los tres cambios se
+          +escribieron al cerrar** (14:18), todas a la vez, con las horas
+          + de las salidas guardadas en la carpeta de trabajo de la sesió
+          +n; no cada una en su momento. La de apertura sí se escribió al
+          + abrir | La regla 6 pide la bitácora al momento. Entre la aper
+          +tura y el cierre pasaron once minutos y la IA encadenó los tre
+          +s cambios sin parar a anotar. Las horas no son estimadas, pero
+          + el orden de escritura no fue el de la regla |
+      162 +| AI-07 | **Una búsqueda de la IA enseñó tres líneas de `.priv
+          +ate/COORDINACION.md`**: buscaba «566» y «sin ejecutar» en todo
+          +s los `.md` del repositorio, para no dejar cifras antiguas, y
+          +no excluyó esa carpeta. No lo ha abierto ni lo ha tocado, y na
+          +da de esas líneas se ha usado | `.private/` no está versionado
+          + y no es de la IA. El Tech Lead tiene que saber que se ha vist
+          +o |
+      163 +
+      164  ## 4. Comprobaciones hechas en la sesión
+      165
+      166  | Qué | Cómo | Resultado |
+
+● Update(ai-workspace\03-proceso\sesion-10.md)
+  ⎿  Added 73 lines, removed 5 lines
+      170  | Puertos al empezar | `netstat -ano` filtrado por `LISTENING`
+            y los puertos 8000, 4200, 8011 y 4211 (14:02:59) | Ninguno en
+            escucha |
+      171  | La base local del Tech Lead | Listado de `backend/data/` (14
+           :02:59) | 28.672 bytes, 2026-11-14 18:37 |
+      172
+      173 +Cambio 1:
+      174 +
+      175 +| Qué | Cómo | Resultado |
+      176 +|---|---|---|
+      177 +| La ruta relativa del paso 30 | `ls -l backend/data/saas-o-ma
+          +tic.db` en Git Bash, desde la raíz y desde `frontend/` (14:07:
+          +53) | Desde la raíz, el fichero; desde `frontend/`, «No such f
+          +ile or directory», código 2 |
+      178 +| Los resultados, intactos | `git diff -U0 06a6314` del guion:
+          + las líneas que no son filas de tabla, y el recuento de las qu
+          +e sí (14:07:53) | Fuera de las tablas, solo los tres retoques;
+          + 35 filas de tabla cambiadas, las mismas que antes de editarlo
+          + |
+      179 +
+      180 +Cambio 2:
+      181 +
+      182 +| Qué | Cómo | Resultado |
+      183 +|---|---|---|
+      184 +| Los tres tests, en verde | `npx ng test --watch=false --incl
+          +ude` de `detalle.spec.ts` y de `simulador.spec.ts` (14:10:19)
+          +| 127 en verde |
+      185 +| Formato y lint de los dos ficheros | `npx prettier --check`
+          +(14:10:11) y `npx eslint --max-warnings 0` (14:12:15) | Código
+          + 0 los dos |
+      186 +| **Mutación del detalle** | `npx ng test --watch=false`, los
+          +569 tests (14:10:50) | **1 fallo y 568 en verde**: el test nue
+          +vo, por aserción, en `detalle.spec.ts:436` |
+      187 +| **Mutación del cliente en el simulador** | Lo mismo (14:11:3
+          +0) | **1 fallo y 568 en verde**: su test, en `simulador.spec.t
+          +s:1033` |
+      188 +| **Mutación de la proyección en el simulador** | Lo mismo (14
+          +:11:52) | **1 fallo y 568 en verde**: su test, en `simulador.s
+          +pec.ts:1063` |
+      189 +| Las mutaciones están deshechas | `cmp` de `detalle.ts` y de
+          +`simulador.ts` con su copia de antes, `git status --short` y u
+          +na búsqueda de `MUTATION` en `frontend/src` (14:11:04 y 14:12:
+          +03) | Idénticos los dos; cambiados, solo los dos `.spec.ts`; n
+          +inguna coincidencia |
+      190 +| Todos los tests, sin mutación | `npx ng test --watch=false`
+          +(14:12:15) | 569 en verde, en 19 ficheros |
+      191 +| El salto de línea final | Los últimos bytes de `simulador.sp
+          +ec.ts` y de SPEC-04, que se editaron por el final (14:10:11 y
+          +14:12:52) | Los dos acaban en salto de línea |
+      192 +| Puertos antes de la pasada con `--e2e` | `netstat` filtrado
+          +por `LISTENING` y los puertos 8000 y 4200 (14:12:52) | Ninguno
+          + en escucha |
+      193 +
+      194 +Cambio 3:
+      195 +
+      196 +| Qué | Cómo | Resultado |
+      197 +|---|---|---|
+      198 +| La matriz | `uv run scripts/traceability.py`, dos veces, y `
+          +cmp` entre ellas (14:15:03) | Código 0 las dos; idénticas; 183
+          + líneas |
+      199 +| Qué cambia respecto de la anterior | `diff` con el apartado
+          +4 que había en el documento (14:15:03) | 9 líneas: el frontend
+          +, de 250 a 253 declaraciones; E-12, E-13, E-14, E-15, E-35 y E
+          +-47, uno más; E-38, dos más; E-40, de 103 a 106 |
+      200 +| El apartado 4 es la salida de la orden | `cmp` de lo que hay
+          + bajo el marcador del documento con la salida, tras escribirlo
+          + y tras poner al día la cabecera (14:15:58) | Idénticos |
+      201 +| Cifras de los *runners* | `uv run --locked pytest --collect-
+          +only -q` y `npx playwright test --list` con cada configuración
+          + (14:15:05 a 14:15:10) | 741 recogidos; 18 pruebas en 5 ficher
+          +os y 4 capturas en 1 |
+      202 +| Ninguna cifra antigua | Búsqueda de «566» y de «sin ejecutar
+          +» en los `.md` (14:15:58) | Fuera de las bitácoras y de los in
+          +formes de evaluación, ninguna (AI-07) |
+      203 +| El código de la aplicación no ha cambiado | `git diff --stat
+          + 06a6314 -- backend frontend` (14:15:58 y, sobre el último com
+          +mit, 14:18:00) | Solo `detalle.spec.ts` y `simulador.spec.ts`:
+          + 91 líneas añadidas |
+      204 +
+      205 +Oráculo:
+      206 +
+      207 +| Qué | Cómo | Resultado |
+      208 +|---|---|---|
+      209 +| **Antes de cada commit** | `uv run scripts/check.py`, con `-
+          +-e2e` en el cambio 2; la salida, a un fichero, y el commit en
+          +la misma orden, solo con código 0 | Código 0 en las cuatro pas
+          +adas anteriores a este cierre: tres sin `--e2e` (23 correctas,
+          + 0 con fallo y 1 inactiva) y una con `--e2e` (24 correctas, 0
+          +con fallo y 0 inactivas) |
+      210 +| Puertos y carpeta temporal tras la pasada con `--e2e` y al c
+          +errar | `netstat` y un listado de la carpeta temporal del sist
+          +ema (14:14:47 y 14:18:00) | Ninguno en escucha y ninguna carpe
+          +ta `saas-o-matic-e2e-*` |
+      211 +| La base local del Tech Lead | Listado de `backend/data/` al
+          +empezar, tras la pasada con `--e2e` y al cerrar | Igual las tr
+          +es veces: 28.672 bytes, 2026-11-14 18:37 |
+      212 +
+      213  ## 5. No verificado
+      214
+      175 -Se rellena al llegar a la parada.
+      215 +Al llegar a la parada 1:
+      216
+      217 +- **La IA no ha visto nada en un navegador.** El guion lo ejec
+          +utó el Tech
+      218 +  Lead; sus resultados y lo que vio constan aquí porque lo afi
+          +rma él. Los
+      219 +  dos «Reintentar» del detalle y del simulador se han visto en
+          + tests, no
+      220 +  en pantalla: el paso 22 del guion solo recorre los del panel
+          +.
+      221 +- **Que el segundo «Reintentar» no vuelve a pedir `/meta`**: l
+          +os tests lo
+      222 +  comprueban, pero ninguna mutación lo ha roto (AI-02).
+      223 +- **Las órdenes de PowerShell del paso 30**, por la IA: lo de
+          +la ruta
+      224 +  relativa se ha visto con la orden de Linux en Git Bash. Las
+          +de
+      225 +  PowerShell las ejecutó el Tech Lead en su pasada.
+      226 +- **Después del cambio 2 no hay pasada con `--e2e`**: los comm
+          +its del
+      227 +  cambio 3 y de este cierre solo tocan documentos, y su pasada
+          + del
+      228 +  oráculo deja Playwright como inactivo.
+      229 +- **Ningún evaluador ha mirado los cambios de esta sesión**, n
+          +i los de la
+      230 +  sesión 09.
+      231 +- **La integración continua no se ha ejecutado nunca**, y nada
+          + del
+      232 +  proyecto se ha ejecutado fuera de Windows. **Un clon limpio*
+          +*, tampoco.
+      233 +- Sigue como en la sesión 09 lo que el Tech Lead dijo que comp
+          +rueba él en
+      234 +  la prueba en limpio: las tres frases del README de AG-08, la
+          + captura
+      235 +  dibujada en el README y el oráculo sin `frontend/node_module
+          +s` (AH-06).
+      236 +- **La matriz no dice qué comprueba cada test**: dice qué cita
+          +n. Los tres
+      237 +  tests nuevos suman a los requisitos de su bloque sin citarlo
+          +s en su
+      238 +  título (AI-03).
+      239 +- **Nada con lector de pantalla** (L-10), como en las sesiones
+          + 08 y 09.
+      240 +
+      241  ## 6. Tareas pendientes
+      242
+      243  | Tarea | Cuándo |
+      244  |---|---|
+      181 -| Cambio 1: el guion, con los resultados del Tech Lead y tres
+          -retoques | Ahora |
+      182 -| Cambio 2: tres tests de los dos «Reintentar», en el detalle
+          -y en el simulador, con su mutación | Después |
+      183 -| Cambio 3: la matriz, las cifras de tests y el «Estado» | Des
+          -pués |
+      184 -| Parada 1 y cierre de esta bitácora | Al acabar |
+      245 +| ~~Cambio 1: el guion, con los resultados del Tech Lead y tre
+          +s retoques~~ | Hecho (`dd4d58d`) |
+      246 +| ~~Cambio 2: tres tests de los dos «Reintentar», en el detall
+          +e y en el simulador, con su mutación~~ | Hecho (`2a422a9`) |
+      247 +| ~~Cambio 3: la matriz, las cifras de tests y el «Estado»~~ |
+          + Hecho (`27213b6`) |
+      248 +| ~~Ejecutar el guion de pruebas manuales~~ (pendiente de la s
+          +esión 09), con ~~el anillo sobre el botón «Guardar» (AE-06)~~
+          +y ~~la ejecución interrumpida con Ctrl+C~~ (pendientes de la s
+          +esión 08) | Hecho por el Tech Lead el 16/11/2026: los 30 pasos
+          +, en OK |
+      249 +| **Parada 1: el Tech Lead revisa** los tres cambios y las pre
+          +cisiones AI-01 a AI-07. En particular, **si CA-07 debe nombrar
+          + el caso del detalle** (AI-03) | Ahora |
+      250 +| **Prueba en limpio y `push`**. Tras el `push`, ver el primer
+          + resultado de la integración continua en Linux y en Windows y
+          +corregir lo que falle | Del Tech Lead; la corrección, en una s
+          +esión nueva |
+      251 +| Poner al día `ai-workspace/README.md` («Estado») y el README
+          + de la raíz («solo se ha probado en Windows 11») cuando la int
+          +egración continua y el clon limpio tengan resultado | Entonces
+          + |
+      252 +| Pendientes heredados que esta sesión no toca: L-07 y los avi
+          +sos de `npm audit`, los cuatro scripts de instalación sin apro
+          +bar, las fechas del fichero de bloqueo en el oráculo y los de
+          +la sesión 06 | A decidir por el Tech Lead |
+
+● Bitácora escrita; compruebo un par de cifras que cito y lanzo el último
+  oráculo para el commit de cierre.
+
+● Update(ai-workspace\03-proceso\sesion-10.md)
+  ⎿  Added 1 line, removed 1 line
+      158  | AI-03 | **En SPEC-04 solo el simulador gana filas** (dos, en
+            5.5, con CA-08, que pide un test por cada fila de 5.5) y 2.1
+           remite a ellas. **El detalle no tiene tabla de casos**: lo suy
+           o está en CA-07, que es una lista en un criterio y no nombra e
+           ste caso. **CA-07 no se ha tocado.** Los tres tests no citan u
+           n requisito en su título: heredan los de su bloque (E-40 entre
+            ellos) y su comentario nombra 2.1 y, en el simulador, 5.5 | E
+           l encargo hablaba de una fila en las tablas; cambiar la redacc
+           ión de un criterio es otra cosa y lo decide el Tech Lead. Si l
+           o quiere, es una frase en CA-07 («y `/meta` y el cliente en er
+           ror a la vez») |
+      159  | AI-04 | **En el guion, solo los tres retoques.** La IA no gu
+           ardó una copia del fichero del Tech Lead antes de editarlo: qu
+           e sus resultados siguen intactos sale de que el `git diff` con
+           tra `06a6314` tiene las mismas 35 filas de tabla antes y despu
+           és, y de que los tres retoques caen fuera de las tablas. De 12
+           :39 a 13:55 van 76 minutos; el texto dice 75, la cifra del Tec
+           h Lead. La frase «la columna «Resultado» se deja vacía hasta e
+           ntonces» de la introducción se queda como estaba | El encargo
+           mandaba no tocar los resultados ni la tabla de cabecera; el Te
+           ch Lead tiene que saber con qué se ha comprobado |
+      160  | AI-05 | **En el «Estado» de `ai-workspace/README.md` hay una
+            frase que el encargo no pedía**: que los tres tests añadidos
+           después de la pasada manual no cambian el código de la aplicac
+           ión. Comprobado: entre `06a6314` y el último commit, en `backe
+           nd/` y `frontend/` solo cambian `detalle.spec.ts` y `simulador
+           .spec.ts`. En el README de la raíz solo cambian la fecha y la
+           cifra; «solo se ha probado en Windows 11» se queda | La pasada
+            manual es sobre `06a6314` y el estado se escribe tres commits
+            después: sin esa frase no se sabe si los 30 pasos valen para
+           lo que hay ahora |
+      161 -| AI-06 | **Las filas de la cronología de los tres cambios se
+          -escribieron al cerrar** (14:18), todas a la vez, con las horas
+          - de las salidas guardadas en la carpeta de trabajo de la sesió
+          -n; no cada una en su momento. La de apertura sí se escribió al
+          - abrir | La regla 6 pide la bitácora al momento. Entre la aper
+          -tura y el cierre pasaron once minutos y la IA encadenó los tre
+          -s cambios sin parar a anotar. Las horas no son estimadas, pero
+          - el orden de escritura no fue el de la regla |
+      161 +| AI-06 | **Las filas de la cronología de los tres cambios se
+          +escribieron al cerrar** (14:18), todas a la vez, con las horas
+          + de las salidas guardadas en la carpeta de trabajo de la sesió
+          +n; no cada una en su momento. La de apertura sí se escribió al
+          + abrir | La regla 6 pide la bitácora al momento. Entre la fila
+          + de apertura (14:05) y el cierre (14:18) pasaron trece minutos
+          + y la IA encadenó los tres cambios sin parar a anotar. Las hor
+          +as no son estimadas, pero el orden de escritura no fue el de l
+          +a regla |
+      162  | AI-07 | **Una búsqueda de la IA enseñó tres líneas de `.priv
+           ate/COORDINACION.md`**: buscaba «566» y «sin ejecutar» en todo
+           s los `.md` del repositorio, para no dejar cifras antiguas, y
+           no excluyó esa carpeta. No lo ha abierto ni lo ha tocado, y na
+           da de esas líneas se ha usado | `.private/` no está versionado
+            y no es de la IA. El Tech Lead tiene que saber que se ha vist
+           o |
+      163
+      164  ## 4. Comprobaciones hechas en la sesión
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Parada 1 alcanzada. Cinco commits, cada uno con el oráculo en código 0 antes y
+  el árbol limpio al acabar; no he hecho push.
+
+  Qué cambió
+
+  Commit: 9e8a650
+  Qué: Apertura de la bitácora 03-proceso/sesion-10.md.
+  ────────────────────────────────────────
+  Commit: dd4d58d
+  Qué: Cambio 1. El guion con tus resultados tal como estaban y los tres
+    retoques: la duración («algo más de una hora: la pasada del 16/11/2026 llevó
+
+    75 minutos, con pausas»), que las órdenes del paso 30 se lanzan desde la
+    raíz, y que lo ejecutaste tú el 16/11 con los 30 pasos en OK.
+  ────────────────────────────────────────
+  Commit: 2a422a9
+  Qué: Cambio 2. Tres tests nuevos, uno en detalle.spec.ts y dos en
+    simulador.spec.ts. SPEC-04 gana dos filas en 5.5, una remisión en 2.1 y su
+    fila de historial. Oráculo con --e2e: 24 correctas, 0 inactivas.
+  ────────────────────────────────────────
+  Commit: 27213b6
+  Qué: Cambio 3. Matriz regenerada sobre 2a422a9 (sigue en 140 de 140), cifras
+  de
+    los dos README y el guion como ejecutado en el «Estado». La integración
+    continua y el clon limpio siguen pendientes.
+  ────────────────────────────────────────
+  Commit: df1740f
+  Qué: Cierre de la bitácora.
+
+  El código de la aplicación no ha cambiado: desde 06a6314, en backend/ y
+  frontend/ solo cambian esos dos .spec.ts.
+
+  Qué mutación mató cada test
+
+  Los tres nacen en verde. Cada mutación es el comportamiento que decidiste no
+  tener: al recuperarse /meta, la vista repite también la petición que había
+  fallado.
+
+  ┌────────────────────────┬────────────────────────────┬───────────────────┐
+  │          Test          │          Mutación          │ Resultado con los │
+  │                        │                            │     569 tests     │
+  ├────────────────────────┼────────────────────────────┼───────────────────┤
+  │ El cliente en el       │ detalle.ts repite la       │ 1 fallo, solo     │
+  │ detalle                │ petición del cliente       │ este test         │
+  ├────────────────────────┼────────────────────────────┼───────────────────┤
+  │ El cliente en el       │ simulador.ts repite la     │ 1 fallo, solo     │
+  │ simulador              │ petición del cliente       │ este test         │
+  ├────────────────────────┼────────────────────────────┼───────────────────┤
+  │ La primera proyección  │ simulador.ts repite la     │ 1 fallo, solo     │
+  │ en el simulador        │ proyección                 │ este test         │
+  └────────────────────────┴────────────────────────────┴───────────────────┘
+
+  Las tres fallan por aserción («expected 1 to be 0» en el número de
+  peticiones). Están deshechas: detalle.ts y simulador.ts son idénticos byte a
+  byte a la copia previa.
+
+  Cuántos tests hay
+
+  - Frontend: 569 (eran 566).
+  - Backend: 741.
+  - Playwright: 18, más las 4 capturas.
+  - Scripts: 96.
+
+  Qué no he podido comprobar
+
+  - Nada en un navegador. Los dos «Reintentar» del detalle y del simulador están
+    vistos en tests, no en pantalla; el paso 22 del guion solo recorre el
+    panel.
+  - Que el segundo «Reintentar» no vuelve a pedir /meta. Los tests lo
+    comprueban, pero ninguna mutación lo rompe: MetaStore.retry() no pide nada
+    si /meta no está en error, así que la mutación directa no cambiaría nada
+    (AI-02).
+  - Las órdenes de PowerShell del paso 30. Lo de la ruta relativa lo vi con la
+    orden de Linux en Git Bash: desde frontend/ falla, desde la raíz no.
+  - Sin pasada con --e2e después del cambio 2. Los dos commits posteriores solo
+    tocan documentos.
+  - Integración continua, clon limpio y evaluador independiente: siguen sin
+    ejecutarse.
+
+  Lo que tienes que conocer
+
+  Quedan sin aprobar AI-01 a AI-07, en la bitácora. Las que piden decisión o son
+  faltas mías:
+
+  - AI-03: el detalle no tiene tabla de casos en SPEC-04 y no he tocado CA-07.
+    Si quieres que nombre el caso, es una frase.
+  - AI-01: hice un commit de apertura de la bitácora que el encargo no nombraba,
+    como en la sesión 09.
+  - AI-04: no guardé copia de tu versión del guion antes de editarlo. Que tus
+    resultados siguen intactos sale de que el diff contra 06a6314 tiene las
+    mismas 35 filas de tabla antes y después. De 12:39 a 13:55 van 76 minutos;
+    puse tus 75.
+  - AI-05: añadí al «Estado» una frase no pedida: que los tres tests posteriores
+    a tu pasada no cambian el código de la aplicación.
+  - AI-06: las filas de la cronología de los tres cambios las escribí al cerrar
+    (14:18), con las horas de las salidas guardadas, no cada una en su momento
+    como pide la regla 6.
+  - AI-07: una búsqueda mía de «566» en los .md enseñó tres líneas de
+    .private/COORDINACION.md. No lo abrí ni lo toqué.
+
+  La última pasada del oráculo, la del commit de cierre (14:19:41 a 14:21:08,
+  código 0), no consta en la bitácora porque es posterior a su texto.
+
+  <!-- buddy: *asoma la cabeza del caparazón* tres mutaciones, tres muertes
+  limpias de 1 entre 569 -->
+
+✻ Churned for 19m 3s · done 2:21 PM
+
+※ recap: Sesión 10, cierre tras tu pasada manual: parada 1 alcanzada, con los tres cambios confirmados, oráculo en verde y 569 tests del frontend. Te toca revisar las precisiones AI-01 a AI-07, sobre todo si CA-07 debe nombrar el caso del detalle. (disable recaps in /config)
