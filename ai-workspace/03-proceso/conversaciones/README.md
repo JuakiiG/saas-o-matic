@@ -7,7 +7,7 @@ decisiones; esto es lo que hay debajo.
 
 ## Los ficheros
 
-Uno por sesión, de la 01 a la 10:
+Uno por sesión, de la 01 a la 11:
 
 | Fichero | Líneas | Sesión y bitácora | Fecha |
 |---|---|---|---|
@@ -20,6 +20,7 @@ Uno por sesión, de la 01 a la 10:
 | [`sesion-08.txt`](sesion-08.txt) | 13.478 | [Sesión 08](../sesion-08.md) · QA del frontend | 2026-11-15 |
 | [`sesion-09.txt`](sesion-09.txt) | 4.427 | [Sesión 09](../sesion-09.md) · Documentación de entrega e integración continua | 2026-11-15 |
 | [`sesion-10.txt`](sesion-10.txt) | 1.437 | [Sesión 10](../sesion-10.md) · Cierre tras la pasada manual | 2026-11-16 |
+| [`sesion-11.txt`](sesion-11.txt) | 1.379 | [Sesión 11](../sesion-11.md) · Las conversaciones publicadas y la nota de método | 2026-11-16 |
 
 Lo que falta:
 
@@ -27,9 +28,9 @@ Lo que falta:
   fichero, que empieza a mitad de la 06 (14/11, hacia las 10:47): la
   conversación se había compactado y lo anterior no se pudo exportar. Lo
   que falta está en la [bitácora de la sesión 06](../sesion-06.md).
-- **La sesión 11**, la que publica estos ficheros: no puede exportarse a sí
-  misma antes de acabar. Su bitácora es
-  [`sesion-11.md`](../sesion-11.md).
+- **La sesión 12**, la que publica esta versión de los ficheros: no puede
+  exportarse a sí misma antes de acabar. Su bitácora es
+  [`sesion-12.md`](../sesion-12.md).
 
 ## Cómo leerlas
 
@@ -50,5 +51,12 @@ Lo que se ve y conviene saber:
 - Los espacios al final de cada línea.
 - En la 03, dos líneas que listaban otra sesión abierta en el equipo, ajena
   al proyecto, sustituidas por una marca.
+- La carpeta de usuario de las rutas locales del equipo, sustituida por
+  `<usuario>`: 19 veces, en las sesiones 05, 06-07, 08 y 09, y 3 en la 11.
+- El correo `noreply` del autor de los commits, sustituido por una marca:
+  7 veces, en la 01.
 
 Nada más: el contenido de la interacción no se ha tocado.
+
+La primera versión publicada, la del commit `4655810`, todavía llevaba esas
+rutas y ese correo.

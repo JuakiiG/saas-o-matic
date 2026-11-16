@@ -2398,7 +2398,7 @@
     moderados.
   - Navegador: solo el headless shell de Chromium 158, como elegiste: 131 MB en
     zip y 304 MB descomprimidos.
-  - Dónde: C:\Users\Unknown\AppData\Local\ms-playwright, fuera del repo, en tres
+  - Dónde: C:\Users\<usuario>\AppData\Local\ms-playwright, fuera del repo, en tres
     carpetas (chromium_headless_shell-1254, ffmpeg-1013, winldd-1007).
 
   Al terminar, netstat no muestra nada en el 8000 ni en el 4200 y no queda
@@ -4479,7 +4479,7 @@
   continua vienen después.
 
   Ran 4 shell commands (ctrl+o to expand)
-  ⎿  Read C:\Users\Unknown\.claude\projects\Z--saas-o-matic\memory\caracteres-in
+  ⎿  Read C:\Users\<usuario>\.claude\projects\Z--saas-o-matic\memory\caracteres-in
      visibles-no-sobreviven-a-edit.md (25 lines)
   ⎿  Referenced file ai-workspace\03-proceso\sesion-08.md
   ⎿  Referenced file ai-workspace\04-calidad\respuesta-evaluacion-frontend-01.md

@@ -11,7 +11,7 @@
   1. Ejecuta git init en Z:\saas-o-matic (rama principal: main).
   2. Configura la identidad SOLO para este repositorio (--local, no global):
      git config --local user.name "Joaquín Gómez"
-     git config --local user.email "48951401+JuakiiG@users.noreply.github.com"
+     git config --local user.email "<correo noreply de GitHub del autor>"
   3. Verifica con git config --local --get user.name y git config --local --get
   user.email, y comprueba con git status que la carpeta .private/ NO aparece
   como pendiente de añadir (está en .gitignore).
@@ -27,7 +27,7 @@
   Joaquín Gómez
 
   git config --local --get user.email
-  48951401+JuakiiG@users.noreply.github.com
+  <correo noreply de GitHub del autor>
 
   git status
   On branch main
@@ -415,7 +415,7 @@
   CRLF.
 
   commit 81f7adb534d08a216c05e7e9adc6f34785008e08
-  Author: Joaquín Gómez <48951401+JuakiiG@users.noreply.github.com>
+  Author: Joaquín Gómez <<correo noreply de GitHub del autor>>
   Date:   Thu Nov 12 12:08:14 2026 +0100
 
       chore: estructura inicial del repositorio y normalización de finales de
@@ -783,7 +783,7 @@
   - .claude/settings.json: añadido Read(./.env.*).
 
   commit 2604c7258a8c3fe55e8c201b49d1ccb28ed82cea
-  Author: Joaquín Gómez <48951401+JuakiiG@users.noreply.github.com>
+  Author: Joaquín Gómez <<correo noreply de GitHub del autor>>
   Date:   Thu Nov 12 12:37:48 2026 +0100
 
       chore: directrices para la IA, reglas por capa y subagente evaluador
@@ -2048,7 +2048,7 @@
   Punto d): commit hecho
 
   commit 64fc571f8d06b144dd5276a0eec45174e0ef584f
-  Author: Joaquín Gómez <48951401+JuakiiG@users.noreply.github.com>
+  Author: Joaquín Gómez <<correo noreply de GitHub del autor>>
   Date:   Thu Nov 12 12:58:57 2026 +0100
 
       docs(specs): índice de especificaciones y SPEC-02 de tarificación en
@@ -2413,7 +2413,7 @@
   Punto e): commit hecho
 
   commit 45b913dabc8117abb65ac0e6f3b267f4cea4ebb2
-  Author: Joaquín Gómez <48951401+JuakiiG@users.noreply.github.com>
+  Author: Joaquín Gómez <<correo noreply de GitHub del autor>>
   Date:   Thu Nov 12 13:13:03 2026 +0100
 
       docs(arquitectura): ADR-001 de stack y ADR-002 del cálculo en tiempo real
@@ -2523,7 +2523,7 @@
   limpio; no empiezo nada más.
 
   commit 39e0123f3465e2fcb97c5304e68df6ee7d7a0881
-  Author: Joaquín Gómez <48951401+JuakiiG@users.noreply.github.com>
+  Author: Joaquín Gómez <<correo noreply de GitHub del autor>>
   Date:   Thu Nov 12 13:40:23 2026 +0100
 
       docs(proceso): bitácora de la sesión 01

@@ -818,7 +818,7 @@ completed (exit code 0)
 
   Ran 3 shell commands (ctrl+o to expand)
   ⎿  1 action not run · permission denied
-     │ Reason: Permission to use Bash with command grep -E ":8011\s"; echo "netstat fin $(date +%H:%M:%S)"; ls -la backend/data; rm -rf "/c/Users/Unknown/AppData/Local/Temp/claude/2e1fa93162e02e92/1b782139-1ddf-4e4…
+     │ Reason: Permission to use Bash with command grep -E ":8011\s"; echo "netstat fin $(date +%H:%M:%S)"; ls -la backend/data; rm -rf "/c/Users/<usuario>/AppData/Local/Temp/claude/2e1fa93162e02e92/1b782139-1ddf-4e4…
 
 ● Background command "Arrancar un backend de comprobación en el puerto 8011 con
 una base temporal fuera del repo" failed with exit code 1
