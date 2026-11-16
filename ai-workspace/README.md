@@ -81,25 +81,42 @@ dos se declaran aquí.
   specs, decide cada hallazgo de las evaluaciones, autoriza los commits, que
   llevan su autoría, y hace el `push`.
 
-Tres consecuencias que conviene saber al leer el resto:
+Cinco consecuencias que conviene saber al leer el resto:
 
+- **El análisis previo.** Antes de la sesión 01 el Tech Lead preparó con la
+  sesión que audita un análisis del encargo (requisitos y ambigüedades
+  numerados, calendario y riesgos) y un estudio comparado del stack. Están
+  en la carpeta privada, y el primer encargo mandaba leerlos: se ve en
+  [`sesion-01.txt`](03-proceso/conversaciones/sesion-01.txt). Las
+  decisiones de stack y de dónde vive el cálculo las tomó él con ese
+  estudio delante. La sesión que implementa redactó, a partir de ese
+  material y del enunciado, el análisis publicado en
+  [`00-analisis/`](00-analisis/) y los dos primeros ADR.
 - **Los prompts largos de cada sesión y de cada parada** que se ven en las
   conversaciones salieron de ese borrador: los redactó la sesión que audita
   con el Tech Lead, y él los revisó y los pegó.
+- **«Revisa cada diff».** `CLAUDE.md`, las convenciones de este documento y
+  ADR-001 dicen que el Tech Lead revisa cada diff. En la práctica se ha
+  hecho así: la sesión que audita revisa los cambios de cada parada (lee el
+  código y las specs que cambian y, de los tests, comprueba que se vieran
+  fallar o que tengan su mutación), y el Tech Lead lee sobre todo ese
+  veredicto y sigue en paralelo lo que hace la sesión que implementa. No ha
+  leído él cada diff línea a línea.
 - **Cuando una bitácora o un prompt dice «comprobado» o «he visto»**, la
   comprobación puede haberla ejecutado la sesión que audita bajo la
   dirección del Tech Lead; por ejemplo, los recorridos en el navegador de
   las sesiones 06 y 07. La excepción es el
   [guion de pruebas manuales](04-calidad/pruebas-manuales.md) del
   16/11/2026: lo ejecutó él a mano, paso a paso.
-- **La sesión que audita no ha escrito en este repositorio**, con dos
-  excepciones: el 16/11/2026 anotó en el guion de pruebas manuales los
-  resultados que el Tech Lead le iba dictando mientras lo ejecutaba, y ese
-  mismo día dejó en `03-proceso/conversaciones/` los ficheros exportados, ya
-  revisados.
+- **La sesión que audita no ha escrito en nada de lo que git versiona en
+  este repositorio**, con dos excepciones: el 16/11/2026 anotó en el guion
+  de pruebas manuales los resultados que el Tech Lead le iba dictando
+  mientras lo ejecutaba, y ese mismo día dejó en
+  `03-proceso/conversaciones/` los ficheros exportados, ya revisados.
 
-Sus notas de trabajo no se publican: están en una carpeta privada, ignorada
-por git, junto con material ajeno a este proyecto.
+Sus notas de trabajo y los borradores de los prompts no se publican: están
+en `.private/`, la carpeta de este mismo directorio que git ignora, junto
+con material ajeno a este proyecto.
 
 *Por qué así*: quien genera no se evalúa a sí mismo. El evaluador
 independiente revisa el resultado contra las specs; la sesión que audita
