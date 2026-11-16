@@ -147,7 +147,10 @@ Con especificaciones antes que código, TDD y una IA dirigida y auditada. El
 análisis, las specs, las decisiones de arquitectura, la bitácora de cada
 sesión y las evaluaciones independientes están en
 [`ai-workspace/`](ai-workspace/README.md), que es por donde conviene empezar
-a leer.
+a leer. Las conversaciones con la IA están
+[publicadas](ai-workspace/03-proceso/conversaciones/README.md), y el método,
+con sus dos sesiones de IA, está explicado en
+[`ai-workspace/README.md`](ai-workspace/README.md#dos-sesiones-de-ia-y-una-persona).
 
 | Carpeta | Contenido |
 |---|---|
