@@ -14,18 +14,19 @@ Las carpetas siguen el orden en que se hizo el trabajo:
 | [`00-analisis/`](00-analisis/) | Requisitos numerados (`R-xx`) y supuestos sobre las ambigüedades (`A-xx`) | ¿Qué hay que construir y qué no estaba definido? |
 | [`01-specs/`](01-specs/) | Especificaciones (`SPEC-xx`) con requisitos EARS, criterios de aceptación y contratos de API | ¿Qué debe hacer exactamente cada parte? |
 | [`02-arquitectura/`](02-arquitectura/) | Decisiones de arquitectura (`ADR-xxx`), esquema de datos, estructura del proyecto y directrices dadas a la IA | ¿Cómo se construye y por qué así? |
-| [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts clave y cada propuesta de la IA corregida o rechazada, con su motivo | ¿Cómo se dirigió a la IA? |
+| [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts clave y cada propuesta de la IA corregida o rechazada, con su motivo. Y las [conversaciones exportadas](03-proceso/conversaciones/README.md) de las sesiones 01 a 10 | ¿Cómo se dirigió a la IA? |
 | [`04-calidad/`](04-calidad/) | Siete evaluaciones independientes, cada una con su respuesta y la decisión sobre cada hallazgo; la [matriz de trazabilidad](04-calidad/trazabilidad.md) requisito → test; las [limitaciones conocidas](04-calidad/limitaciones-conocidas.md); el [guion de pruebas manuales](04-calidad/pruebas-manuales.md) y las capturas de las vistas | ¿Cómo se sabe que funciona, y qué se sabe que no? |
 
 ## Recorrido de cinco minutos
 
-Para ver el método sin leerlo todo, cinco documentos, en este orden:
+Para ver el método sin leerlo todo, seis documentos, en este orden:
 
 | Qué | Dónde | En qué fijarse |
 |---|---|---|
 | Una spec | [SPEC-02](01-specs/SPEC-02-tarificacion-e-impuestos.md), la más corta | Los requisitos EARS (apartado 3), los casos de prueba con sus importes en céntimos (5) y los criterios de aceptación (6): los tests salen de esas tablas |
 | Un ADR | [ADR-002](02-arquitectura/ADR-002-calculo-en-tiempo-real.md) | Las opciones comparadas y por qué el cálculo vive solo en el backend |
 | Una bitácora | [Sesión 08](03-proceso/sesion-08.md), apartado 3 | Las tablas de precisiones de la IA y las decisiones del Tech Lead. Dos casos: la primera mutación de la prueba de principio a fin sobrevivió (AC-03), y la IA no quitó un test que tenía permiso para quitar, porque el permiso se apoyaba en algo falso (AF-05) |
+| Una conversación | [La de la sesión 08](03-proceso/conversaciones/sesion-08.txt), buscando «❯» | Cómo se dirigió a la IA: cada intervención del Tech Lead empieza con ese carácter, y en esa sesión son cuatro. De dónde salieron esos prompts lo dice [«Dos sesiones de IA y una persona»](#dos-sesiones-de-ia-y-una-persona) |
 | Una evaluación y su respuesta | [Segunda evaluación del frontend](04-calidad/evaluacion-frontend-02.md) y [su respuesta](04-calidad/respuesta-evaluacion-frontend-02.md) | El informe de un subagente con contexto limpio, guardado intacto; la respuesta de la IA, sin aplicar nada; y, en su apartado 4, lo que decidió el Tech Lead, con el commit de cada cambio |
 | La trazabilidad | [`trazabilidad.md`](04-calidad/trazabilidad.md), apartados 2 y 3 | Qué tests citan cada requisito, y lo que esa matriz no demuestra |
 
@@ -51,9 +52,59 @@ sitios:
   código de una parte hasta que su spec está aprobada.
 - **Roles**: una persona decide, aprueba las specs y revisa cada cambio; la IA
   analiza, propone e implementa sobre lo aprobado; un evaluador independiente
-  (subagente con contexto limpio) revisa el resultado contra las specs.
+  (subagente con contexto limpio) revisa el resultado contra las specs. El
+  reparto completo, con la segunda sesión de IA, que audita, está en
+  [«Dos sesiones de IA y una persona»](#dos-sesiones-de-ia-y-una-persona).
 - **Bitácora sin retoques**: se anotan los hechos tal como ocurrieron,
   incluidas las propuestas descartadas.
+
+## Dos sesiones de IA y una persona
+
+En este proyecto han trabajado dos sesiones de Claude Code, separadas, y las
+dos se declaran aquí.
+
+- **La sesión que implementa.** Abierta en este repositorio. Analiza,
+  propone, escribe las specs, el código, los tests y la bitácora, y lanza a
+  los evaluadores independientes. Es la que aparece en
+  [`03-proceso/`](03-proceso/) y en las
+  [conversaciones exportadas](03-proceso/conversaciones/README.md).
+- **La sesión que audita.** Abierta en otra carpeta, sin comunicación con la
+  primera: nunca le ha enviado un mensaje. En cada parada lee en disco lo
+  que la otra ha hecho (los cambios, los commits y el registro de la propia
+  sesión) y lo comprueba por su cuenta: repite el oráculo, mira que cada
+  commit vaya detrás de un oráculo en verde, que cada test nuevo se viera
+  fallar o tenga su mutación, y que el informe de cada evaluador se guardara
+  intacto. Con eso le da al Tech Lead un veredicto y un borrador de
+  respuesta.
+- **El Tech Lead.** Decide. Lee el veredicto, acepta, cambia o descarta cada
+  punto, y pega él la respuesta en la sesión que implementa. Aprueba las
+  specs, decide cada hallazgo de las evaluaciones, autoriza los commits, que
+  llevan su autoría, y hace el `push`.
+
+Tres consecuencias que conviene saber al leer el resto:
+
+- **Los prompts largos de cada sesión y de cada parada** que se ven en las
+  conversaciones salieron de ese borrador: los redactó la sesión que audita
+  con el Tech Lead, y él los revisó y los pegó.
+- **Cuando una bitácora o un prompt dice «comprobado» o «he visto»**, la
+  comprobación puede haberla ejecutado la sesión que audita bajo la
+  dirección del Tech Lead; por ejemplo, los recorridos en el navegador de
+  las sesiones 06 y 07. La excepción es el
+  [guion de pruebas manuales](04-calidad/pruebas-manuales.md) del
+  16/11/2026: lo ejecutó él a mano, paso a paso.
+- **La sesión que audita no ha escrito en este repositorio**, con dos
+  excepciones: el 16/11/2026 anotó en el guion de pruebas manuales los
+  resultados que el Tech Lead le iba dictando mientras lo ejecutaba, y ese
+  mismo día dejó en `03-proceso/conversaciones/` los ficheros exportados, ya
+  revisados.
+
+Sus notas de trabajo no se publican: están en una carpeta privada, ignorada
+por git, junto con material ajeno a este proyecto.
+
+*Por qué así*: quien genera no se evalúa a sí mismo. El evaluador
+independiente revisa el resultado contra las specs; la sesión que audita
+revisa el proceso (que lo que la bitácora dice que pasó, pasó); y la persona
+decide con las dos cosas delante.
 
 ## Estado
 
