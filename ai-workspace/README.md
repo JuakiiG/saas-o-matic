@@ -128,7 +128,7 @@ decide con las dos cosas delante.
 
 ## Estado
 
-A 2026-11-17, al cerrar la sesión 14 (las sesiones 11 a 14 solo han
+A 2026-11-17, al cerrar la sesión 15 (las sesiones 11 a 15 solo han
 cambiado documentación):
 
 - **Specs**: las cuatro, `aprobadas` (el bloque backend el 2026-11-13 y
@@ -184,7 +184,7 @@ cambiado documentación):
   descargado desde cero. **Es la primera vez que el proyecto se ejecuta
   fuera de Windows.**
 - **Después de `3591202`**: los commits posteriores, que son los de las
-  sesiones 13 y 14, **solo cambian documentación**; ninguno toca
+  sesiones 13, 14 y 15, **solo cambian documentación**; ninguno toca
   `backend/`, `frontend/`, `scripts/` ni `.github/`. Sobre `c06630c`, el
   cierre de la sesión 13, **la sesión de IA que audita, el 17/11/2026**:
   - de 11:04 a 11:05, el oráculo con `--e2e`: 24 correctas, 0 con fallo,
@@ -196,10 +196,23 @@ cambiado documentación):
     fallo y 0 inactivas. Los tres con código 0, y al acabar la terminal
     queda en la raíz del clon.
 
-  Los commits de la sesión 14, posteriores a `c06630c`, no tocan el README
-  de la raíz. **La integración continua se ejecuta en cada `push`**: su
-  resultado sobre el último commit es el de la insignia del README de la
-  raíz. La ejecución descrita en el punto anterior es la primera.
+  Sobre `baa1480`, el cierre de la sesión 14, **también el 17/11/2026**:
+  - de 12:34 a 12:36, la sesión de IA que audita, el oráculo con `--e2e`:
+    24 correctas, 0 con fallo, 0 inactivas;
+  - a las 12:48, el `push` del Tech Lead de los diez commits de las
+    sesiones 13 y 14. La integración continua se lanzó sola, **su segunda
+    ejecución**: los dos trabajos, en verde, y en los dos «ORÁCULO EN
+    VERDE · 24 correctas, 0 con fallo, 0 inactivas»; en Linux, en tres
+    minutos y medio, y en Windows, en algo menos de seis.
+
+  **El repositorio es público desde el 17/11/2026**: sin iniciar sesión,
+  la página carga y la insignia dice «passing».
+
+  Los commits de las sesiones 14 y 15, posteriores a `c06630c`, no tocan
+  el README de la raíz. **La integración continua se ejecuta en cada
+  `push`**: su resultado sobre el último commit es el de la insignia del
+  README de la raíz. La ejecución descrita en el punto anterior es la
+  primera.
 
 **Sin probar**:
 
