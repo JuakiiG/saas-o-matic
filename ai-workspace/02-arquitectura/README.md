@@ -40,6 +40,80 @@ Tres tablas de SQLite. Las columnas y sus restricciones están en SPEC-03
 versionado, que se aplica al arrancar. Esta carpeta no guarda una copia:
 muestra el modelo y enlaza a ese fichero.
 
+## Organización de carpetas
+
+Lo versionado a 2026-11-17 (`git ls-files`), hasta el nivel de carpeta; de
+ficheros, solo los puntos de entrada.
+
+```
+backend/              API REST: FastAPI y SQLite
+  app/                la aplicación
+    main.py           punto de entrada: monta la aplicación FastAPI
+    config.py         configuración por variables de entorno
+    api/              routers, esquemas Pydantic y errores HTTP
+    services/         casos de uso: orquestan dominio y repositorios
+    domain/           reglas de negocio, como funciones puras
+    repositories/     acceso a SQLite y su esquema (schema.sql)
+  tests/              pytest, y las tablas de casos compartidas
+    unit/             el dominio y los errores del alta
+    integration/      la API y los repositorios, con una base temporal
+frontend/             SPA Angular
+  src/                la aplicación
+    main.ts           punto de entrada
+    app/              componente raíz y rutas (app.routes.ts)
+      core/           servicios de la API, modelos y formatos
+      features/       una carpeta por vista: panel/, alta/, detalle/,
+                      simulador/ y not-found/
+      shared/         componentes y pipes de presentación
+    environments/     las URL a las que llama la aplicación
+    styles/           estilos globales
+  e2e/                pruebas de principio a fin (Playwright)
+    support/          utilidades de esas pruebas
+    capturas/         genera las capturas de las vistas
+scripts/              herramientas del repo
+  check.py            punto de entrada: el oráculo
+  traceability.py     punto de entrada: la matriz de trazabilidad
+  oracle/             las comprobaciones del oráculo
+  tracematrix/        la matriz requisito → test
+  hooks/              hook: ningún código sin su spec aprobada
+  tests/              tests de los propios scripts
+```
+
+Los tests unitarios del frontend van junto al fichero que prueban
+(`.spec.ts`).
+
+**Dependencias.** Backend: `api → services → domain`,
+`services → repositories` y `repositories → domain`; `domain/` no importa
+de ninguna otra capa. Frontend: `features/` importa de `core/` y de
+`shared/`, nunca al revés, y una vista no importa de otra.
+
+**Qué lo vigila**, con el nombre que sale en la salida del oráculo
+(`uv run scripts/check.py`):
+
+| Regla | Comprobación |
+|---|---|
+| Sentido de las capas del backend, y `sqlite3` solo en `repositories/` | «Dirección de las capas y `sqlite3` solo en repositories/» |
+| `domain/` solo importa la biblioteca estándar | «domain/ solo importa la biblioteca estándar y no usa float ni la división `/`» |
+| `core/` y `shared/` no importan de `features/`; una vista no importa de otra | «ESLint, con los límites de tamaño» (`no-restricted-imports`) |
+| 250 líneas por fichero de código, sin contar tests, y 120 por plantilla | «Ficheros de código de 250 líneas como máximo y plantillas de 120» |
+| 40 líneas y 5 parámetros por función | Python: «Funciones de Python de 40 líneas y 5 parámetros como máximo». TypeScript: «ESLint, con los límites de tamaño» |
+
+**No lo vigila nada**, lo mira quien revisa: en qué carpeta va cada test;
+que `domain/` no haga entrada/salida ni lea el reloj; que los routers sean
+finos y el SQL esté solo en `repositories/`; `main.py` y `config.py`, que
+quedan fuera de la comprobación de capas; que `HttpClient` solo se use en
+`core/` y las rutas se carguen de forma diferida; y el tamaño de los
+tests.
+
+La IA recibió esta estructura antes de escribir el código, en
+[`.claude/rules/backend.md`](../../.claude/rules/backend.md) y
+[`.claude/rules/frontend.md`](../../.claude/rules/frontend.md). **Hoy no
+coinciden en dos cosas**: `frontend.md` nombra tres vistas (búsqueda,
+cliente, simulador) e interceptores en `core/`, y hay cinco carpetas de
+vista (la búsqueda es `panel/`; el cliente, `detalle/`) y ningún
+interceptor; `backend.md` dice que `unit/` prueba «dominio y servicios»,
+y prueba el dominio y un módulo de `api/`.
+
 ## Directrices dadas a la IA
 
 Viven en la raíz del repo, que es donde la herramienta las carga:
@@ -51,8 +125,3 @@ Viven en la raíz del repo, que es donde la herramienta las carga:
 | [`.claude/rules/frontend.md`](../../.claude/rules/frontend.md) | Estructura del frontend y convenciones de Angular |
 | [`.claude/agents/evaluador.md`](../../.claude/agents/evaluador.md) | Subagente evaluador independiente, de solo lectura |
 | [`.claude/settings.json`](../../.claude/settings.json) | Permisos denegados a la IA: `git push` y lectura de ficheros de entorno |
-
-## Pendiente
-
-- Estructura de carpetas definitiva de cada proyecto: se documenta al
-  crearlos.
