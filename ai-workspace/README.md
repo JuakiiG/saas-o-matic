@@ -128,7 +128,7 @@ decide con las dos cosas delante.
 
 ## Estado
 
-A 2026-11-17, al cerrar la sesión 13 (las sesiones 11, 12 y 13 solo han
+A 2026-11-17, al cerrar la sesión 14 (las sesiones 11 a 14 solo han
 cambiado documentación):
 
 - **Specs**: las cuatro, `aprobadas` (el bloque backend el 2026-11-13 y
@@ -183,15 +183,28 @@ cambiado documentación):
   0.12.13, Node 24.18.0 y npm 11.16.0, y el navegador de Playwright
   descargado desde cero. **Es la primera vez que el proyecto se ejecuta
   fuera de Windows.**
+- **Después de `3591202`**: los commits posteriores, que son los de las
+  sesiones 13 y 14, **solo cambian documentación**; ninguno toca
+  `backend/`, `frontend/`, `scripts/` ni `.github/`. Sobre `c06630c`, el
+  cierre de la sesión 13, **la sesión de IA que audita, el 17/11/2026**:
+  - de 11:04 a 11:05, el oráculo con `--e2e`: 24 correctas, 0 con fallo,
+    0 inactivas;
+  - de 11:06 a 11:09, en su clon, los tres bloques corregidos de «Tests y
+    oráculo» del README de la raíz, en PowerShell, tal como están
+    escritos y empezando en `frontend/`: el primero, 23 correctas y 1
+    inactiva; el segundo, sin error; el tercero, 24 correctas, 0 con
+    fallo y 0 inactivas. Los tres con código 0, y al acabar la terminal
+    queda en la raíz del clon.
+
+  Los commits de la sesión 14, posteriores a `c06630c`, no tocan el README
+  de la raíz. **La integración continua se ejecuta en cada `push`**: su
+  resultado sobre el último commit es el de la insignia del README de la
+  raíz. La ejecución descrita en el punto anterior es la primera.
 
 **Sin probar**:
 
 - **macOS**: nunca.
 - **Linux a mano, con un navegador**: allí solo se ha ejecutado el oráculo
   en la integración continua, sin nadie mirando.
-- **Los commits de la sesión 13**: las dos pruebas en limpio y la
-  integración continua son sobre `3591202`, anterior a ellos. Solo cambian
-  documentación, pero el README corregido no se ha vuelto a seguir desde
-  un clon, y la integración continua no los verá hasta el próximo `push`.
 
 El detalle de cada día está en la bitácora de [`03-proceso/`](03-proceso/).
