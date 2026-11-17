@@ -93,8 +93,9 @@ Cinco consecuencias que conviene saber al leer el resto:
   material y del enunciado, el análisis publicado en
   [`00-analisis/`](00-analisis/) y los dos primeros ADR.
 - **Los prompts largos de cada sesión y de cada parada** que se ven en las
-  conversaciones salieron de ese borrador: los redactó la sesión que audita
-  con el Tech Lead, y él los revisó y los pegó.
+  conversaciones salieron del borrador de respuesta de la sesión que
+  audita, no del análisis previo: los redactó ella con el Tech Lead, y él
+  los revisó y los pegó.
 - **«Revisa cada diff».** `CLAUDE.md`, las convenciones de este documento y
   ADR-001 dicen que el Tech Lead revisa cada diff. En la práctica se ha
   hecho así: la sesión que audita revisa los cambios de cada parada (lee el
@@ -105,9 +106,11 @@ Cinco consecuencias que conviene saber al leer el resto:
 - **Cuando una bitácora o un prompt dice «comprobado» o «he visto»**, la
   comprobación puede haberla ejecutado la sesión que audita bajo la
   dirección del Tech Lead; por ejemplo, los recorridos en el navegador de
-  las sesiones 06 y 07. La excepción es el
+  las sesiones 06 y 07 y la prueba en limpio del 16/11/2026. Las
+  excepciones son el
   [guion de pruebas manuales](04-calidad/pruebas-manuales.md) del
-  16/11/2026: lo ejecutó él a mano, paso a paso.
+  16/11/2026, que ejecutó él a mano, paso a paso, y la prueba en limpio
+  del 17/11/2026, que hizo también él, a mano.
 - **La sesión que audita no ha escrito en nada de lo que git versiona en
   este repositorio**, con dos excepciones: el 16/11/2026 anotó en el guion
   de pruebas manuales los resultados que el Tech Lead le iba dictando
@@ -115,8 +118,8 @@ Cinco consecuencias que conviene saber al leer el resto:
   `03-proceso/conversaciones/` los ficheros exportados, ya revisados.
 
 Sus notas de trabajo y los borradores de los prompts no se publican: están
-en `.private/`, la carpeta de este mismo directorio que git ignora, junto
-con material ajeno a este proyecto.
+en `.private/`, la carpeta de la raíz del repositorio que git ignora,
+junto con material ajeno a este proyecto.
 
 *Por qué así*: quien genera no se evalúa a sí mismo. El evaluador
 independiente revisa el resultado contra las specs; la sesión que audita
@@ -125,8 +128,8 @@ decide con las dos cosas delante.
 
 ## Estado
 
-A 2026-11-16, al cerrar la sesión 12 (las sesiones 11 y 12 solo han cambiado
-documentación):
+A 2026-11-17, al cerrar la sesión 13 (las sesiones 11, 12 y 13 solo han
+cambiado documentación):
 
 - **Specs**: las cuatro, `aprobadas` (el bloque backend el 2026-11-13 y
   SPEC-04 el 2026-11-14).
@@ -149,12 +152,46 @@ documentación):
   OK**. Lo que vio en cada uno está en su columna de resultados. Los tres
   tests del frontend añadidos después no cambian el código de la
   aplicación.
+- **Instalación desde un clon limpio**: hecha dos veces, las dos sobre el
+  commit `3591202`, en Windows 11 y siguiendo el
+  [`README.md`](../README.md) de la raíz.
+  - **El 16/11/2026, de 17:27 a 17:33, la sesión de IA que audita**, con
+    la autorización del Tech Lead para usar los puertos 8000 y 4200: un
+    clon en una carpeta vacía, las órdenes del README al pie de la letra,
+    la parte de navegador con el Chromium de Playwright (no con Chrome) y
+    el oráculo con `--e2e` dentro del clon: 24 correctas, 0 inactivas.
+  - **El 17/11/2026, de 08:34 a 10:03, el Tech Lead, a mano**, en otro
+    clon vacío, con Chrome y solo con el README delante: el backend,
+    `npm ci` (los dos avisos anunciados y solo esos), `npm start`, el
+    alta de un cliente de España, el identificador que da error, el alta
+    de un cliente de otro país, una simulación de 15 usuarios, la divisa
+    USD, `/docs` y el oráculo, sin opciones (23 correctas, 1 inactiva) y
+    con `--e2e` (24 correctas, 0 inactivas).
 
-**Pendiente**, y por tanto sin comprobar:
+  En los dos clones, después: árbol de git limpio, puertos libres y
+  ninguna carpeta temporal. De ahí salieron dos fallos del README (qué se
+  ve al abrir otra dirección y desde qué carpeta se lanza el oráculo),
+  corregidos en la sesión 13: son R-1 y R-2 en su
+  [bitácora](03-proceso/sesion-13.md).
+- **Integración continua**
+  ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)): **primera
+  ejecución el 17/11/2026**, sola, tras el `push` del Tech Lead de
+  `3591202` a un repositorio privado de GitHub, a las 10:09. Los dos
+  trabajos, en verde, y en los dos la línea «ORÁCULO EN VERDE · 24
+  correctas, 0 con fallo, 0 inactivas»: en Ubuntu 26.04.1, en tres
+  minutos y medio, y en Windows Server 2025, en seis. En los dos, uv
+  0.12.13, Node 24.18.0 y npm 11.16.0, y el navegador de Playwright
+  descargado desde cero. **Es la primera vez que el proyecto se ejecuta
+  fuera de Windows.**
 
-- La integración continua (`.github/workflows/ci.yml`) está escrita y **no
-  se ha ejecutado nunca**: solo puede hacerlo tras subir el repositorio.
-  Sería la primera ejecución fuera de Windows.
-- La instalación desde un clon limpio.
+**Sin probar**:
+
+- **macOS**: nunca.
+- **Linux a mano, con un navegador**: allí solo se ha ejecutado el oráculo
+  en la integración continua, sin nadie mirando.
+- **Los commits de la sesión 13**: las dos pruebas en limpio y la
+  integración continua son sobre `3591202`, anterior a ellos. Solo cambian
+  documentación, pero el README corregido no se ha vuelto a seguir desde
+  un clon, y la integración continua no los verá hasta el próximo `push`.
 
 El detalle de cada día está en la bitácora de [`03-proceso/`](03-proceso/).

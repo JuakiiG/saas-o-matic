@@ -13,7 +13,7 @@ Playwright interrumpida).
 
 ## Quién, cuándo y con qué
 
-Lo rellena quien ejecuta el guion.
+Lo rellena quien ejecuta el guion o quien anota a su dictado.
 
 | | |
 |---|---|
