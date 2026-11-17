@@ -14,7 +14,7 @@ Las carpetas siguen el orden en que se hizo el trabajo:
 | [`00-analisis/`](00-analisis/) | Requisitos numerados (`R-xx`) y supuestos sobre las ambigüedades (`A-xx`) | ¿Qué hay que construir y qué no estaba definido? |
 | [`01-specs/`](01-specs/) | Especificaciones (`SPEC-xx`) con requisitos EARS, criterios de aceptación y contratos de API | ¿Qué debe hacer exactamente cada parte? |
 | [`02-arquitectura/`](02-arquitectura/) | Decisiones de arquitectura (`ADR-xxx`), esquema de datos, estructura del proyecto y directrices dadas a la IA | ¿Cómo se construye y por qué así? |
-| [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts clave y cada propuesta de la IA corregida o rechazada, con su motivo. Y las [conversaciones exportadas](03-proceso/conversaciones/README.md) de las sesiones 01 a 11 | ¿Cómo se dirigió a la IA? |
+| [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts clave y cada propuesta de la IA corregida o rechazada, con su motivo. Y las [conversaciones exportadas](03-proceso/conversaciones/README.md) de las sesiones 01 a 12 | ¿Cómo se dirigió a la IA? |
 | [`04-calidad/`](04-calidad/) | Siete evaluaciones independientes, cada una con su respuesta y la decisión sobre cada hallazgo; la [matriz de trazabilidad](04-calidad/trazabilidad.md) requisito → test; las [limitaciones conocidas](04-calidad/limitaciones-conocidas.md); el [guion de pruebas manuales](04-calidad/pruebas-manuales.md) y las capturas de las vistas | ¿Cómo se sabe que funciona, y qué se sabe que no? |
 
 ## Recorrido de cinco minutos

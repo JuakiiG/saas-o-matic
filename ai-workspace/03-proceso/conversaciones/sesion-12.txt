@@ -1,0 +1,1394 @@
+ ▐▛███▛█   Claude Code v2.1.326
+▝▜██████▀  Fable 5.2 · Claude Max
+ ▝▝   ▝▝   Z:\saas-o-matic
+
+
+❯ /clear
+
+❯ Sesión 12: se corrige la nota de método con lo que encontraste y se retiran
+  de las conversaciones las rutas de usuario y el correo. Antes de nada lee
+  CLAUDE.md, ai-workspace/README.md y los pendientes de
+  03-proceso/sesion-11.md. Abre 03-proceso/sesion-12.md con el mismo formato
+  que las anteriores.
+
+  Parada 1 de la sesión 11 aprobada. Admitidas AJ-01 a AJ-07. Los nueve cruces
+  N-1 a N-9 estaban bien vistos: los cuatro que pesan se corrigen aquí. N-3,
+  N-5, N-7, N-8 y N-9 se quedan como están.
+
+  En esta sesión no cambia el código de la aplicación ni ningún test. Un commit
+  por paso, con el oráculo en verde por su código de salida, sin --e2e.
+
+  Paso 1. Las conversaciones (AJ-02). He regenerado los ficheros de
+  03-proceso/conversaciones/ y he añadido sesion-11.txt, sin commit: git enseña
+  cinco modificados y uno nuevo. NO los edites. Lo que cambia respecto a
+  4655810, y nada más: la carpeta de usuario de las rutas locales pasa a ser
+  <usuario> (19 veces, en las sesiones 05, 06-07, 08 y 09) y el correo noreply
+  del autor pasa a ser una marca (7 veces, en la 01). Son 26 líneas. El fichero
+  nuevo, sesion-11.txt, lleva ya la misma sustitución (3 rutas). Comprueba con
+  git diff que es eso y solo eso, y dime si ves otra cosa. Pon al día el
+  índice:
+  - La tabla gana la sesión 11. La que falta ahora es la 12, por la misma
+  razón.
+  - «Qué se ha cambiado al publicarlas» gana las dos sustituciones, y dice que
+  la primera versión publicada, la del commit 4655810, todavía las llevaba.
+
+  Paso 2. La nota de método. Sustituye entero el apartado «Dos sesiones de IA y
+  una persona» de ai-workspace/README.md por este, literal. Solo ajusta los
+  saltos de línea. Si algo sigue contradiciendo lo que sabes del repositorio,
+  dímelo en la parada sin cambiarlo.
+
+  ## Dos sesiones de IA y una persona
+
+  En este proyecto han trabajado dos sesiones de Claude Code, separadas, y las
+  dos se declaran aquí.
+
+  - **La sesión que implementa.** Abierta en este repositorio. Analiza,
+  propone, escribe las specs, el código, los tests y la bitácora, y lanza a los
+  evaluadores independientes. Es la que aparece en
+  [`03-proceso/`](03-proceso/) y en las [conversaciones
+  exportadas](03-proceso/conversaciones/README.md).
+  - **La sesión que audita.** Abierta en otra carpeta, sin comunicación con la
+  primera: nunca le ha enviado un mensaje. En cada parada lee en disco lo que
+  la otra ha hecho (los cambios, los commits y el registro de la propia sesión)
+  y lo comprueba por su cuenta: repite el oráculo, mira que cada commit vaya
+  detrás de un oráculo en verde, que cada test nuevo se viera fallar o tenga su
+  mutación, y que el informe de cada evaluador se guardara intacto. Con eso le
+  da al Tech Lead un veredicto y un borrador de respuesta.
+  - **El Tech Lead.** Decide. Lee el veredicto, acepta, cambia o descarta cada
+  punto, y pega él la respuesta en la sesión que implementa. Aprueba las specs,
+  decide cada hallazgo de las evaluaciones, autoriza los commits, que llevan
+  su autoría, y hace el `push`.
+
+  Cinco consecuencias que conviene saber al leer el resto:
+
+  - **El análisis previo.** Antes de la sesión 01 el Tech Lead preparó con la
+  sesión que audita un análisis del encargo (requisitos y ambigüedades
+  numerados, calendario y riesgos) y un estudio comparado del stack. Están en
+  la carpeta privada, y el primer encargo mandaba leerlos: se ve en
+  [`sesion-01.txt`](03-proceso/conversaciones/sesion-01.txt). Las decisiones de
+  stack y de dónde vive el cálculo las tomó él con ese estudio delante. La
+  sesión que implementa redactó, a partir de ese material y del enunciado, el
+  análisis publicado en [`00-analisis/`](00-analisis/) y los dos primeros ADR.
+  - **Los prompts largos de cada sesión y de cada parada** que se ven en las
+  conversaciones salieron de ese borrador: los redactó la sesión que audita con
+  el Tech Lead, y él los revisó y los pegó.
+  - **«Revisa cada diff».** `CLAUDE.md`, las convenciones de este documento y
+  ADR-001 dicen que el Tech Lead revisa cada diff. En la práctica se ha hecho
+  así: la sesión que audita revisa los cambios de cada parada (lee el código y
+  las specs que cambian y, de los tests, comprueba que se vieran fallar o que
+  tengan su mutación), y el Tech Lead lee sobre todo ese veredicto y sigue en
+  paralelo lo que hace la sesión que implementa. No ha leído él cada diff línea
+  a línea.
+  - **Cuando una bitácora o un prompt dice «comprobado» o «he visto»**, la
+  comprobación puede haberla ejecutado la sesión que audita bajo la dirección
+  del Tech Lead; por ejemplo, los recorridos en el navegador de las sesiones 06
+  y 07. La excepción es el [guion de pruebas
+  manuales](04-calidad/pruebas-manuales.md) del 16/11/2026: lo ejecutó él a
+  mano, paso a paso.
+  - **La sesión que audita no ha escrito en nada de lo que git versiona en este
+  repositorio**, con dos excepciones: el 16/11/2026 anotó en el guion de
+  pruebas manuales los resultados que el Tech Lead le iba dictando mientras lo
+  ejecutaba, y ese mismo día dejó en `03-proceso/conversaciones/` los ficheros
+  exportados, ya revisados.
+
+  Sus notas de trabajo y los borradores de los prompts no se publican: están en
+  `.private/`, la carpeta de este mismo directorio que git ignora, junto con
+  material ajeno a este proyecto.
+
+  *Por qué así*: quien genera no se evalúa a sí mismo. El evaluador
+  independiente revisa el resultado contra las specs; la sesión que audita
+  revisa el proceso (que lo que la bitácora dice que pasó, pasó); y la persona
+  decide con las dos cosas delante.
+
+  (Fin del apartado.)
+
+  Paso 3. Dos retoques, en un commit:
+  - En pruebas-manuales.md, en el apartado final y sin tocar las tablas: los
+  resultados los anotó, al dictado del Tech Lead, la sesión que audita, con
+  enlace a la nota (N-2).
+  - El «Estado» de ai-workspace/README.md, al día: al cerrar la sesión 12.
+  Siguen pendientes la integración continua y el clon limpio.
+
+  PARA ahí (parada 1) y cierra la bitácora de la sesión 12. Dime qué cambió,
+  qué enseñó el git diff de las conversaciones y si algo de la nota sigue
+  contradiciendo lo que sabes. No leas ni cites .private/.
+
+  Searched for 1 pattern, read 4 files, ran 5 shell commands (ctrl+o to expand)
+
+● Sigo en la comprobación del paso 1: el diff de las conversaciones son 26
+  líneas, pero una de ellas no coincide con la sustitución simple; estoy mirando
+  cuál y por qué antes de tocar el índice.
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Diff comprobado: son exactamente las dos sustituciones (19 rutas y 7 correos,
+  26 líneas). Abro ahora la bitácora de la sesión 12 y sigo con los pasos.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Wrote 146 lines to ai-workspace\03-proceso\sesion-12.md
+       1 # Sesión 12 · La nota de método corregida y las conversaciones s
+         in rutas de usuario ni correo
+       2
+       3 | | |
+       4 |---|---|
+       5 | **Fecha** | 2026-11-16 |
+       6 | **Participantes** | Tech Lead (persona) · IA: Claude Code, mod
+         elo Claude Fable 5.2 |
+       7 | **Resultado** | Sesión abierta a las 16:06 |
+       8
+     … +138 lines (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 11 lines
+      112  - **En `pruebas-manuales.md` no se tocan las tablas.**
+      113  - **`.private/` no se lee ni se cita.**
+      114
+      115 +### Los tres pasos · lo hecho
+      116 +
+      117 +*(La tabla de los pasos se rellena según se hacen.)*
+      118 +
+      119 +Precisiones de la IA, **sin aprobar**:
+      120 +
+      121 +| # | Precisión | Motivo |
+      122 +|---|---|---|
+      123 +| AK-01 | **La sesión tendrá cinco commits**: este de apertura
+          + de la bitácora, los tres pasos y el cierre. En el de apertura
+          + solo entra `sesion-12.md`; las conversaciones siguen sin comm
+          +it hasta el paso 1 | Es lo que se hizo en las sesiones 09 a 11
+          + y lo admitido en AJ-01 |
+      124 +| AK-02 | **El `git diff` es lo que dice el encargo, y además
+          +la IA ha visto cuatro cosas**, sin cambiar ninguna. (1) **El n
+          +ombre de la carpeta de usuario sigue escrito, suelto, en dos l
+          +íneas de `sesion-11.txt`** (221 y 350): son la fila AJ-02 de l
+          +a bitácora de la sesión 11 tal como salió en pantalla, que dic
+          +e cuál es el usuario de esas rutas. La sustitución cambió la r
+          +uta de esa fila, no esa frase. (2) **La bitácora de la sesión
+          +11, que está versionada, lo lleva en dos líneas** (147, con la
+          + ruta y el nombre, y 195, con el nombre): `sesion-11.txt` ense
+          +ña ahora esa fila con `<usuario>` y el fichero que esa convers
+          +ación escribía dice el nombre. (3) **El historial**: el commit
+          + `4655810` conserva las 26 líneas, como dice el encargo, y el
+          +correo es el del autor de los 226 commits. (4) En `sesion-11.t
+          +xt`, «❯» aparece también seis veces dentro del texto, citado;
+          +en las otras nueve conversaciones solo estaba al principio de
+          +línea | El encargo pedía decir si se veía otra cosa. La regla
+          +de `CLAUDE.md` habla de rutas locales; un nombre suelto no es
+          +una ruta, pero es justo lo que la sustitución retira. Las bitá
+          +coras antiguas no se tocan y los `.txt` no se editan: lo decid
+          +e el Tech Lead |
+      125 +
+      126  ## 4. Comprobaciones hechas en la sesión
+      127
+      128  | Qué | Cómo | Resultado |
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Apertura hecha (1c01eff, oráculo en código 0). Voy con el paso 1: el índice de
+  las conversaciones.
+
+● Update(ai-workspace\03-proceso\conversaciones\README.md)
+  ⎿  Added 1 line, removed 1 line
+       7
+       8  ## Los ficheros
+       9
+      10 -Uno por sesión, de la 01 a la 10:
+      10 +Uno por sesión, de la 01 a la 11:
+      11
+      12  | Fichero | Líneas | Sesión y bitácora | Fecha |
+      13  |---|---|---|---|
+
+● Update(ai-workspace\03-proceso\conversaciones\README.md)
+  ⎿  Added 1 line
+      20  | [`sesion-08.txt`](sesion-08.txt) | 13.478 | [Sesión 08](../se
+          sion-08.md) · QA del frontend | 2026-11-15 |
+      21  | [`sesion-09.txt`](sesion-09.txt) | 4.427 | [Sesión 09](../ses
+          ion-09.md) · Documentación de entrega e integración continua |
+          2026-11-15 |
+      22  | [`sesion-10.txt`](sesion-10.txt) | 1.437 | [Sesión 10](../ses
+          ion-10.md) · Cierre tras la pasada manual | 2026-11-16 |
+      23 +| [`sesion-11.txt`](sesion-11.txt) | 1.379 | [Sesión 11](../ses
+         +ion-11.md) · Las conversaciones publicadas y la nota de método
+         +| 2026-11-16 |
+      24
+      25  Lo que falta:
+      26
+
+● Update(ai-workspace\03-proceso\conversaciones\README.md)
+  ⎿  Added 3 lines, removed 3 lines
+      28    fichero, que empieza a mitad de la 06 (14/11, hacia las 10:47
+          ): la
+      29    conversación se había compactado y lo anterior no se pudo exp
+          ortar. Lo
+      30    que falta está en la [bitácora de la sesión 06](../sesion-06.
+          md).
+      31 -- **La sesión 11**, la que publica estos ficheros: no puede exp
+         -ortarse a sí
+      32 -  misma antes de acabar. Su bitácora es
+      33 -  [`sesion-11.md`](../sesion-11.md).
+      31 +- **La sesión 12**, la que publica esta versión de los ficheros
+         +: no puede
+      32 +  exportarse a sí misma antes de acabar. Su bitácora es
+      33 +  [`sesion-12.md`](../sesion-12.md).
+      34
+      35  ## Cómo leerlas
+      36
+
+● Update(ai-workspace\03-proceso\conversaciones\README.md)
+  ⎿  Added 7 lines
+      51  - Los espacios al final de cada línea.
+      52  - En la 03, dos líneas que listaban otra sesión abierta en el e
+          quipo, ajena
+      53    al proyecto, sustituidas por una marca.
+      54 +- La carpeta de usuario de las rutas locales del equipo, sustit
+         +uida por
+      55 +  `<usuario>`: 19 veces, en las sesiones 05, 06-07, 08 y 09, y
+         +3 en la 11.
+      56 +- El correo `noreply` del autor de los commits, sustituido por
+         +una marca:
+      57 +  7 veces, en la 01.
+      58
+      59  Nada más: el contenido de la interacción no se ha tocado.
+      60 +
+      61 +La primera versión publicada, la del commit `4655810`, todavía
+         +llevaba esas
+      62 +rutas y ese correo.
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 1 line, removed 1 line
+      14  | [`00-analisis/`](00-analisis/) | Requisitos numerados (`R-xx`
+          ) y supuestos sobre las ambigüedades (`A-xx`) | ¿Qué hay que co
+          nstruir y qué no estaba definido? |
+      15  | [`01-specs/`](01-specs/) | Especificaciones (`SPEC-xx`) con r
+          equisitos EARS, criterios de aceptación y contratos de API | ¿Q
+          ué debe hacer exactamente cada parte? |
+      16  | [`02-arquitectura/`](02-arquitectura/) | Decisiones de arquit
+          ectura (`ADR-xxx`), esquema de datos, estructura del proyecto y
+           directrices dadas a la IA | ¿Cómo se construye y por qué así?
+          |
+      17 -| [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts c
+         -lave y cada propuesta de la IA corregida o rechazada, con su mo
+         -tivo. Y las [conversaciones exportadas](03-proceso/conversacion
+         -es/README.md) de las sesiones 01 a 10 | ¿Cómo se dirigió a la I
+         -A? |
+      17 +| [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts c
+         +lave y cada propuesta de la IA corregida o rechazada, con su mo
+         +tivo. Y las [conversaciones exportadas](03-proceso/conversacion
+         +es/README.md) de las sesiones 01 a 11 | ¿Cómo se dirigió a la I
+         +A? |
+      18  | [`04-calidad/`](04-calidad/) | Siete evaluaciones independien
+          tes, cada una con su respuesta y la decisión sobre cada hallazg
+          o; la [matriz de trazabilidad](04-calidad/trazabilidad.md) requ
+          isito → test; las [limitaciones conocidas](04-calidad/limitacio
+          nes-conocidas.md); el [guion de pruebas manuales](04-calidad/pr
+          uebas-manuales.md) y las capturas de las vistas | ¿Cómo se sabe
+           que funciona, y qué se sabe que no? |
+      19
+      20  ## Recorrido de cinco minutos
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 2 lines
+      84  | Hora | Commit | Qué |
+      85  |---|---|---|
+      86  | 16:10 | — | Mensaje recibido hacia las 16:06 (primera lectura
+           del reloj, 16:06:49). El último commit es `9b58091` (2026-11-1
+          6 15:35:56), el cierre de la sesión 11. **`git status`: cinco `
+          .txt` de `03-proceso/conversaciones/` modificados (01, 05, 06-0
+          7, 08 y 09) y `sesion-11.txt` sin versionar**, que es lo que an
+          unciaba el encargo. **`netstat` a las 16:07:41: nada escucha en
+           el 8000 ni en el 4200.** `backend/data/saas-o-matic.db`, del T
+          ech Lead: 28.672 bytes, 2026-11-14 18:37; la IA no lo toca. Lec
+          turas del encargo hechas, y además el índice de las conversacio
+          nes y `04-calidad/pruebas-manuales.md`. **El `git diff` de las
+          conversaciones, comprobado antes de tocar nada** (16:07:38 a 16
+          :09:48; apartado 4): son las dos sustituciones y nada más. Lo q
+          ue la IA ha visto además está en AK-02. Apertura de esta bitáco
+          ra |
+      87 +| 16:13 | `1c01eff` | **Apertura de la bitácora**, 16:12:39 seg
+         +ún `git log`, tras el oráculo sin `--e2e` de 16:10:54 a 16:12:3
+         +9, código 0 (23 correctas, 1 inactiva); la salida, a un fichero
+         +, y el commit, en la misma orden, solo con ese código. Solo ent
+         +ra `sesion-12.md`: las conversaciones siguen sin commit (AK-01)
+         + |
+      88 +| 16:13 | — | **Paso 1, el índice**: `conversaciones/README.md`
+         +, con la herramienta de edición, de 54 a 62 líneas. La tabla ga
+         +na la sesión 11 (1.379 líneas) y dice «de la 01 a la 11»; «Lo q
+         +ue falta» nombra la sesión 12 en lugar de la 11; «Qué se ha cam
+         +biado al publicarlas» gana las dos sustituciones, con sus cuent
+         +as, y la frase del commit `4655810`. Sus 22 destinos existen (1
+         +6:13:05). **Y un cambio que el encargo no nombraba**: en `ai-wo
+         +rkspace/README.md`, la fila de `03-proceso` de «Cómo leerlo» de
+         +cía «sesiones 01 a 10» y dice «01 a 11» (AK-03). Los `.txt` no
+         +se han tocado |
+      89
+      90  ## 3. Revisiones y decisiones del Tech Lead
+      91
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 1 line
+      124  |---|---|---|
+      125  | AK-01 | **La sesión tendrá cinco commits**: este de apertura
+            de la bitácora, los tres pasos y el cierre. En el de apertura
+            solo entra `sesion-12.md`; las conversaciones siguen sin comm
+           it hasta el paso 1 | Es lo que se hizo en las sesiones 09 a 11
+            y lo admitido en AJ-01 |
+      126  | AK-02 | **El `git diff` es lo que dice el encargo, y además
+           la IA ha visto cuatro cosas**, sin cambiar ninguna. (1) **El n
+           ombre de la carpeta de usuario sigue escrito, suelto, en dos l
+           íneas de `sesion-11.txt`** (221 y 350): son la fila AJ-02 de l
+           a bitácora de la sesión 11 tal como salió en pantalla, que dic
+           e cuál es el usuario de esas rutas. La sustitución cambió la r
+           uta de esa fila, no esa frase. (2) **La bitácora de la sesión
+           11, que está versionada, lo lleva en dos líneas** (147, con la
+            ruta y el nombre, y 195, con el nombre): `sesion-11.txt` ense
+           ña ahora esa fila con `<usuario>` y el fichero que esa convers
+           ación escribía dice el nombre. (3) **El historial**: el commit
+            `4655810` conserva las 26 líneas, como dice el encargo, y el
+           correo es el del autor de los 226 commits. (4) En `sesion-11.t
+           xt`, «❯» aparece también seis veces dentro del texto, citado;
+           en las otras nueve conversaciones solo estaba al principio de
+           línea | El encargo pedía decir si se veía otra cosa. La regla
+           de `CLAUDE.md` habla de rutas locales; un nombre suelto no es
+           una ruta, pero es justo lo que la sustitución retira. Las bitá
+           coras antiguas no se tocan y los `.txt` no se editan: lo decid
+           e el Tech Lead |
+      127 +| AK-03 | **Dos cosas del paso 1 que el encargo no daba.** (1)
+          + En `ai-workspace/README.md`, la fila de `03-proceso` de «Cómo
+          + leerlo» pasa de «sesiones 01 a 10» a «01 a 11»; va en el comm
+          +it del paso 1. (2) En el índice, las dos sustituciones llevan
+          +sus cuentas (19 y 3 rutas, 7 correos), y la entrada de la sesi
+          +ón 12 dice «la que publica esta versión de los ficheros» | Con
+          + `sesion-11.txt` publicada, «01 a 10» era falso; es el mismo c
+          +aso que «cinco documentos» en AJ-06, admitida. Las cuentas son
+          + las del encargo, comprobadas en el apartado 4. Si sobran, se
+          +quitan |
+      128
+      129  ## 4. Comprobaciones hechas en la sesión
+      130
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 1 hecho (4020b1c, las diez conversaciones entran con la misma huella que
+  dejaste). Voy con el paso 2: la nota de método.
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 1 line
+      86  | 16:10 | — | Mensaje recibido hacia las 16:06 (primera lectura
+           del reloj, 16:06:49). El último commit es `9b58091` (2026-11-1
+          6 15:35:56), el cierre de la sesión 11. **`git status`: cinco `
+          .txt` de `03-proceso/conversaciones/` modificados (01, 05, 06-0
+          7, 08 y 09) y `sesion-11.txt` sin versionar**, que es lo que an
+          unciaba el encargo. **`netstat` a las 16:07:41: nada escucha en
+           el 8000 ni en el 4200.** `backend/data/saas-o-matic.db`, del T
+          ech Lead: 28.672 bytes, 2026-11-14 18:37; la IA no lo toca. Lec
+          turas del encargo hechas, y además el índice de las conversacio
+          nes y `04-calidad/pruebas-manuales.md`. **El `git diff` de las
+          conversaciones, comprobado antes de tocar nada** (16:07:38 a 16
+          :09:48; apartado 4): son las dos sustituciones y nada más. Lo q
+          ue la IA ha visto además está en AK-02. Apertura de esta bitáco
+          ra |
+      87  | 16:13 | `1c01eff` | **Apertura de la bitácora**, 16:12:39 seg
+          ún `git log`, tras el oráculo sin `--e2e` de 16:10:54 a 16:12:3
+          9, código 0 (23 correctas, 1 inactiva); la salida, a un fichero
+          , y el commit, en la misma orden, solo con ese código. Solo ent
+          ra `sesion-12.md`: las conversaciones siguen sin commit (AK-01)
+           |
+      88  | 16:13 | — | **Paso 1, el índice**: `conversaciones/README.md`
+          , con la herramienta de edición, de 54 a 62 líneas. La tabla ga
+          na la sesión 11 (1.379 líneas) y dice «de la 01 a la 11»; «Lo q
+          ue falta» nombra la sesión 12 en lugar de la 11; «Qué se ha cam
+          biado al publicarlas» gana las dos sustituciones, con sus cuent
+          as, y la frase del commit `4655810`. Sus 22 destinos existen (1
+          6:13:05). **Y un cambio que el encargo no nombraba**: en `ai-wo
+          rkspace/README.md`, la fila de `03-proceso` de «Cómo leerlo» de
+          cía «sesiones 01 a 10» y dice «01 a 11» (AK-03). Los `.txt` no
+          se han tocado |
+      89 +| 16:15 | `4020b1c` | **Paso 1**, 16:15:08 según `git log`: los
+         + cinco `.txt` regenerados, `sesion-11.txt`, el índice y la fila
+         + de `ai-workspace/README.md`; ocho ficheros, 1.418 líneas añadi
+         +das y 31 quitadas. Antes, oráculo sin `--e2e` de 16:13:26 a 16:
+         +15:08, código 0 (23 correctas, 1 inactiva). Después (16:15:09):
+         + **los diez `.txt` del commit tienen la misma huella que los qu
+         +e dejó el Tech Lead** y los de la carpeta siguen igual; `git ls
+         +-files --eol` dice `i/lf w/lf` en los once ficheros de la carpe
+         +ta |
+      90
+      91  ## 3. Revisiones y decisiones del Tech Lead
+      92
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 17 lines, removed 1 line
+       81    specs, decide cada hallazgo de las evaluaciones, autoriza lo
+           s commits, que
+       82    llevan su autoría, y hace el `push`.
+       83
+       84 -Tres consecuencias que conviene saber al leer el resto:
+       84 +Cinco consecuencias que conviene saber al leer el resto:
+       85
+       86 +- **El análisis previo.** Antes de la sesión 01 el Tech Lead p
+          +reparó con la
+       87 +  sesión que audita un análisis del encargo (requisitos y ambi
+          +güedades
+       88 +  numerados, calendario y riesgos) y un estudio comparado del
+          +stack. Están
+       89 +  en la carpeta privada, y el primer encargo mandaba leerlos:
+          +se ve en
+       90 +  [`sesion-01.txt`](03-proceso/conversaciones/sesion-01.txt).
+          +Las
+       91 +  decisiones de stack y de dónde vive el cálculo las tomó él c
+          +on ese
+       92 +  estudio delante. La sesión que implementa redactó, a partir
+          +de ese
+       93 +  material y del enunciado, el análisis publicado en
+       94 +  [`00-analisis/`](00-analisis/) y los dos primeros ADR.
+       95  - **Los prompts largos de cada sesión y de cada parada** que s
+           e ven en las
+       96    conversaciones salieron de ese borrador: los redactó la sesi
+           ón que audita
+       97    con el Tech Lead, y él los revisó y los pegó.
+       98 +- **«Revisa cada diff».** `CLAUDE.md`, las convenciones de est
+          +e documento y
+       99 +  ADR-001 dicen que el Tech Lead revisa cada diff. En la práct
+          +ica se ha
+      100 +  hecho así: la sesión que audita revisa los cambios de cada p
+          +arada (lee el
+      101 +  código y las specs que cambian y, de los tests, comprueba qu
+          +e se vieran
+      102 +  fallar o que tengan su mutación), y el Tech Lead lee sobre t
+          +odo ese
+      103 +  veredicto y sigue en paralelo lo que hace la sesión que impl
+          +ementa. No ha
+      104 +  leído él cada diff línea a línea.
+      105  - **Cuando una bitácora o un prompt dice «comprobado» o «he vi
+           sto»**, la
+      106    comprobación puede haberla ejecutado la sesión que audita ba
+           jo la
+      107    dirección del Tech Lead; por ejemplo, los recorridos en el n
+           avegador de
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 8 lines, removed 7 lines
+      108    las sesiones 06 y 07. La excepción es el
+      109    [guion de pruebas manuales](04-calidad/pruebas-manuales.md)
+           del
+      110    16/11/2026: lo ejecutó él a mano, paso a paso.
+      111 -- **La sesión que audita no ha escrito en este repositorio**,
+          -con dos
+      112 -  excepciones: el 16/11/2026 anotó en el guion de pruebas manu
+          -ales los
+      113 -  resultados que el Tech Lead le iba dictando mientras lo ejec
+          -utaba, y ese
+      114 -  mismo día dejó en `03-proceso/conversaciones/` los ficheros
+          -exportados, ya
+      115 -  revisados.
+      111 +- **La sesión que audita no ha escrito en nada de lo que git v
+          +ersiona en
+      112 +  este repositorio**, con dos excepciones: el 16/11/2026 anotó
+          + en el guion
+      113 +  de pruebas manuales los resultados que el Tech Lead le iba d
+          +ictando
+      114 +  mientras lo ejecutaba, y ese mismo día dejó en
+      115 +  `03-proceso/conversaciones/` los ficheros exportados, ya rev
+          +isados.
+      116
+      117 -Sus notas de trabajo no se publican: están en una carpeta priv
+          -ada, ignorada
+      118 -por git, junto con material ajeno a este proyecto.
+      117 +Sus notas de trabajo y los borradores de los prompts no se pub
+          +lican: están
+      118 +en `.private/`, la carpeta de este mismo directorio que git ig
+          +nora, junto
+      119 +con material ajeno a este proyecto.
+      120
+      121  *Por qué así*: quien genera no se evalúa a sí mismo. El evalua
+           dor
+      122  independiente revisa el resultado contra las specs; la sesión
+           que audita
+
+  Made 1 scratchpad edit +20, ran 3 shell commands (ctrl+o to expand)
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 1 line
+      87  | 16:13 | `1c01eff` | **Apertura de la bitácora**, 16:12:39 seg
+          ún `git log`, tras el oráculo sin `--e2e` de 16:10:54 a 16:12:3
+          9, código 0 (23 correctas, 1 inactiva); la salida, a un fichero
+          , y el commit, en la misma orden, solo con ese código. Solo ent
+          ra `sesion-12.md`: las conversaciones siguen sin commit (AK-01)
+           |
+      88  | 16:13 | — | **Paso 1, el índice**: `conversaciones/README.md`
+          , con la herramienta de edición, de 54 a 62 líneas. La tabla ga
+          na la sesión 11 (1.379 líneas) y dice «de la 01 a la 11»; «Lo q
+          ue falta» nombra la sesión 12 en lugar de la 11; «Qué se ha cam
+          biado al publicarlas» gana las dos sustituciones, con sus cuent
+          as, y la frase del commit `4655810`. Sus 22 destinos existen (1
+          6:13:05). **Y un cambio que el encargo no nombraba**: en `ai-wo
+          rkspace/README.md`, la fila de `03-proceso` de «Cómo leerlo» de
+          cía «sesiones 01 a 10» y dice «01 a 11» (AK-03). Los `.txt` no
+          se han tocado |
+      89  | 16:15 | `4020b1c` | **Paso 1**, 16:15:08 según `git log`: los
+           cinco `.txt` regenerados, `sesion-11.txt`, el índice y la fila
+           de `ai-workspace/README.md`; ocho ficheros, 1.418 líneas añadi
+          das y 31 quitadas. Antes, oráculo sin `--e2e` de 16:13:26 a 16:
+          15:08, código 0 (23 correctas, 1 inactiva). Después (16:15:09):
+           **los diez `.txt` del commit tienen la misma huella que los qu
+          e dejó el Tech Lead** y los de la carpeta siguen igual; `git ls
+          -files --eol` dice `i/lf w/lf` en los once ficheros de la carpe
+          ta |
+      90 +| 16:17 | — | **Paso 2, la nota de método**, en `ai-workspace/R
+         +EADME.md`, con la herramienta de edición: el apartado «Dos sesi
+         +ones de IA y una persona», sustituido por el del encargo, con l
+         +os saltos de línea a 76 columnas como mucho; pasa de 48 a 65 lí
+         +neas. Cambian «Tres consecuencias» por «Cinco», dos consecuenci
+         +as nuevas («El análisis previo» y «Revisa cada diff»), la últim
+         +a consecuencia y el párrafo de las notas; lo demás del apartado
+         + ya decía lo mismo. **Sin los saltos de línea, el apartado es i
+         +déntico al texto del encargo** (16:16:01; las dos copias son de
+         + la IA, como en AJ-07). Lo que la nota nueva dice frente a lo q
+         +ue la IA sabe está en el apartado 3, N-10 a N-14: **la nota no
+         +se ha cambiado** |
+      91
+      92  ## 3. Revisiones y decisiones del Tech Lead
+      93
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 18 lines
+      128  | AK-02 | **El `git diff` es lo que dice el encargo, y además
+           la IA ha visto cuatro cosas**, sin cambiar ninguna. (1) **El n
+           ombre de la carpeta de usuario sigue escrito, suelto, en dos l
+           íneas de `sesion-11.txt`** (221 y 350): son la fila AJ-02 de l
+           a bitácora de la sesión 11 tal como salió en pantalla, que dic
+           e cuál es el usuario de esas rutas. La sustitución cambió la r
+           uta de esa fila, no esa frase. (2) **La bitácora de la sesión
+           11, que está versionada, lo lleva en dos líneas** (147, con la
+            ruta y el nombre, y 195, con el nombre): `sesion-11.txt` ense
+           ña ahora esa fila con `<usuario>` y el fichero que esa convers
+           ación escribía dice el nombre. (3) **El historial**: el commit
+            `4655810` conserva las 26 líneas, como dice el encargo, y el
+           correo es el del autor de los 226 commits. (4) En `sesion-11.t
+           xt`, «❯» aparece también seis veces dentro del texto, citado;
+           en las otras nueve conversaciones solo estaba al principio de
+           línea | El encargo pedía decir si se veía otra cosa. La regla
+           de `CLAUDE.md` habla de rutas locales; un nombre suelto no es
+           una ruta, pero es justo lo que la sustitución retira. Las bitá
+           coras antiguas no se tocan y los `.txt` no se editan: lo decid
+           e el Tech Lead |
+      129  | AK-03 | **Dos cosas del paso 1 que el encargo no daba.** (1)
+            En `ai-workspace/README.md`, la fila de `03-proceso` de «Cómo
+            leerlo» pasa de «sesiones 01 a 10» a «01 a 11»; va en el comm
+           it del paso 1. (2) En el índice, las dos sustituciones llevan
+           sus cuentas (19 y 3 rutas, 7 correos), y la entrada de la sesi
+           ón 12 dice «la que publica esta versión de los ficheros» | Con
+            `sesion-11.txt` publicada, «01 a 10» era falso; es el mismo c
+           aso que «cinco documentos» en AJ-06, admitida. Las cuentas son
+            las del encargo, comprobadas en el apartado 4. Si sobran, se
+           quitan |
+      130
+      131 +### La nota nueva frente a lo que la IA sabe del repositorio
+      132 +
+      133 +El encargo pedía decirlo sin cambiar la nota. **La nota está e
+          +n el README
+      134 +tal como llegó.** Como en la sesión 11, la IA no puede confirm
+          +ar ni
+      135 +desmentir nada de lo que la nota dice de la sesión que audita:
+          + no la ve.
+      136 +**De los cuatro cruces que pesaban, la nota cierra tres** (N-1
+          +, N-4 y N-6)
+      137 +y el paso 3 cierra el cuarto (N-2). Lo que sigue es lo que que
+          +da después.
+      138 +La numeración continúa la de la sesión 11. **Ninguno de los te
+          +xtos citados
+      139 +se ha tocado.**
+      140 +
+      141 +| # | Qué dice la nota | Qué dice el repositorio | Qué ha hech
+          +o la IA |
+      142 +|---|---|---|---|
+      143 +| N-10 | «`CLAUDE.md`, las convenciones de este documento y AD
+          +R-001 dicen que el Tech Lead revisa cada diff», y en la prácti
+          +ca él lee sobre todo el veredicto | `CLAUDE.md` lo dice así. L
+          +as convenciones dicen «revisa cada cambio». **ADR-001 no lo di
+          +ce como reparto, lo usa como argumento**: el criterio «Experie
+          +ncia previa de quien revisa» (alta en Python, menor en Node) y
+          + el motivo 3 de la decisión del backend, «Quien revisa cada di
+          +ff conoce bien este stack. Auditar código generado exige enten
+          +derlo sin esfuerzo»; y en los riesgos del frontend, «Quien rev
+          +isa tiene menos experiencia en Angular que en Python. Se mitig
+          +a con […] revisión explicada de cada componente generado». Hay
+          + dos textos más que la nota no nombra: el primer encargo, en `
+          +sesion-01.txt` (línea 63: «reviso cada diff»), y ADR-005 («las
+          + capturas […] las revisa el Tech Lead») | Nada. La nota declar
+          +a la diferencia y los tres textos siguen como estaban. **Lo qu
+          +e pesa es ADR-001**: uno de los tres motivos del stack se apoy
+          +a en quien lee cada diff, y la nota dice que quien lee el códi
+          +go en cada parada es la sesión que audita |
+      144 +| N-11 | Las notas y los borradores «están en `.private/`, la
+          +carpeta de este mismo directorio que git ignora» | La nota est
+          +á en `ai-workspace/README.md`. `.private/` existe en la raíz d
+          +el repositorio y no en `ai-workspace/` (`test -d`, sin listarl
+          +a); la ignora la línea 2 de `.gitignore` | Nada. Leído desde e
+          +se documento, «este mismo directorio» apunta a `ai-workspace/`
+          +. Además, la primera consecuencia dice «la carpeta privada» an
+          +tes de que la nota la nombre |
+      145 +| N-12 | El análisis previo y el estudio del stack los preparó
+          + el Tech Lead con la sesión que audita; las decisiones de stac
+          +k y del cálculo las tomó él; la sesión que implementa redactó
+          +`00-analisis/` y los dos primeros ADR «a partir de ese materia
+          +l y del enunciado» | `sesion-01.txt`, líneas 66 a 72 y 74: coi
+          +ncide (el primer encargo manda leer el enunciado, el análisis
+          +y el estudio, y dice «Decisiones ya tomadas por mí»). ADR-001
+          +y ADR-002: «Decide: Tech Lead». Los dos primeros ADR son del c
+          +ommit `45b913d`, de la sesión 01. Quedan dos cruces: ese mismo
+          + encargo dice del material privado que «no se publica ni se ci
+          +ta nunca en el repo», y la bitácora de la sesión 01 dice «reda
+          +ctados como análisis propio»; `requisitos.md` dice «nuestra le
+          +ctura del encargo» | Nada. La nota dice que ese material exist
+          +e y qué es, no lo que contiene; sus nombres de fichero ya se v
+          +eían en `sesion-01.txt` |
+      146 +| N-13 | Los prompts largos «salieron de ese borrador» | El bo
+          +rrador es el «borrador de respuesta» de la sesión que audita,
+          +tres párrafos más arriba. Entre los dos está ahora la consecue
+          +ncia del análisis previo, que habla de «ese estudio» y «ese ma
+          +terial» | Nada. Es de redacción, no de hechos: «ese borrador»
+          +puede leerse como el análisis previo |
+      147 +| N-14 | Los ficheros exportados se dejaron en la carpeta «ya
+          +revisados» | El índice de las conversaciones dice desde hoy qu
+          +e la primera versión publicada todavía llevaba las rutas de us
+          +uario y el correo (AJ-02). Los ficheros se han dejado dos vece
+          +s el 16/11: los nueve de la sesión 11 y los de esta | Nada. «E
+          +se mismo día» sigue siendo cierto |
+      148 +
+      149  ## 4. Comprobaciones hechas en la sesión
+      150
+      151  | Qué | Cómo | Resultado |
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 2 hecho (b58083b, nota literal comprobada). Voy con el paso 3: el
+  apartado final del guion y el «Estado».
+
+● Update(ai-workspace\04-calidad\pruebas-manuales.md)
+  ⎿  Added 4 lines, removed 1 line
+      146  **Lo ejecutó el Tech Lead el 16/11/2026**, sobre `06a6314`: lo
+           s 30 pasos,
+      147  en OK. Los datos de la pasada están en la tabla de cabecera; l
+           o que vio en
+      148  cada paso, en la columna «Resultado»; y lo que cierra, en la b
+           itácora de la
+      149 -[sesión 10](../03-proceso/sesion-10.md).
+      149 +[sesión 10](../03-proceso/sesion-10.md). **Los resultados los
+          +anotó, al
+      150 +dictado del Tech Lead mientras lo ejecutaba, la sesión de IA q
+          +ue audita**:
+      151 +quién es y qué hace está en
+      152 +[«Dos sesiones de IA y una persona»](../README.md#dos-sesiones
+          +-de-ia-y-una-persona).
+      153
+      154  Si un paso no sale como dice, puede estar mal el paso y no la
+           aplicación:
+      155  anotar lo visto y decidir después.
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 2 lines, removed 1 line
+      125
+      126  ## Estado
+      127
+      128 -A 2026-11-16, al cerrar la sesión 10:
+      128 +A 2026-11-16, al cerrar la sesión 12 (las sesiones 11 y 12 sol
+          +o han cambiado
+      129 +documentación):
+      130
+      131  - **Specs**: las cuatro, `aprobadas` (el bloque backend el 202
+           6-11-13 y
+      132    SPEC-04 el 2026-11-14).
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 2 lines
+      88  | 16:13 | — | **Paso 1, el índice**: `conversaciones/README.md`
+          , con la herramienta de edición, de 54 a 62 líneas. La tabla ga
+          na la sesión 11 (1.379 líneas) y dice «de la 01 a la 11»; «Lo q
+          ue falta» nombra la sesión 12 en lugar de la 11; «Qué se ha cam
+          biado al publicarlas» gana las dos sustituciones, con sus cuent
+          as, y la frase del commit `4655810`. Sus 22 destinos existen (1
+          6:13:05). **Y un cambio que el encargo no nombraba**: en `ai-wo
+          rkspace/README.md`, la fila de `03-proceso` de «Cómo leerlo» de
+          cía «sesiones 01 a 10» y dice «01 a 11» (AK-03). Los `.txt` no
+          se han tocado |
+      89  | 16:15 | `4020b1c` | **Paso 1**, 16:15:08 según `git log`: los
+           cinco `.txt` regenerados, `sesion-11.txt`, el índice y la fila
+           de `ai-workspace/README.md`; ocho ficheros, 1.418 líneas añadi
+          das y 31 quitadas. Antes, oráculo sin `--e2e` de 16:13:26 a 16:
+          15:08, código 0 (23 correctas, 1 inactiva). Después (16:15:09):
+           **los diez `.txt` del commit tienen la misma huella que los qu
+          e dejó el Tech Lead** y los de la carpeta siguen igual; `git ls
+          -files --eol` dice `i/lf w/lf` en los once ficheros de la carpe
+          ta |
+      90  | 16:17 | — | **Paso 2, la nota de método**, en `ai-workspace/R
+          EADME.md`, con la herramienta de edición: el apartado «Dos sesi
+          ones de IA y una persona», sustituido por el del encargo, con l
+          os saltos de línea a 76 columnas como mucho; pasa de 48 a 65 lí
+          neas. Cambian «Tres consecuencias» por «Cinco», dos consecuenci
+          as nuevas («El análisis previo» y «Revisa cada diff»), la últim
+          a consecuencia y el párrafo de las notas; lo demás del apartado
+           ya decía lo mismo. **Sin los saltos de línea, el apartado es i
+          déntico al texto del encargo** (16:16:01; las dos copias son de
+           la IA, como en AJ-07). Lo que la nota nueva dice frente a lo q
+          ue la IA sabe está en el apartado 3, N-10 a N-14: **la nota no
+          se ha cambiado** |
+      91 +| 16:20 | `b58083b` | **Paso 2**, 16:19:05 según `git log`: sol
+         +o `ai-workspace/README.md`, 27 líneas añadidas y 10 quitadas. A
+         +ntes, oráculo sin `--e2e` de 16:17:24 a 16:19:05, código 0 (23
+         +correctas, 1 inactiva) |
+      92 +| 16:20 | — | **Paso 3, los dos retoques.** (1) `04-calidad/pru
+         +ebas-manuales.md`, apartado final «De dónde sale lo que el guio
+         +n espera»: una frase detrás de la que dice quién lo ejecutó, «L
+         +os resultados los anotó, al dictado del Tech Lead mientras lo e
+         +jecutaba, la sesión de IA que audita», con enlace a la nota. Ni
+         +nguna línea de tabla cambia (16:19:32). (2) El «Estado» de `ai-
+         +workspace/README.md`: «al cerrar la sesión 10» pasa a «al cerra
+         +r la sesión 12 (las sesiones 11 y 12 solo han cambiado document
+         +ación)» (AK-04). Los dos pendientes, la integración continua y
+         +el clon limpio, siguen como estaban |
+      93
+      94  ## 3. Revisiones y decisiones del Tech Lead
+      95
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 1 line
+      129  | AK-01 | **La sesión tendrá cinco commits**: este de apertura
+            de la bitácora, los tres pasos y el cierre. En el de apertura
+            solo entra `sesion-12.md`; las conversaciones siguen sin comm
+           it hasta el paso 1 | Es lo que se hizo en las sesiones 09 a 11
+            y lo admitido en AJ-01 |
+      130  | AK-02 | **El `git diff` es lo que dice el encargo, y además
+           la IA ha visto cuatro cosas**, sin cambiar ninguna. (1) **El n
+           ombre de la carpeta de usuario sigue escrito, suelto, en dos l
+           íneas de `sesion-11.txt`** (221 y 350): son la fila AJ-02 de l
+           a bitácora de la sesión 11 tal como salió en pantalla, que dic
+           e cuál es el usuario de esas rutas. La sustitución cambió la r
+           uta de esa fila, no esa frase. (2) **La bitácora de la sesión
+           11, que está versionada, lo lleva en dos líneas** (147, con la
+            ruta y el nombre, y 195, con el nombre): `sesion-11.txt` ense
+           ña ahora esa fila con `<usuario>` y el fichero que esa convers
+           ación escribía dice el nombre. (3) **El historial**: el commit
+            `4655810` conserva las 26 líneas, como dice el encargo, y el
+           correo es el del autor de los 226 commits. (4) En `sesion-11.t
+           xt`, «❯» aparece también seis veces dentro del texto, citado;
+           en las otras nueve conversaciones solo estaba al principio de
+           línea | El encargo pedía decir si se veía otra cosa. La regla
+           de `CLAUDE.md` habla de rutas locales; un nombre suelto no es
+           una ruta, pero es justo lo que la sustitución retira. Las bitá
+           coras antiguas no se tocan y los `.txt` no se editan: lo decid
+           e el Tech Lead |
+      131  | AK-03 | **Dos cosas del paso 1 que el encargo no daba.** (1)
+            En `ai-workspace/README.md`, la fila de `03-proceso` de «Cómo
+            leerlo» pasa de «sesiones 01 a 10» a «01 a 11»; va en el comm
+           it del paso 1. (2) En el índice, las dos sustituciones llevan
+           sus cuentas (19 y 3 rutas, 7 correos), y la entrada de la sesi
+           ón 12 dice «la que publica esta versión de los ficheros» | Con
+            `sesion-11.txt` publicada, «01 a 10» era falso; es el mismo c
+           aso que «cinco documentos» en AJ-06, admitida. Las cuentas son
+            las del encargo, comprobadas en el apartado 4. Si sobran, se
+           quitan |
+      132 +| AK-04 | **Tres cosas del paso 3.** (1) El «Estado» gana un p
+          +aréntesis que el encargo no daba: «las sesiones 11 y 12 solo h
+          +an cambiado documentación». (2) **Sus cifras no se han vuelto
+          +a contar**: son las de la sesión 10. La salida del oráculo, en
+          + verde, solo enseña los 96 tests de los scripts; los 741, los
+          +569 y los 18 no salen, y Playwright no se ha ejecutado. (3) En
+          + el guion, la frase nueva dice «la sesión de IA que audita» y
+          +remite a la nota con «quién es y qué hace»; **la frase de la c
+          +abecera, «Lo rellena quien ejecuta el guion», y «Quién: JGH» s
+          +iguen como estaban**: no están en el apartado final y una es d
+          +e una tabla | (1) Sin el paréntesis, «al cerrar la sesión 12»
+          +delante de cifras de la sesión 10 hace pensar que se han vuelt
+          +o a medir; que solo ha cambiado documentación lo dice `git dif
+          +f df1740f HEAD -- backend frontend scripts`, vacío. (3) El enc
+          +argo acotaba el retoque al apartado final. La cabecera y el fi
+          +nal dicen ahora cosas distintas sobre quién rellena |
+      133
+      134  ### La nota nueva frente a lo que la IA sabe del repositorio
+      135
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 3 hecho (53768f7). Queda cerrar la bitácora de la sesión 12 con su commit
+  y darte la parada.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 1 line, removed 1 line
+      88  | 16:13 | — | **Paso 1, el índice**: `conversaciones/README.md`
+          , con la herramienta de edición, de 54 a 62 líneas. La tabla ga
+          na la sesión 11 (1.379 líneas) y dice «de la 01 a la 11»; «Lo q
+          ue falta» nombra la sesión 12 en lugar de la 11; «Qué se ha cam
+          biado al publicarlas» gana las dos sustituciones, con sus cuent
+          as, y la frase del commit `4655810`. Sus 22 destinos existen (1
+          6:13:05). **Y un cambio que el encargo no nombraba**: en `ai-wo
+          rkspace/README.md`, la fila de `03-proceso` de «Cómo leerlo» de
+          cía «sesiones 01 a 10» y dice «01 a 11» (AK-03). Los `.txt` no
+          se han tocado |
+      89  | 16:15 | `4020b1c` | **Paso 1**, 16:15:08 según `git log`: los
+           cinco `.txt` regenerados, `sesion-11.txt`, el índice y la fila
+           de `ai-workspace/README.md`; ocho ficheros, 1.418 líneas añadi
+          das y 31 quitadas. Antes, oráculo sin `--e2e` de 16:13:26 a 16:
+          15:08, código 0 (23 correctas, 1 inactiva). Después (16:15:09):
+           **los diez `.txt` del commit tienen la misma huella que los qu
+          e dejó el Tech Lead** y los de la carpeta siguen igual; `git ls
+          -files --eol` dice `i/lf w/lf` en los once ficheros de la carpe
+          ta |
+      90  | 16:17 | — | **Paso 2, la nota de método**, en `ai-workspace/R
+          EADME.md`, con la herramienta de edición: el apartado «Dos sesi
+          ones de IA y una persona», sustituido por el del encargo, con l
+          os saltos de línea a 76 columnas como mucho; pasa de 48 a 65 lí
+          neas. Cambian «Tres consecuencias» por «Cinco», dos consecuenci
+          as nuevas («El análisis previo» y «Revisa cada diff»), la últim
+          a consecuencia y el párrafo de las notas; lo demás del apartado
+           ya decía lo mismo. **Sin los saltos de línea, el apartado es i
+          déntico al texto del encargo** (16:16:01; las dos copias son de
+           la IA, como en AJ-07). Lo que la nota nueva dice frente a lo q
+          ue la IA sabe está en el apartado 3, N-10 a N-14: **la nota no
+          se ha cambiado** |
+      91 -| 16:20 | `b58083b` | **Paso 2**, 16:19:05 según `git log`: sol
+         -o `ai-workspace/README.md`, 27 líneas añadidas y 10 quitadas. A
+         -ntes, oráculo sin `--e2e` de 16:17:24 a 16:19:05, código 0 (23
+         -correctas, 1 inactiva) |
+      91 +| 16:19 | `b58083b` | **Paso 2**, 16:19:05 según `git log`: sol
+         +o `ai-workspace/README.md`, 27 líneas añadidas y 10 quitadas. A
+         +ntes, oráculo sin `--e2e` de 16:17:24 a 16:19:05, código 0 (23
+         +correctas, 1 inactiva) |
+      92  | 16:20 | — | **Paso 3, los dos retoques.** (1) `04-calidad/pru
+          ebas-manuales.md`, apartado final «De dónde sale lo que el guio
+          n espera»: una frase detrás de la que dice quién lo ejecutó, «L
+          os resultados los anotó, al dictado del Tech Lead mientras lo e
+          jecutaba, la sesión de IA que audita», con enlace a la nota. Ni
+          nguna línea de tabla cambia (16:19:32). (2) El «Estado» de `ai-
+          workspace/README.md`: «al cerrar la sesión 10» pasa a «al cerra
+          r la sesión 12 (las sesiones 11 y 12 solo han cambiado document
+          ación)» (AK-04). Los dos pendientes, la integración continua y
+          el clon limpio, siguen como estaban |
+      93
+      94  ## 3. Revisiones y decisiones del Tech Lead
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 1 line, removed 1 line
+      89  | 16:15 | `4020b1c` | **Paso 1**, 16:15:08 según `git log`: los
+           cinco `.txt` regenerados, `sesion-11.txt`, el índice y la fila
+           de `ai-workspace/README.md`; ocho ficheros, 1.418 líneas añadi
+          das y 31 quitadas. Antes, oráculo sin `--e2e` de 16:13:26 a 16:
+          15:08, código 0 (23 correctas, 1 inactiva). Después (16:15:09):
+           **los diez `.txt` del commit tienen la misma huella que los qu
+          e dejó el Tech Lead** y los de la carpeta siguen igual; `git ls
+          -files --eol` dice `i/lf w/lf` en los once ficheros de la carpe
+          ta |
+      90  | 16:17 | — | **Paso 2, la nota de método**, en `ai-workspace/R
+          EADME.md`, con la herramienta de edición: el apartado «Dos sesi
+          ones de IA y una persona», sustituido por el del encargo, con l
+          os saltos de línea a 76 columnas como mucho; pasa de 48 a 65 lí
+          neas. Cambian «Tres consecuencias» por «Cinco», dos consecuenci
+          as nuevas («El análisis previo» y «Revisa cada diff»), la últim
+          a consecuencia y el párrafo de las notas; lo demás del apartado
+           ya decía lo mismo. **Sin los saltos de línea, el apartado es i
+          déntico al texto del encargo** (16:16:01; las dos copias son de
+           la IA, como en AJ-07). Lo que la nota nueva dice frente a lo q
+          ue la IA sabe está en el apartado 3, N-10 a N-14: **la nota no
+          se ha cambiado** |
+      91  | 16:19 | `b58083b` | **Paso 2**, 16:19:05 según `git log`: sol
+          o `ai-workspace/README.md`, 27 líneas añadidas y 10 quitadas. A
+          ntes, oráculo sin `--e2e` de 16:17:24 a 16:19:05, código 0 (23
+          correctas, 1 inactiva) |
+      92 -| 16:20 | — | **Paso 3, los dos retoques.** (1) `04-calidad/pru
+         -ebas-manuales.md`, apartado final «De dónde sale lo que el guio
+         -n espera»: una frase detrás de la que dice quién lo ejecutó, «L
+         -os resultados los anotó, al dictado del Tech Lead mientras lo e
+         -jecutaba, la sesión de IA que audita», con enlace a la nota. Ni
+         -nguna línea de tabla cambia (16:19:32). (2) El «Estado» de `ai-
+         -workspace/README.md`: «al cerrar la sesión 10» pasa a «al cerra
+         -r la sesión 12 (las sesiones 11 y 12 solo han cambiado document
+         -ación)» (AK-04). Los dos pendientes, la integración continua y
+         -el clon limpio, siguen como estaban |
+      92 +| 16:19 | — | **Paso 3, los dos retoques.** (1) `04-calidad/pru
+         +ebas-manuales.md`, apartado final «De dónde sale lo que el guio
+         +n espera»: una frase detrás de la que dice quién lo ejecutó, «L
+         +os resultados los anotó, al dictado del Tech Lead mientras lo e
+         +jecutaba, la sesión de IA que audita», con enlace a la nota. Ni
+         +nguna línea de tabla cambia (16:19:32). (2) El «Estado» de `ai-
+         +workspace/README.md`: «al cerrar la sesión 10» pasa a «al cerra
+         +r la sesión 12 (las sesiones 11 y 12 solo han cambiado document
+         +ación)» (AK-04). Los dos pendientes, la integración continua y
+         +el clon limpio, siguen como estaban |
+      93
+      94  ## 3. Revisiones y decisiones del Tech Lead
+      95
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 2 lines
+      90  | 16:17 | — | **Paso 2, la nota de método**, en `ai-workspace/R
+          EADME.md`, con la herramienta de edición: el apartado «Dos sesi
+          ones de IA y una persona», sustituido por el del encargo, con l
+          os saltos de línea a 76 columnas como mucho; pasa de 48 a 65 lí
+          neas. Cambian «Tres consecuencias» por «Cinco», dos consecuenci
+          as nuevas («El análisis previo» y «Revisa cada diff»), la últim
+          a consecuencia y el párrafo de las notas; lo demás del apartado
+           ya decía lo mismo. **Sin los saltos de línea, el apartado es i
+          déntico al texto del encargo** (16:16:01; las dos copias son de
+           la IA, como en AJ-07). Lo que la nota nueva dice frente a lo q
+          ue la IA sabe está en el apartado 3, N-10 a N-14: **la nota no
+          se ha cambiado** |
+      91  | 16:19 | `b58083b` | **Paso 2**, 16:19:05 según `git log`: sol
+          o `ai-workspace/README.md`, 27 líneas añadidas y 10 quitadas. A
+          ntes, oráculo sin `--e2e` de 16:17:24 a 16:19:05, código 0 (23
+          correctas, 1 inactiva) |
+      92  | 16:19 | — | **Paso 3, los dos retoques.** (1) `04-calidad/pru
+          ebas-manuales.md`, apartado final «De dónde sale lo que el guio
+          n espera»: una frase detrás de la que dice quién lo ejecutó, «L
+          os resultados los anotó, al dictado del Tech Lead mientras lo e
+          jecutaba, la sesión de IA que audita», con enlace a la nota. Ni
+          nguna línea de tabla cambia (16:19:32). (2) El «Estado» de `ai-
+          workspace/README.md`: «al cerrar la sesión 10» pasa a «al cerra
+          r la sesión 12 (las sesiones 11 y 12 solo han cambiado document
+          ación)» (AK-04). Los dos pendientes, la integración continua y
+          el clon limpio, siguen como estaban |
+      93 +| 16:22 | `53768f7` | **Paso 3**, 16:21:37 según `git log`: `pr
+         +uebas-manuales.md` y `ai-workspace/README.md`, 6 líneas añadida
+         +s y 2 quitadas. Antes, oráculo sin `--e2e` de 16:19:54 a 16:21:
+         +37, código 0 (23 correctas, 1 inactiva). Después (16:21:37): en
+         +tre `9b58091` y este commit cambian 10 ficheros, **ninguno en `
+         +backend/`, `frontend/` ni `scripts/`**; nada escucha en el 8000
+         + ni en el 4200; `backend/data/saas-o-matic.db`, igual. Al escri
+         +bir esta fila (reloj, 16:21:51), corregidas dos horas de las fi
+         +las anteriores, que la IA había puesto sin mirar el reloj (AK-0
+         +5) |
+      94 +| 16:22 | *(este commit)* | **Cierre de esta bitácora para la p
+         +arada 1.** Las filas anteriores se han escrito cada una en su m
+         +omento, con el fichero sin commit entre la apertura y este cier
+         +re: los commits de los pasos llevan solo los ficheros de su pas
+         +o. La IA para aquí: el Tech Lead revisa los tres pasos, lo que
+         +enseñó el `git diff` (AK-02), la tabla N-10 a N-14 y las precis
+         +iones AK-01 a AK-05. El `push` es suyo. La hora de este commit
+         +se ve con `git log` |
+      95
+      96  ## 3. Revisiones y decisiones del Tech Lead
+      97
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 7 lines, removed 1 line
+      122
+      123  ### Los tres pasos · lo hecho
+      124
+      125 -*(La tabla de los pasos se rellena según se hacen.)*
+      125 +| # | Commit | Qué toca |
+      126 +|---|---|---|
+      127 +| 1 · Las conversaciones | `4020b1c` | Los cinco `.txt` regene
+          +rados y `sesion-11.txt`, tal como los dejó el Tech Lead; `conv
+          +ersaciones/README.md`; y una fila de `ai-workspace/README.md`
+          +(«01 a 11») |
+      128 +| 2 · La nota de método | `b58083b` | `ai-workspace/README.md`
+          +: el apartado «Dos sesiones de IA y una persona», sustituido e
+          +ntero |
+      129 +| 3 · Dos retoques | `53768f7` | `04-calidad/pruebas-manuales.
+          +md`: una frase en el apartado final. `ai-workspace/README.md`:
+          + la primera línea del «Estado» |
+      130
+      131 +Ningún test nuevo ni cambiado: no hay rojo ni mutación que ano
+          +tar.
+      132 +
+      133  Precisiones de la IA, **sin aprobar**:
+      134
+      135  | # | Precisión | Motivo |
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 1 line
+      138  | AK-02 | **El `git diff` es lo que dice el encargo, y además
+           la IA ha visto cuatro cosas**, sin cambiar ninguna. (1) **El n
+           ombre de la carpeta de usuario sigue escrito, suelto, en dos l
+           íneas de `sesion-11.txt`** (221 y 350): son la fila AJ-02 de l
+           a bitácora de la sesión 11 tal como salió en pantalla, que dic
+           e cuál es el usuario de esas rutas. La sustitución cambió la r
+           uta de esa fila, no esa frase. (2) **La bitácora de la sesión
+           11, que está versionada, lo lleva en dos líneas** (147, con la
+            ruta y el nombre, y 195, con el nombre): `sesion-11.txt` ense
+           ña ahora esa fila con `<usuario>` y el fichero que esa convers
+           ación escribía dice el nombre. (3) **El historial**: el commit
+            `4655810` conserva las 26 líneas, como dice el encargo, y el
+           correo es el del autor de los 226 commits. (4) En `sesion-11.t
+           xt`, «❯» aparece también seis veces dentro del texto, citado;
+           en las otras nueve conversaciones solo estaba al principio de
+           línea | El encargo pedía decir si se veía otra cosa. La regla
+           de `CLAUDE.md` habla de rutas locales; un nombre suelto no es
+           una ruta, pero es justo lo que la sustitución retira. Las bitá
+           coras antiguas no se tocan y los `.txt` no se editan: lo decid
+           e el Tech Lead |
+      139  | AK-03 | **Dos cosas del paso 1 que el encargo no daba.** (1)
+            En `ai-workspace/README.md`, la fila de `03-proceso` de «Cómo
+            leerlo» pasa de «sesiones 01 a 10» a «01 a 11»; va en el comm
+           it del paso 1. (2) En el índice, las dos sustituciones llevan
+           sus cuentas (19 y 3 rutas, 7 correos), y la entrada de la sesi
+           ón 12 dice «la que publica esta versión de los ficheros» | Con
+            `sesion-11.txt` publicada, «01 a 10» era falso; es el mismo c
+           aso que «cinco documentos» en AJ-06, admitida. Las cuentas son
+            las del encargo, comprobadas en el apartado 4. Si sobran, se
+           quitan |
+      140  | AK-04 | **Tres cosas del paso 3.** (1) El «Estado» gana un p
+           aréntesis que el encargo no daba: «las sesiones 11 y 12 solo h
+           an cambiado documentación». (2) **Sus cifras no se han vuelto
+           a contar**: son las de la sesión 10. La salida del oráculo, en
+            verde, solo enseña los 96 tests de los scripts; los 741, los
+           569 y los 18 no salen, y Playwright no se ha ejecutado. (3) En
+            el guion, la frase nueva dice «la sesión de IA que audita» y
+           remite a la nota con «quién es y qué hace»; **la frase de la c
+           abecera, «Lo rellena quien ejecuta el guion», y «Quién: JGH» s
+           iguen como estaban**: no están en el apartado final y una es d
+           e una tabla | (1) Sin el paréntesis, «al cerrar la sesión 12»
+           delante de cifras de la sesión 10 hace pensar que se han vuelt
+           o a medir; que solo ha cambiado documentación lo dice `git dif
+           f df1740f HEAD -- backend frontend scripts`, vacío. (3) El enc
+           argo acotaba el retoque al apartado final. La cabecera y el fi
+           nal dicen ahora cosas distintas sobre quién rellena |
+      141 +| AK-05 | **Dos errores de la IA en esta sesión.** (1) **Horas
+          + puestas sin mirar el reloj**: las filas del commit del paso 2
+          + y del paso 3 decían 16:20 y se escribieron entre las 16:19:32
+          + y las 16:19:54, que son las lecturas de antes y de después; c
+          +orregidas a 16:19 antes de entrar en ningún commit. Otras dos
+          +celdas tampoco salieron de una lectura hecha al escribirlas, y
+          + no se pueden afinar más: la fila de apertura (16:10) se escri
+          +bió entre las 16:09:48 y las 16:10:54, y la del paso 2 (16:17)
+          +, entre las 16:16:43 y las 16:17:24. (2) **Una orden mal escri
+          +ta al comprobar el `git diff`**: la primera comparación (16:07
+          +:38) dio las líneas por distintas porque la sustitución de la
+          +IA no cambiaba las rutas con `\`; con la orden bien escrita (1
+          +6:08:04), idénticas | La regla 6 dice que las horas salen del
+          +reloj y nunca se estiman; es el mismo error de AJ-05. El de la
+          + orden duró medio minuto y no llegó a ningún texto: se anota p
+          +orque la comprobación que vale es la segunda |
+      142
+      143  ### La nota nueva frente a lo que la IA sabe del repositorio
+      144
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 67 lines, removed 5 lines
+      177  | Lo que queda en los diez `.txt` | Búsquedas de la carpeta de
+            usuario, del correo, del nombre de usuario de GitHub y de cua
+           lquier ruta de usuario (16:07:40) | Ninguna ruta con la carpet
+           a de usuario; ningún correo `noreply` ni el nombre de usuario
+           de GitHub. `<usuario>`: 1, 15, 3 y 1 veces en `sesion-05`, `06
+           -07`, `08` y `09` (una de las tres de la 08 ya estaba así) y 3
+            en `sesion-11`. La marca del correo, 7 veces en `sesion-01`.
+           Los demás emails, de ejemplo (`.example`) o decoradores de Pyt
+           hon. **El nombre de la carpeta de usuario, suelto, sigue en do
+           s líneas de `sesion-11.txt`** (AK-02) |
+      178  | `sesion-11.txt` | `wc`, finales de línea, espacios finales,
+           último byte, «❯» y sus primeras y últimas líneas (16:07:41 y 1
+           6:09:16) | 1.379 líneas y 79.643 bytes; `w/lf`, sin espacios f
+           inales ni retornos de carro, acaba en salto de línea. Empieza
+           con el `/clear` y el encargo de la sesión 11 y acaba con la re
+           spuesta de la parada 1 y un «※ recap». «❯»: 2 al principio de
+           línea y 6 más dentro del texto (AK-02) |
+      179  | Huella de los diez `.txt` antes del commit | `sha256sum`, gu
+           ardada fuera del repositorio (16:09:48) | Para compararla con
+           lo que quede en el commit del paso 1 |
+      180 +| El autor de los commits | `git log --format=%ae`, contando s
+          +in mostrar la dirección (16:10:54) | 226 commits, una sola dir
+          +ección, la `noreply` de GitHub |
+      181
+      182 +Paso 1:
+      183 +
+      184 +| Qué | Cómo | Resultado |
+      185 +|---|---|---|
+      186 +| Los enlaces del índice | `test -e` de sus 22 destinos (16:13
+          +:05) | Existen todos |
+      187 +| **Las conversaciones entran en el commit sin cambiar** | SHA
+          +-256 de los diez `.txt` antes del commit (16:09:48), de los di
+          +ez tal como quedan en `4020b1c` (`git show`) y de los de la ca
+          +rpeta después (16:15:09) | Las tres series, idénticas |
+      188 +| Finales de línea de lo versionado | `git ls-files --eol` de
+          +la carpeta (16:15:09) | `i/lf w/lf` en los once ficheros |
+      189 +
+      190 +Pasos 2 y 3:
+      191 +
+      192 +| Qué | Cómo | Resultado |
+      193 +|---|---|---|
+      194 +| La nota, sin los saltos de línea, es el texto del encargo |
+          +`cmp` del apartado del README con una copia del encargo, junta
+          +ndo saltos y espacios (16:16:01) | Idénticos, 3.721 bytes. Las
+          + dos copias son de la IA: vale lo que valía en AJ-07 |
+      195 +| El ancho del apartado | La línea más larga entre «Dos sesion
+          +es…» y «Estado» (16:16:01) | 76 columnas, en 65 líneas |
+      196 +| Los enlaces de la nota | `test -e` de sus cinco destinos (16
+          +:16:01) | Existen. El ancla del apartado no cambia: el título
+          +es el mismo |
+      197 +| Las citas de la tabla N-10 a N-14 | Lectura de las líneas ci
+          +tadas de `sesion-01.txt`, de ADR-001 y ADR-005, de la bitácora
+          + de la sesión 01 y de `requisitos.md` (16:09:16 a 16:17:24) |
+          +Dicen lo que la tabla dice que dicen |
+      198 +| Dónde está `.private/` | `test -d` en la raíz y en `ai-works
+          +pace/`, y `git check-ignore -v` con una ruta de prueba; **sin
+          +listarla ni leerla** (16:09:16) | Existe en la raíz y no en `a
+          +i-workspace/`; la ignora la línea 2 de `.gitignore` |
+      199 +| En el guion no cambia ninguna tabla | `git diff -U0` de `pru
+          +ebas-manuales.md`, contando las líneas cambiadas que empiezan
+          +por «\|» (16:19:32) | Ninguna: cambia una línea de texto y se
+          +añaden tres |
+      200 +| **El código de la aplicación y los tests no han cambiado** |
+          + `git diff --stat` de `backend`, `frontend` y `scripts`, desde
+          + `df1740f` (16:19:32) y desde `9b58091` (16:21:37) | Vacío las
+          + dos veces. Desde `9b58091`, 10 ficheros: esta bitácora, seis
+          +`.txt`, el índice, `ai-workspace/README.md` y `pruebas-manuale
+          +s.md` |
+      201 +
+      202 +Oráculo:
+      203 +
+      204 +| Qué | Cómo | Resultado |
+      205 +|---|---|---|
+      206 +| **Antes de cada commit** | `uv run scripts/check.py`, sin `-
+          +-e2e`; la salida, a un fichero fuera del repositorio, y el com
+          +mit en la misma orden, solo con código 0 | Código 0 en las cua
+          +tro pasadas anteriores a este cierre (16:10:54, 16:13:26, 16:1
+          +7:24 y 16:19:54): 23 correctas, 0 con fallo y 1 inactiva, Play
+          +wright |
+      207 +| Puertos y base local al cerrar | `netstat` y un listado de `
+          +backend/data/` (16:21:37) | Ninguno en escucha; 28.672 bytes,
+          +2026-11-14 18:37, como al empezar. La IA no ha arrancado ningú
+          +n servidor |
+      208 +
+      209  ## 5. No verificado
+      210
+      183 -*(Se rellena al llegar a la parada 1.)*
+      211 +Al llegar a la parada 1:
+      212
+      213 +- **Nada de lo que la nota dice de la sesión que audita**, com
+          +o en la
+      214 +  sesión 11: ni que exista, ni que preparara con el Tech Lead
+          +el análisis
+      215 +  previo y el estudio del stack, ni que redactara los prompts,
+          + ni qué lee o
+      216 +  comprueba en cada parada, ni que anotara los resultados del
+          +guion. Tampoco
+      217 +  lo contrario. La IA ve los mensajes que llegan a esta conver
+          +sación y el
+      218 +  repositorio.
+      219 +- **Que `sesion-11.txt` sea la conversación entera de la sesió
+          +n 11 y que no
+      220 +  se le haya cambiado nada más que las tres rutas**: es un fic
+          +hero nuevo y
+      221 +  la IA no tiene con qué compararlo. Ha mirado su principio, s
+          +u final y las
+      222 +  búsquedas del apartado 4; no lo ha leído entero. De los otro
+          +s nueve sí
+      223 +  hay comparación, con `4655810`.
+      224 +- **Si las conversaciones llevan contenido de los ficheros de
+          +`.private/`**:
+      225 +  sigue como en la sesión 11. La IA no lo ha buscado y no tien
+          +e con qué
+      226 +  comparar sin leer la carpeta.
+      227 +- **Que la copia de la nota sea fiel al mensaje del Tech Lead*
+          +*, más allá
+      228 +  de la comparación de las dos copias de la IA.
+      229 +- **Las cifras del «Estado»** (741, 569, 18 y 96 tests, 140 re
+          +quisitos,
+      230 +  siete evaluaciones, once limitaciones): no se han vuelto a c
+          +ontar, salvo
+      231 +  los 96 tests de los scripts, que salen en el oráculo (AK-04)
+          +.
+      232 +- **Cómo se ven los ficheros una vez publicados**: el ancla
+      233 +  `#dos-sesiones-de-ia-y-una-persona`, también desde el enlace
+          + nuevo del
+      234 +  guion, y los enlaces a los `.txt`. No hay remoto.
+      235 +- **Ningún evaluador ha mirado los cambios de esta sesión**, n
+          +i los de las
+      236 +  sesiones 09 a 11.
+      237 +- **Sin pasada con `--e2e`**, por el encargo: Playwright sale
+          +inactivo en
+      238 +  las cuatro. Los tests no se han tocado.
+      239 +- Sigue como en la sesión 11: **la integración continua no se
+          +ha ejecutado
+      240 +  nunca**, nada se ha ejecutado fuera de Windows y **un clon l
+          +impio**,
+      241 +  tampoco.
+      242 +
+      243  ## 6. Tareas pendientes
+      244
+      245  | Tarea | Cuándo |
+      246  |---|---|
+      189 -| Paso 1: las conversaciones regeneradas, `sesion-11.txt` y el
+          - índice al día | Ahora |
+      190 -| Paso 2: la nota de método nueva en `ai-workspace/README.md`
+          -| Después |
+      191 -| Paso 3: el apartado final de `pruebas-manuales.md` y el «Est
+          -ado» | Después |
+      192 -| Parada 1 y cierre de esta bitácora | Después |
+      247 +| ~~Paso 1: las conversaciones regeneradas, `sesion-11.txt` y
+          +el índice al día~~ | Hecho (`4020b1c`) |
+      248 +| ~~Paso 2: la nota de método nueva en `ai-workspace/README.md
+          +`~~ | Hecho (`b58083b`) |
+      249 +| ~~Paso 3: el apartado final de `pruebas-manuales.md` y el «E
+          +stado»~~ | Hecho (`53768f7`) |
+      250 +| **Parada 1: el Tech Lead revisa** los tres pasos, la tabla N
+          +-10 a N-14 y las precisiones AK-01 a AK-05. En particular: **s
+          +i el nombre de la carpeta de usuario, suelto, se queda en `ses
+          +ion-11.txt` y en la bitácora de la sesión 11** (AK-02); **si e
+          +l motivo 3 de ADR-001 se queda como está** (N-10); **si «este
+          +mismo directorio» se queda** (N-11); y **si la cabecera del gu
+          +ion, «Lo rellena quien ejecuta el guion», se queda** (AK-04) |
+          + Ahora |
+      251 +| La conversación de la sesión 12 no está publicada: el índice
+          + lo dice | A decidir por el Tech Lead |
+      252 +| **Prueba en limpio y `push`**. Tras el `push`, ver el primer
+          + resultado de la integración continua en Linux y en Windows y
+          +corregir lo que falle | Del Tech Lead; la corrección, en una s
+          +esión nueva |
+      253 +| Poner al día `ai-workspace/README.md` («Estado») y el README
+          + de la raíz («solo se ha probado en Windows 11») cuando la int
+          +egración continua y el clon limpio tengan resultado | Entonces
+          + |
+      254 +| Pendientes heredados que esta sesión no toca: L-07 y los avi
+          +sos de `npm audit`, los cuatro scripts de instalación sin apro
+          +bar, las fechas del fichero de bloqueo en el oráculo y los de
+          +la sesión 06 | A decidir por el Tech Lead |
+
+● Update(ai-workspace\03-proceso\sesion-12.md)
+  ⎿  Added 1 line, removed 1 line
+       4  |---|---|
+       5  | **Fecha** | 2026-11-16 |
+       6  | **Participantes** | Tech Lead (persona) · IA: Claude Code, mo
+          delo Claude Fable 5.2 |
+       7 -| **Resultado** | Sesión abierta a las 16:06 |
+       7 +| **Resultado** | **Parada 1 alcanzada (16:22): los tres pasos,
+         + hechos, cada uno en su commit y con el oráculo en código 0 ant
+         +es, sin `--e2e`.** No ha cambiado el código de la aplicación ni
+         + ningún test: entre `9b58091` y el último commit no cambia nada
+         + en `backend/`, `frontend/` ni `scripts/`. **Paso 1** (`4020b1c
+         +`): las conversaciones regeneradas y `sesion-11.txt`, idénticas
+         + byte a byte a las que dejó el Tech Lead, y el índice al día. *
+         +*Paso 2** (`b58083b`): la nota de método, sustituida entera y l
+         +iteral. **Paso 3** (`53768f7`): quién anotó los resultados del
+         +guion y el «Estado» al cerrar la sesión 12. **Lo que el Tech Le
+         +ad tiene que conocer**: (1) **el `git diff` de las conversacion
+         +es es lo que decía el encargo y nada más**: 26 líneas, 19 rutas
+         + y 7 correos; (2) **el nombre de la carpeta de usuario sigue, s
+         +uelto, en dos líneas de `sesion-11.txt` y en dos de la bitácora
+         + de la sesión 11**, y las 26 líneas siguen en el historial, en
+         +`4655810` (AK-02); (3) **la nota no se ha cambiado**; de lo que
+         + queda, N-10 a N-14, pesan dos: el motivo 3 de ADR-001 se apoya
+         + en quien lee cada diff (N-10) y «este mismo directorio» apunta
+         + a `ai-workspace/`, donde `.private/` no está (N-11); (4) la ca
+         +becera del guion sigue diciendo «Lo rellena quien ejecuta el gu
+         +ion» (AK-04); (5) la sesión tiene cinco commits, con el de aper
+         +tura (AK-01). Quedan sin aprobar AK-01 a AK-05. · Antes, sesión
+         + abierta a las 16:06 |
+       8
+       9  Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abr
+          e al empezar
+      10  la sesión y cada revisión se anota en el momento en que ocurre
+          (acuerdo f4 de
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Parada 1 alcanzada. Los tres pasos están hechos, cada uno en su commit, con el
+  oráculo en código 0 antes de cada uno (sin --e2e: 23 correctas, 1 inactiva,
+  Playwright). No ha cambiado nada en backend/, frontend/ ni scripts/.
+
+  Qué cambió
+
+  ┌─────────┬────────────────────────────────────────────────────────────────┐
+  │ Commit  │                              Qué                               │
+  ├─────────┼────────────────────────────────────────────────────────────────┤
+  │ 1c01eff │ Apertura de 03-proceso/sesion-12.md                            │
+  ├─────────┼────────────────────────────────────────────────────────────────┤
+  │         │ Paso 1: los cinco .txt regenerados y sesion-11.txt, sin editar │
+  │ 4020b1c │  (misma huella SHA-256 antes y dentro del commit), y el índice │
+  │         │  al día                                                        │
+  ├─────────┼────────────────────────────────────────────────────────────────┤
+  │ b58083b │ Paso 2: el apartado «Dos sesiones de IA y una persona»,        │
+  │         │ sustituido entero                                              │
+  ├─────────┼────────────────────────────────────────────────────────────────┤
+  │ 53768f7 │ Paso 3: la frase en el apartado final del guion, con enlace a  │
+  │         │ la nota, y el «Estado» al cerrar la sesión 12                  │
+  ├─────────┼────────────────────────────────────────────────────────────────┤
+  │ 3591202 │ Cierre de la bitácora                                          │
+  └─────────┴────────────────────────────────────────────────────────────────┘
+
+  Tres cosas que no pedías, anotadas como precisiones:
+  - «01 a 11»: la fila de 03-proceso en «Cómo leerlo» de ai-workspace/README.md
+    decía «sesiones 01 a 10»; con sesion-11.txt publicada era falso (AK-03).
+  - Cuentas en el índice: las dos sustituciones llevan sus cifras (19 y 3 rutas,
+    7 correos) (AK-03).
+  - Paréntesis en el «Estado»: «las sesiones 11 y 12 solo han cambiado
+    documentación», porque las cifras son las de la sesión 10 y no se han vuelto
+    a contar (AK-04).
+
+  Qué enseñó el git diff de las conversaciones
+
+  Es lo que decías y solo eso: 26 líneas en cinco ficheros (7, 1, 15, 2 y 1),
+  con 19 rutas y 7 correos. Aplicando las dos sustituciones a las líneas
+  quitadas salen idénticas a las puestas, y los otros cuatro .txt son iguales a
+  los versionados.
+
+  Otra cosa que he visto, sin tocarla (AK-02):
+  - El nombre de la carpeta de usuario sigue escrito, suelto, en dos líneas de
+    sesion-11.txt (221 y 350) y en dos de sesion-11.md (147 y 195). Es la fila
+    AJ-02, que dice cuál es el usuario de esas rutas; la sustitución cambió la
+    ruta, no esa frase.
+  - «❯» en sesion-11.txt aparece también seis veces dentro del texto, citado; en
+    las otras nueve solo estaba al principio de línea.
+
+  Lo que la nota sigue cruzando con el repositorio
+
+  La nota está literal (comparada sin saltos de línea con mi copia de tu
+  mensaje). Cierra N-1, N-4 y N-6, y el paso 3 cierra N-2. Queda esto, sin
+  cambiar nada:
+
+  - N-10, el que pesa: ADR-001 no dice «revisa cada diff» como reparto, lo usa
+    como argumento. El motivo 3 del stack es «Quien revisa cada diff conoce bien
+    este stack», y hay un criterio «Experiencia previa de quien revisa». Según
+    la nota, quien lee el código en cada parada es la sesión que audita.
+  - N-11: «.private/, la carpeta de este mismo directorio». La nota está en
+    ai-workspace/README.md y la carpeta está en la raíz, no en ai-workspace/
+    (comprobado con test -d, sin listarla).
+  - N-12: el análisis previo coincide con sesion-01.txt (líneas 66 a 74). Ese
+    mismo encargo dice que el material privado «no se cita nunca en el repo», y
+    la bitácora 01 dice «análisis propio».
+  - N-13: «salieron de ese borrador» queda ahora detrás de la consecuencia del
+    análisis previo y puede leerse como si el borrador fuera ese análisis.
+  - N-14: «ya revisados», cuando el índice dice ahora que la primera versión
+    todavía llevaba rutas y correo.
+  - Cabecera del guion: sigue diciendo «Lo rellena quien ejecuta el guion» y
+    «Quién: JGH»; no está en el apartado final, así que no la toqué (AK-04).
+
+  No verificado
+
+  - Nada de lo que la nota dice de la sesión que audita: no la veo.
+  - Que sesion-11.txt esté entera y solo lleve las tres sustituciones: es nueva
+    y no tengo con qué compararla; miré principio, final y búsquedas.
+  - Si las conversaciones llevan contenido de .private/.
+  - Las cifras del «Estado», salvo los 96 tests de los scripts.
+
+  Errores míos (AK-05)
+
+  - Dos filas de la cronología decían 16:20 sin mirar el reloj; corregidas a
+    16:19 antes de entrar en ningún commit.
+  - La fila de cierre dice 16:22 y se escribió entre las 16:21:51 y las
+    16:23:17. Ya está en el commit; no la he enmendado.
+  - Mi primera comparación del diff dio falso «distintas» por una orden mal
+    escrita; la que vale es la segunda.
+
+  Para que decidas
+
+  1. Si el nombre suelto de la carpeta de usuario se queda en sesion-11.txt y en
+     sesion-11.md.
+  2. Si el motivo 3 de ADR-001 se queda como está (N-10).
+  3. Si «este mismo directorio» se queda (N-11).
+  4. Si la cabecera del guion se queda.
+  5. Las precisiones AK-01 a AK-05, sin aprobar.
+
+  <!-- buddy: *estira el cuello* veintiséis líneas contadas dos veces, y el
+  nombre suelto sigue asomando en la 11 -->
+
+✻ Churned for 18m 44s · done Monday 4:25 PM
+
+※ recap: Sesión 12: corregir la nota de método y retirar rutas de usuario y correo de las conversaciones; los tres pasos y el cierre de la bitácora están en cinco commits, en la parada 1. Ahora te toca decidir los cinco puntos pendientes.
+
+  <!-- buddy: *parpadea despacio* cinco commits en verde y cinco decisiones esperando --> (disable recaps in /config)

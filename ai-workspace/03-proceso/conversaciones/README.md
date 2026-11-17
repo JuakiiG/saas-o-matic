@@ -7,7 +7,7 @@ decisiones; esto es lo que hay debajo.
 
 ## Los ficheros
 
-Uno por sesión, de la 01 a la 11:
+Uno por sesión, de la 01 a la 12:
 
 | Fichero | Líneas | Sesión y bitácora | Fecha |
 |---|---|---|---|
@@ -21,6 +21,7 @@ Uno por sesión, de la 01 a la 11:
 | [`sesion-09.txt`](sesion-09.txt) | 4.427 | [Sesión 09](../sesion-09.md) · Documentación de entrega e integración continua | 2026-11-15 |
 | [`sesion-10.txt`](sesion-10.txt) | 1.437 | [Sesión 10](../sesion-10.md) · Cierre tras la pasada manual | 2026-11-16 |
 | [`sesion-11.txt`](sesion-11.txt) | 1.379 | [Sesión 11](../sesion-11.md) · Las conversaciones publicadas y la nota de método | 2026-11-16 |
+| [`sesion-12.txt`](sesion-12.txt) | 1.394 | [Sesión 12](../sesion-12.md) · La nota de método corregida y las conversaciones sin rutas de usuario ni correo | 2026-11-16 |
 
 Lo que falta:
 
@@ -28,9 +29,9 @@ Lo que falta:
   fichero, que empieza a mitad de la 06 (14/11, hacia las 10:47): la
   conversación se había compactado y lo anterior no se pudo exportar. Lo
   que falta está en la [bitácora de la sesión 06](../sesion-06.md).
-- **La sesión 12**, la que publica esta versión de los ficheros: no puede
+- **La sesión 13**, la que publica la conversación de la 12: no puede
   exportarse a sí misma antes de acabar. Su bitácora es
-  [`sesion-12.md`](../sesion-12.md).
+  [`sesion-13.md`](../sesion-13.md).
 
 ## Cómo leerlas
 
