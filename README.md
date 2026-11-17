@@ -1,5 +1,7 @@
 # SaaS-O-Matic
 
+[![Integración continua](https://github.com/JuakiiG/saas-o-matic/actions/workflows/ci.yml/badge.svg)](https://github.com/JuakiiG/saas-o-matic/actions/workflows/ci.yml)
+
 Herramienta interna para que un equipo comercial simule y presupueste
 suscripciones SaaS: tarificación por tramos, impuestos por país e importes
 en varias divisas. Una API REST (FastAPI y SQLite) y un panel web (Angular).
@@ -8,7 +10,7 @@ en varias divisas. Una API REST (FastAPI y SQLite) y un panel web (Angular).
 
 ## Requisitos
 
-Probado con estas versiones, y solo con ellas:
+Probado a mano con estas versiones, y solo con ellas:
 
 | Herramienta | Versión |
 |---|---|
@@ -17,6 +19,11 @@ Probado con estas versiones, y solo con ellas:
 | Python | 3.12.0 (el proyecto pide 3.12; `uv` lo descarga si falta) |
 | Node.js y npm | 24.18.0 y 11.16.0 |
 | git | 2.55.0 |
+
+Además, la integración continua ejecuta el oráculo con `--e2e` en Linux y
+en Windows Server, con las mismas versiones de uv, Node.js y npm y sin
+nadie mirando un navegador. En macOS no se ha probado nunca (ver
+«Límites»).
 
 ## Arranque
 
@@ -40,9 +47,12 @@ npm ci
 npm start
 ```
 
-Abrir **`http://localhost:4200`**. No `http://127.0.0.1:4200`: el backend
-solo admite por CORS el origen `http://localhost:4200`, y desde otro el
-navegador oculta sus respuestas y la aplicación muestra «No se ha podido
+Abrir **`http://localhost:4200`**, y solo esa dirección: es el único origen
+que el backend admite por defecto (CORS). `http://127.0.0.1:4200` ni
+siquiera carga (visto en Windows 11: «No se puede acceder a este sitio
+web»), porque `ng serve` escucha solo en `[::1]:4200`. Desde otro origen
+que sí cargue, como `http://[::1]:4200`, la aplicación se abre, pero el
+navegador oculta las respuestas del backend y se ve «No se ha podido
 conectar con el servidor.».
 
 `npm ci` termina con dos avisos que no impiden nada: los de `npm audit`
@@ -73,21 +83,31 @@ identificador no se puede repetir dentro de un país.
 
 ## Tests y oráculo
 
-El oráculo, desde la raíz, ejecuta tests, lint, tipos, cobertura, límites
-de tamaño y el control de specs. **Necesita antes el `npm ci` del frontend**
-(«Arranque»). Con `--e2e` añade las pruebas de principio a fin, con
-Playwright:
+El oráculo ejecuta tests, lint, tipos, cobertura, límites de tamaño y el
+control de specs. Se lanza desde la raíz del repositorio, no desde
+`frontend/`, que es donde deja «Arranque», y **necesita antes el `npm ci`
+del frontend**:
 
 ```
+# en la raíz del repositorio (desde frontend/: cd ..)
 uv run scripts/check.py
-uv run scripts/check.py --e2e
 ```
 
-Playwright necesita antes su navegador, una sola vez:
+Con `--e2e` añade las pruebas de principio a fin, con Playwright, que
+necesita antes su navegador, una sola vez:
 
 ```
+# desde la raíz del repositorio
 cd frontend
 npx playwright install --only-shell chromium
+cd ..
+```
+
+Y entonces:
+
+```
+# en la raíz del repositorio
+uv run scripts/check.py --e2e
 ```
 
 - **Qué descarga**: Chromium sin ventana, de `cdn.playwright.dev`: 131 MB,
@@ -98,6 +118,11 @@ npx playwright install --only-shell chromium
   servidores que estén abiertos: con un puerto ocupado fallan sin tocar
   nada.
 - **Solo funcionan en Chromium.**
+
+La integración continua
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) ejecuta esa misma
+orden, con `--e2e`, en Linux y en Windows, en cada `push` y en cada
+*pull request*: es la insignia de debajo del título.
 
 Tests que hay hoy (2026-11-16): 741 del backend, 569 del frontend, 18 de
 Playwright y 96 de los propios scripts. Por separado:
@@ -131,8 +156,10 @@ Lo que el sistema no hace, o hace de forma imperfecta, está en
 [`limitaciones-conocidas.md`](ai-workspace/04-calidad/limitaciones-conocidas.md).
 Además:
 
-- **Solo se ha probado en Windows 11.** En Linux y en macOS no se ha
-  ejecutado nunca.
+- **A mano, solo se ha probado en Windows 11.** En Linux (Ubuntu 26.04) y
+  en Windows Server 2025 solo se ha ejecutado el oráculo con `--e2e`, en
+  la integración continua (primera ejecución, 2026-11-17, en verde), sin
+  nadie mirando un navegador. **En macOS no se ha ejecutado nunca.**
 - **`npm audit` da 27 avisos de gravedad moderada** (2026-11-15), todos en
   herramientas de desarrollo; nada de eso llega al navegador (L-07).
 - **Dos ejecuciones de Playwright a la vez se estorban**: la segunda falla
