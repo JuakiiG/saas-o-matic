@@ -1,0 +1,1341 @@
+ ▐▛███▛█   Claude Code v2.1.326
+▝▜██████▀  Fable 5.2 · Claude Max
+ ▝▝   ▝▝   Z:\saas-o-matic
+
+
+❯ /clear
+
+❯ Sesión 13: cierre de documentación tras la prueba en limpio y la primera
+  integración continua. Antes de nada lee CLAUDE.md, README.md,
+  ai-workspace/README.md y los pendientes de 03-proceso/sesion-12.md. Abre
+  03-proceso/sesion-13.md con el mismo formato que las anteriores.
+
+  Parada 1 de la sesión 12 aprobada. Admitidas AK-01 a AK-05. Decisiones sobre
+  lo que dejaste pendiente:
+  - AK-02: el nombre de la carpeta de usuario, suelto, se queda donde está. No
+  es un dato personal.
+  - N-10: ADR-001 se queda como está. Es un registro del 12/11 y la nota ya
+  explica cómo se ha revisado.
+  - N-11, N-13 y la cabecera del guion (AK-04) se corrigen en el paso 3.
+  - N-12 y N-14 se quedan.
+
+  En esta sesión no cambia el código de la aplicación ni ningún test, ni el
+  fichero de la CI. Un commit por paso, con el oráculo en verde por su código
+  de salida, sin --e2e. El repositorio tiene ahora un remoto, origin, privado:
+  no hagas push.
+
+  Hechos nuevos, que son míos y no tienes que comprobar. Van a la bitácora y a
+  los documentos que se nombran en cada paso.
+
+  A. Prueba en limpio, dos veces, las dos sobre 3591202 y en Windows 11:
+  - 16/11, de 17:27 a 17:33, la sesión que audita, con mi autorización para
+  usar los puertos 8000 y 4200: clon en una carpeta vacía, las órdenes del
+  README al pie de la letra, la parte de navegador con el Chromium de
+  Playwright (no con Chrome), y el oráculo con --e2e dentro del clon: 24
+  correctas, 0 inactivas.
+  - 17/11, de 08:34 a 10:03, yo, a mano, en otro clon vacío, con Chrome y solo
+  con el README delante: backend, npm ci (los dos avisos anunciados y solo
+  esos), npm start, alta de un cliente de España, el identificador que da
+  error, alta de un cliente de otro país, una simulación de 15 usuarios, divisa
+  USD, /docs, y el oráculo sin opciones (23 correctas, 1 inactiva) y con --e2e
+  (24 correctas, 0 inactivas).
+  - En los dos clones, después: árbol de git limpio, puertos libres y ninguna
+  carpeta temporal.
+
+  B. Dos fallos del README que salieron de ahí:
+  - R-1. «Arranque» dice que desde http://127.0.0.1:4200 la aplicación muestra
+  «No se ha podido conectar con el servidor.». No es lo que pasa: en este
+  Windows esa dirección no carga (Chrome: «No se puede acceder a este sitio
+  web»), porque ng serve escucha solo en [::1]:4200. El mensaje sí sale cuando
+  la aplicación carga desde otro origen: visto el 16/11 con http://[::1]:4200.
+  La cabecera access-control-allow-origin solo se devuelve al origen
+  http://localhost:4200 (visto con curl).
+  - R-2. En «Tests y oráculo» lancé uv run scripts/check.py desde frontend/,
+  que es donde deja «Arranque», y falló: «Failed to spawn: scripts/check.py».
+  «Desde la raíz» está en la frase y no en el bloque de órdenes. Además, las
+  órdenes del oráculo van antes que la instalación del navegador de Playwright,
+  que el --e2e necesita.
+
+  C. Integración continua, primera ejecución, el 17/11: hice push de 3591202 a
+  un repositorio privado de GitHub a las 10:09 y la CI se lanzó sola. Los dos
+  trabajos, en verde, y en los dos la línea «ORÁCULO EN VERDE · 24 correctas, 0
+  con fallo, 0 inactivas»:
+  - Oracle (ubuntu-latest): Ubuntu 26.04.1, imagen ubuntu-26.04 versión
+  20261111.196.1. Tres minutos y medio.
+  - Oracle (windows-latest): Microsoft Windows Server 2025, imagen
+  windows-2025-vs2026 versión 20261103.298.1. Seis minutos.
+  - En los dos: uv 0.12.13, Node 24.18.0 y npm 11.16.0, y el navegador de
+  Playwright descargado desde cero.
+  - Una anotación informativa de GitHub: la etiqueta ubuntu-latest pasa a
+  Ubuntu 26. No es un fallo.
+  Es la primera vez que el proyecto se ejecuta fuera de Windows. Sigue sin
+  probar: macOS, y Linux a mano con un navegador.
+
+  Paso 1. La conversación de la sesión 12. He dejado sesion-12.txt en
+  03-proceso/conversaciones/, sin commit, con las mismas sustituciones que las
+  demás. NO la edites. Pon al día el índice: la tabla gana la sesión 12 y la
+  que falta es la 13, por la misma razón. Si ai-workspace/README.md dice «01 a
+  11» en algún sitio, pasa a «01 a 12».
+
+  Paso 2. El README de la raíz. Cuatro cambios y ninguno más:
+  - R-1: reescribe el párrafo de «Abrir http://localhost:4200» con lo que pasa
+  de verdad (hecho B). Corto.
+  - R-2: en «Tests y oráculo», que cada bloque de órdenes diga su carpeta sin
+  tener que leer la frase (un cd explícito desde la raíz del repositorio o
+  equivalente), y que la instalación del navegador de Playwright vaya antes de
+  la orden con --e2e.
+  - «Requisitos» y «Límites»: «Solo se ha probado en Windows 11» ya no es
+  verdad. Di lo que hay: a mano, solo en Windows 11; en Linux y en Windows
+  Server, el oráculo con --e2e en la integración continua (hecho C), sin nadie
+  mirando un navegador; macOS, nunca.
+  - Una insignia de la CI bajo el título y una frase que la nombre en «Tests y
+  oráculo», con enlace a .github/workflows/ci.yml. La dirección del repositorio
+  sale de git remote get-url origin. Mientras el repositorio sea privado la
+  insignia no se ve desde fuera: dilo en la bitácora, no en el README.
+
+  Paso 3. ai-workspace, en un commit:
+  - El «Estado» de ai-workspace/README.md, al cerrar la sesión 13: los dos
+  pendientes (la integración continua y el clon limpio) pasan a hechos, con sus
+  fechas y con quién hizo cada cosa (hechos A y C). Lo que sigue sin probar,
+  dicho.
+  - La nota «Dos sesiones de IA y una persona», tres retoques y nada más:
+  (N-11) «la carpeta de este mismo directorio que git ignora» pasa a «la
+  carpeta de la raíz del repositorio que git ignora»; (N-13) «salieron de ese
+  borrador» pasa a decir sin ambigüedad que es el borrador de respuesta de la
+  sesión que audita, no el análisis previo; y en la consecuencia de
+  «comprobado» / «he visto», la prueba en limpio del 16/11 se añade como otro
+  ejemplo de comprobación ejecutada por la sesión que audita, y la del 17/11, a
+  mano, como mía.
+  - En pruebas-manuales.md, la frase de la cabecera «Lo rellena quien ejecuta
+  el guion» pasa a decir que lo rellena quien lo ejecuta o quien anota a su
+  dictado. La tabla y los resultados no se tocan.
+  - Si limitaciones-conocidas.md o algún otro documento de 04-calidad dice que
+  la CI no se ha ejecutado o que no se ha probado fuera de Windows, ponlo al
+  día con los hechos A y C. Dime cuáles has tocado.
+
+  PARA ahí (parada 1) y cierra la bitácora de la sesión 13. Dime qué cambió,
+  qué documentos decían todavía «no ejecutada» o «solo Windows» y cuáles has
+  corregido, y si algo de los hechos A, B y C contradice lo que sabes del
+  repositorio. No leas ni cites .private/. El push lo hago yo.
+
+● Empiezo por la lectura que pides antes de tocar nada.
+
+  Searched for 3 patterns, read 7 files, ran 5 shell commands, recalled 1 memory (ctrl+o to expand)
+
+● Las lecturas están hechas y el estado comprobado: HEAD en 3591202, puertos
+  libres y sesion-12.txt limpio. Ahora contrasto tres citas más para validar los
+  hechos A, B y C y después abro la bitácora. · summary
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Todo contrastado; abro ahora la bitácora de la sesión 13 y hago su commit de
+  apertura con el oráculo.
+
+● Write(ai-workspace\03-proceso\sesion-13.md)
+  ⎿  Wrote 248 lines to ai-workspace\03-proceso\sesion-13.md
+       1 # Sesión 13 · Cierre de documentación tras la prueba en limpio y
+          la primera integración continua
+       2
+       3 | | |
+       4 |---|---|
+       5 | **Fecha** | 2026-11-17 |
+       6 | **Participantes** | Tech Lead (persona) · IA: Claude Code, mod
+         elo Claude Fable 5.2 |
+       7 | **Resultado** | Sesión abierta a las 10:40 |
+       8
+     … +240 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\conversaciones\README.md)
+  ⎿  Added 1 line, removed 1 line
+       7
+       8  ## Los ficheros
+       9
+      10 -Uno por sesión, de la 01 a la 11:
+      10 +Uno por sesión, de la 01 a la 12:
+      11
+      12  | Fichero | Líneas | Sesión y bitácora | Fecha |
+      13  |---|---|---|---|
+
+● Update(ai-workspace\03-proceso\conversaciones\README.md)
+  ⎿  Added 1 line
+      21  | [`sesion-09.txt`](sesion-09.txt) | 4.427 | [Sesión 09](../ses
+          ion-09.md) · Documentación de entrega e integración continua |
+          2026-11-15 |
+      22  | [`sesion-10.txt`](sesion-10.txt) | 1.437 | [Sesión 10](../ses
+          ion-10.md) · Cierre tras la pasada manual | 2026-11-16 |
+      23  | [`sesion-11.txt`](sesion-11.txt) | 1.379 | [Sesión 11](../ses
+          ion-11.md) · Las conversaciones publicadas y la nota de método
+          | 2026-11-16 |
+      24 +| [`sesion-12.txt`](sesion-12.txt) | 1.394 | [Sesión 12](../ses
+         +ion-12.md) · La nota de método corregida y las conversaciones s
+         +in rutas de usuario ni correo | 2026-11-16 |
+      25
+      26  Lo que falta:
+      27
+
+● Update(ai-workspace\03-proceso\conversaciones\README.md)
+  ⎿  Added 2 lines, removed 2 lines
+      29    fichero, que empieza a mitad de la 06 (14/11, hacia las 10:47
+          ): la
+      30    conversación se había compactado y lo anterior no se pudo exp
+          ortar. Lo
+      31    que falta está en la [bitácora de la sesión 06](../sesion-06.
+          md).
+      32 -- **La sesión 12**, la que publica esta versión de los ficheros
+         -: no puede
+      32 +- **La sesión 13**, la que publica la conversación de la 12: no
+         + puede
+      33    exportarse a sí misma antes de acabar. Su bitácora es
+      34 -  [`sesion-12.md`](../sesion-12.md).
+      34 +  [`sesion-13.md`](../sesion-13.md).
+      35
+      36  ## Cómo leerlas
+      37
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 1 line, removed 1 line
+      14  | [`00-analisis/`](00-analisis/) | Requisitos numerados (`R-xx`
+          ) y supuestos sobre las ambigüedades (`A-xx`) | ¿Qué hay que co
+          nstruir y qué no estaba definido? |
+      15  | [`01-specs/`](01-specs/) | Especificaciones (`SPEC-xx`) con r
+          equisitos EARS, criterios de aceptación y contratos de API | ¿Q
+          ué debe hacer exactamente cada parte? |
+      16  | [`02-arquitectura/`](02-arquitectura/) | Decisiones de arquit
+          ectura (`ADR-xxx`), esquema de datos, estructura del proyecto y
+           directrices dadas a la IA | ¿Cómo se construye y por qué así?
+          |
+      17 -| [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts c
+         -lave y cada propuesta de la IA corregida o rechazada, con su mo
+         -tivo. Y las [conversaciones exportadas](03-proceso/conversacion
+         -es/README.md) de las sesiones 01 a 11 | ¿Cómo se dirigió a la I
+         -A? |
+      17 +| [`03-proceso/`](03-proceso/) | Bitácora por sesión: prompts c
+         +lave y cada propuesta de la IA corregida o rechazada, con su mo
+         +tivo. Y las [conversaciones exportadas](03-proceso/conversacion
+         +es/README.md) de las sesiones 01 a 12 | ¿Cómo se dirigió a la I
+         +A? |
+      18  | [`04-calidad/`](04-calidad/) | Siete evaluaciones independien
+          tes, cada una con su respuesta y la decisión sobre cada hallazg
+          o; la [matriz de trazabilidad](04-calidad/trazabilidad.md) requ
+          isito → test; las [limitaciones conocidas](04-calidad/limitacio
+          nes-conocidas.md); el [guion de pruebas manuales](04-calidad/pr
+          uebas-manuales.md) y las capturas de las vistas | ¿Cómo se sabe
+           que funciona, y qué se sabe que no? |
+      19
+      20  ## Recorrido de cinco minutos
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Índice al día (paso 1). Anoto las filas en la bitácora y hago el commit del
+  paso 1 con el oráculo.
+
+● Update(ai-workspace\03-proceso\sesion-13.md)
+  ⎿  Added 2 lines
+      111  | Hora | Commit | Qué |
+      112  |---|---|---|
+      113  | 10:44 | — | Mensaje recibido hacia las 10:40 (primera lectur
+           a del reloj, 10:40:49). El último commit es `3591202` (2026-11
+           -16 16:24:58), el cierre de la sesión 12, y `origin/main` apun
+           ta al mismo (referencia local, sin consultar la red). **`git s
+           tatus`: solo `sesion-12.txt`, sin versionar**, que es lo que a
+           nunciaba el encargo. **`netstat` a las 10:41:07: nada escucha
+           en el 8000 ni en el 4200.** `backend/data/saas-o-matic.db`, de
+           l Tech Lead: 28.672 bytes, 2026-11-14 18:37, como al cerrar la
+            sesión 12; la IA no lo toca. Lecturas del encargo hechas, y a
+           demás el índice de las conversaciones, `limitaciones-conocidas
+           .md`, la cabecera de `pruebas-manuales.md` y `.github/workflow
+           s/ci.yml`, este solo para leerlo. `sesion-12.txt`, mirada sin
+           editarla (apartado 4). Los hechos A, B y C, contrastados con e
+           l repositorio antes de tocar nada (apartado 3). Apertura de es
+           ta bitácora |
+      114 +| 10:48 | `e3e2c61` | **Apertura de la bitácora**, 10:47:16 se
+          +gún `git log`, tras el oráculo sin `--e2e` de 10:45:39 a 10:47
+          +:16, código 0 (23 correctas, 1 inactiva); la salida, a un fich
+          +ero, y el commit, en la misma orden, solo con ese código. Solo
+          + entra `sesion-13.md`: `sesion-12.txt` sigue sin commit (AL-01
+          +) |
+      115 +| 10:48 | — | **Paso 1, el índice**: `conversaciones/README.md
+          +`, con la herramienta de edición, de 62 a 63 líneas. La tabla
+          +gana la sesión 12 (1.394 líneas) y dice «de la 01 a la 12»; «L
+          +o que falta» nombra la sesión 13 en lugar de la 12. «Qué se ha
+          + cambiado al publicarlas» no se ha tocado (AL-02). En `ai-work
+          +space/README.md`, la fila de `03-proceso` de «Cómo leerlo» dec
+          +ía «sesiones 01 a 11» y dice «01 a 12»; era el único sitio (10
+          +:47:34). Los 25 destinos de los enlaces del índice existen. `s
+          +esion-12.txt` no se ha tocado |
+      116
+      117  ## 3. Revisiones y decisiones del Tech Lead
+      118
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 1 en su commit (bc4ee0d). Ahora el paso 2: los cuatro cambios del README
+  de la raíz.
+
+● Update(README.md)
+  ⎿  Added 2 lines
+      1  # SaaS-O-Matic
+      2
+      3 +[![Integración continua](https://github.com/JuakiiG/saas-o-matic
+        +/actions/workflows/ci.yml/badge.svg)](https://github.com/JuakiiG
+        +/saas-o-matic/actions/workflows/ci.yml)
+      4 +
+      5  Herramienta interna para que un equipo comercial simule y presup
+         ueste
+      6  suscripciones SaaS: tarificación por tramos, impuestos por país
+         e importes
+      7  en varias divisas. Una API REST (FastAPI y SQLite) y un panel we
+         b (Angular).
+
+● Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      10
+      11  ## Requisitos
+      12
+      13 -Probado con estas versiones, y solo con ellas:
+      13 +Probado a mano con estas versiones, y solo con ellas:
+      14
+      15  | Herramienta | Versión |
+      16  |---|---|
+
+● Update(README.md)
+  ⎿  Added 5 lines
+      20  | Node.js y npm | 24.18.0 y 11.16.0 |
+      21  | git | 2.55.0 |
+      22
+      23 +Además, la integración continua ejecuta el oráculo con `--e2e`
+         +en Linux y
+      24 +en Windows Server, con las mismas versiones de uv, Node.js y np
+         +m y sin
+      25 +nadie mirando un navegador. En macOS no se ha probado nunca (ve
+         +r
+      26 +«Límites»).
+      27 +
+      28  ## Arranque
+      29
+      30  El backend, en una terminal:
+
+● Update(README.md)
+  ⎿  Added 6 lines, removed 3 lines
+      47  npm start
+      48  ```
+      49
+      50 -Abrir **`http://localhost:4200`**. No `http://127.0.0.1:4200`:
+         -el backend
+      51 -solo admite por CORS el origen `http://localhost:4200`, y desde
+         - otro el
+      52 -navegador oculta sus respuestas y la aplicación muestra «No se
+         -ha podido
+      50 +Abrir **`http://localhost:4200`**, y solo esa dirección: es el
+         +único origen
+      51 +que el backend admite por defecto (CORS). `http://127.0.0.1:420
+         +0` ni
+      52 +siquiera carga (visto en Windows 11: «No se puede acceder a est
+         +e sitio
+      53 +web»), porque `ng serve` escucha solo en `[::1]:4200`. Desde ot
+         +ro origen
+      54 +que sí cargue, como `http://[::1]:4200`, la aplicación se abre,
+         + pero el
+      55 +navegador oculta las respuestas del backend y se ve «No se ha p
+         +odido
+      56  conectar con el servidor.».
+      57
+      58  `npm ci` termina con dos avisos que no impiden nada: los de `np
+          m audit`
+
+● Update(README.md)
+  ⎿  Added 16 lines, removed 6 lines
+       83
+       84  ## Tests y oráculo
+       85
+       86 -El oráculo, desde la raíz, ejecuta tests, lint, tipos, cobertu
+          -ra, límites
+       87 -de tamaño y el control de specs. **Necesita antes el `npm ci`
+          -del frontend**
+       88 -(«Arranque»). Con `--e2e` añade las pruebas de principio a fin
+          -, con
+       89 -Playwright:
+       86 +El oráculo ejecuta tests, lint, tipos, cobertura, límites de t
+          +amaño y el
+       87 +control de specs. Se lanza desde la raíz del repositorio, no d
+          +esde
+       88 +`frontend/`, que es donde deja «Arranque», y **necesita antes
+          +el `npm ci`
+       89 +del frontend**:
+       90
+       91  ```
+       92 +# en la raíz del repositorio (desde frontend/: cd ..)
+       93  uv run scripts/check.py
+       93 -uv run scripts/check.py --e2e
+       94  ```
+       95
+       96 -Playwright necesita antes su navegador, una sola vez:
+       96 +Con `--e2e` añade las pruebas de principio a fin, con Playwrig
+          +ht, que
+       97 +necesita antes su navegador, una sola vez:
+       98
+       99  ```
+      100 +# desde la raíz del repositorio
+      101  cd frontend
+      102  npx playwright install --only-shell chromium
+      103 +cd ..
+      104  ```
+      105
+      106 +Y entonces:
+      107 +
+      108 +```
+      109 +# en la raíz del repositorio
+      110 +uv run scripts/check.py --e2e
+      111 +```
+      112 +
+      113  - **Qué descarga**: Chromium sin ventana, de `cdn.playwright.d
+           ev`: 131 MB,
+      114    304 MB en disco, en la carpeta `ms-playwright` del usuario,
+           fuera del
+      115    repositorio.
+
+● Update(README.md)
+  ⎿  Added 5 lines
+      119    nada.
+      120  - **Solo funcionan en Chromium.**
+      121
+      122 +La integración continua
+      123 +([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) ejecu
+          +ta esa misma
+      124 +orden, con `--e2e`, en Linux y en Windows, en cada `push` y en
+          + cada
+      125 +*pull request*: es la insignia de debajo del título.
+      126 +
+      127  Tests que hay hoy (2026-11-16): 741 del backend, 569 del front
+           end, 18 de
+      128  Playwright y 96 de los propios scripts. Por separado:
+      129  `uv run --locked pytest` en `backend/`; `npm run test:ci` y `n
+           pm run e2e`
+
+● Update(README.md)  ⎿  Added 4 lines, removed 2 lines
+      156  [`limitaciones-conocidas.md`](ai-workspace/04-calidad/limitaci
+           ones-conocidas.md).
+      157  Además:
+      158
+      159 -- **Solo se ha probado en Windows 11.** En Linux y en macOS no
+          - se ha
+      160 -  ejecutado nunca.
+      159 +- **A mano, solo se ha probado en Windows 11.** En Linux (Ubun
+          +tu 26.04) y
+      160 +  en Windows Server 2025 solo se ha ejecutado el oráculo con `
+          +--e2e`, en
+      161 +  la integración continua (primera ejecución, 2026-11-17, en v
+          +erde), sin
+      162 +  nadie mirando un navegador. **En macOS no se ha ejecutado nu
+          +nca.**
+      163  - **`npm audit` da 27 avisos de gravedad moderada** (2026-11-1
+           5), todos en
+      164    herramientas de desarrollo; nada de eso llega al navegador (
+           L-07).
+      165  - **Dos ejecuciones de Playwright a la vez se estorban**: la s
+           egunda falla
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\sesion-13.md)
+  ⎿  Added 2 lines
+      113  | 10:44 | — | Mensaje recibido hacia las 10:40 (primera lectur
+           a del reloj, 10:40:49). El último commit es `3591202` (2026-11
+           -16 16:24:58), el cierre de la sesión 12, y `origin/main` apun
+           ta al mismo (referencia local, sin consultar la red). **`git s
+           tatus`: solo `sesion-12.txt`, sin versionar**, que es lo que a
+           nunciaba el encargo. **`netstat` a las 10:41:07: nada escucha
+           en el 8000 ni en el 4200.** `backend/data/saas-o-matic.db`, de
+           l Tech Lead: 28.672 bytes, 2026-11-14 18:37, como al cerrar la
+            sesión 12; la IA no lo toca. Lecturas del encargo hechas, y a
+           demás el índice de las conversaciones, `limitaciones-conocidas
+           .md`, la cabecera de `pruebas-manuales.md` y `.github/workflow
+           s/ci.yml`, este solo para leerlo. `sesion-12.txt`, mirada sin
+           editarla (apartado 4). Los hechos A, B y C, contrastados con e
+           l repositorio antes de tocar nada (apartado 3). Apertura de es
+           ta bitácora |
+      114  | 10:48 | `e3e2c61` | **Apertura de la bitácora**, 10:47:16 se
+           gún `git log`, tras el oráculo sin `--e2e` de 10:45:39 a 10:47
+           :16, código 0 (23 correctas, 1 inactiva); la salida, a un fich
+           ero, y el commit, en la misma orden, solo con ese código. Solo
+            entra `sesion-13.md`: `sesion-12.txt` sigue sin commit (AL-01
+           ) |
+      115  | 10:48 | — | **Paso 1, el índice**: `conversaciones/README.md
+           `, con la herramienta de edición, de 62 a 63 líneas. La tabla
+           gana la sesión 12 (1.394 líneas) y dice «de la 01 a la 12»; «L
+           o que falta» nombra la sesión 13 en lugar de la 12. «Qué se ha
+            cambiado al publicarlas» no se ha tocado (AL-02). En `ai-work
+           space/README.md`, la fila de `03-proceso` de «Cómo leerlo» dec
+           ía «sesiones 01 a 11» y dice «01 a 12»; era el único sitio (10
+           :47:34). Los 25 destinos de los enlaces del índice existen. `s
+           esion-12.txt` no se ha tocado |
+      116 +| 10:50 | `bc4ee0d` | **Paso 1**, 10:49:19 según `git log`: `s
+          +esion-12.txt`, el índice y la fila de `ai-workspace/README.md`
+          +; tres ficheros, 1.399 líneas añadidas y 4 quitadas. Antes, or
+          +áculo sin `--e2e` de 10:47:52 a 10:49:19, código 0 (23 correct
+          +as, 1 inactiva). Después (10:49:19): **`sesion-12.txt` tiene e
+          +n el commit la misma huella que el fichero que dejó el Tech Le
+          +ad** y el de la carpeta sigue igual; `git ls-files --eol` dice
+          + `i/lf w/lf` |
+      117 +| 10:50 | — | **Paso 2, el README de la raíz**, con la herrami
+          +enta de edición: los cuatro cambios del encargo, 39 líneas aña
+          +didas y 12 quitadas (10:49:59). (1) **R-1**: el párrafo de «Ab
+          +rir `http://localhost:4200`», reescrito con el hecho B; pasa d
+          +e 4 a 7 líneas. (2) **R-2**: en «Tests y oráculo», tres bloque
+          +s en lugar de dos, cada uno con una primera línea que dice su
+          +carpeta, y la instalación del navegador antes de la orden con
+          +`--e2e` (AL-03). (3) **Dónde se ha probado**: «Requisitos» dic
+          +e «Probado a mano» y gana un párrafo detrás de la tabla; en «L
+          +ímites», la primera fila dice a mano, en la integración contin
+          +ua y nunca (AL-04). (4) **La insignia**, bajo el título, y una
+          + frase en «Tests y oráculo» con enlace a `.github/workflows/ci
+          +.yml` (AL-05). Lo demás del README no se ha tocado: ni las cif
+          +ras de tests ni su fecha |
+      118
+      119  ## 3. Revisiones y decisiones del Tech Lead
+      120
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 2 en su commit (2a33120). Ahora el paso 3: el «Estado», los tres retoques
+  de la nota y la cabecera del guion.
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 3 lines, removed 2 lines
+       93    material y del enunciado, el análisis publicado en
+       94    [`00-analisis/`](00-analisis/) y los dos primeros ADR.
+       95  - **Los prompts largos de cada sesión y de cada parada** que s
+           e ven en las
+       96 -  conversaciones salieron de ese borrador: los redactó la sesi
+          -ón que audita
+       97 -  con el Tech Lead, y él los revisó y los pegó.
+       96 +  conversaciones salieron del borrador de respuesta de la sesi
+          +ón que
+       97 +  audita, no del análisis previo: los redactó ella con el Tech
+          + Lead, y él
+       98 +  los revisó y los pegó.
+       99  - **«Revisa cada diff».** `CLAUDE.md`, las convenciones de est
+           e documento y
+      100    ADR-001 dicen que el Tech Lead revisa cada diff. En la práct
+           ica se ha
+      101    hecho así: la sesión que audita revisa los cambios de cada p
+           arada (lee el
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 4 lines, removed 2 lines
+      106  - **Cuando una bitácora o un prompt dice «comprobado» o «he vi
+           sto»**, la
+      107    comprobación puede haberla ejecutado la sesión que audita ba
+           jo la
+      108    dirección del Tech Lead; por ejemplo, los recorridos en el n
+           avegador de
+      109 -  las sesiones 06 y 07. La excepción es el
+      109 +  las sesiones 06 y 07 y la prueba en limpio del 16/11/2026. L
+          +as
+      110 +  excepciones son el
+      111    [guion de pruebas manuales](04-calidad/pruebas-manuales.md)
+           del
+      111 -  16/11/2026: lo ejecutó él a mano, paso a paso.
+      112 +  16/11/2026, que ejecutó él a mano, paso a paso, y la prueba
+          +en limpio
+      113 +  del 17/11/2026, que hizo también él, a mano.
+      114  - **La sesión que audita no ha escrito en nada de lo que git v
+           ersiona en
+      115    este repositorio**, con dos excepciones: el 16/11/2026 anotó
+            en el guion
+      116    de pruebas manuales los resultados que el Tech Lead le iba d
+           ictando
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 2 lines, removed 2 lines
+      118    `03-proceso/conversaciones/` los ficheros exportados, ya rev
+           isados.
+      119
+      120  Sus notas de trabajo y los borradores de los prompts no se pub
+           lican: están
+      121 -en `.private/`, la carpeta de este mismo directorio que git ig
+          -nora, junto
+      122 -con material ajeno a este proyecto.
+      121 +en `.private/`, la carpeta de la raíz del repositorio que git
+          +ignora,
+      122 +junto con material ajeno a este proyecto.
+      123
+      124  *Por qué así*: quien genera no se evalúa a sí mismo. El evalua
+           dor
+      125  independiente revisa el resultado contra las specs; la sesión
+           que audita
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 2 lines, removed 2 lines
+      128
+      129  ## Estado
+      130
+      131 -A 2026-11-16, al cerrar la sesión 12 (las sesiones 11 y 12 sol
+          -o han cambiado
+      132 -documentación):
+      131 +A 2026-11-17, al cerrar la sesión 13 (las sesiones 11, 12 y 13
+          + solo han
+      132 +cambiado documentación):
+      133
+      134  - **Specs**: las cuatro, `aprobadas` (el bloque backend el 202
+           6-11-13 y
+      135    SPEC-04 el 2026-11-14).
+
+● Update(ai-workspace\README.md)
+  ⎿  Added 39 lines, removed 5 lines
+      152    OK**. Lo que vio en cada uno está en su columna de resultado
+           s. Los tres
+      153    tests del frontend añadidos después no cambian el código de
+           la
+      154    aplicación.
+      155 +- **Instalación desde un clon limpio**: hecha dos veces, las d
+          +os sobre el
+      156 +  commit `3591202`, en Windows 11 y siguiendo el
+      157 +  [`README.md`](../README.md) de la raíz.
+      158 +  - **El 16/11/2026, de 17:27 a 17:33, la sesión de IA que aud
+          +ita**, con
+      159 +    la autorización del Tech Lead para usar los puertos 8000 y
+          + 4200: un
+      160 +    clon en una carpeta vacía, las órdenes del README al pie d
+          +e la letra,
+      161 +    la parte de navegador con el Chromium de Playwright (no co
+          +n Chrome) y
+      162 +    el oráculo con `--e2e` dentro del clon: 24 correctas, 0 in
+          +activas.
+      163 +  - **El 17/11/2026, de 08:34 a 10:03, el Tech Lead, a mano**,
+          + en otro
+      164 +    clon vacío, con Chrome y solo con el README delante: el ba
+          +ckend,
+      165 +    `npm ci` (los dos avisos anunciados y solo esos), `npm sta
+          +rt`, el
+      166 +    alta de un cliente de España, el identificador que da erro
+          +r, el alta
+      167 +    de un cliente de otro país, una simulación de 15 usuarios,
+          + la divisa
+      168 +    USD, `/docs` y el oráculo, sin opciones (23 correctas, 1 i
+          +nactiva) y
+      169 +    con `--e2e` (24 correctas, 0 inactivas).
+      170
+      156 -**Pendiente**, y por tanto sin comprobar:
+      171 +  En los dos clones, después: árbol de git limpio, puertos lib
+          +res y
+      172 +  ninguna carpeta temporal. De ahí salieron dos fallos del REA
+          +DME (qué se
+      173 +  ve al abrir otra dirección y desde qué carpeta se lanza el o
+          +ráculo),
+      174 +  corregidos en la sesión 13: son R-1 y R-2 en su
+      175 +  [bitácora](03-proceso/sesion-13.md).
+      176 +- **Integración continua**
+      177 +  ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)):
+          + **primera
+      178 +  ejecución el 17/11/2026**, sola, tras el `push` del Tech Lea
+          +d de
+      179 +  `3591202` a un repositorio privado de GitHub, a las 10:09. L
+          +os dos
+      180 +  trabajos, en verde, y en los dos la línea «ORÁCULO EN VERDE
+          +· 24
+      181 +  correctas, 0 con fallo, 0 inactivas»: en Ubuntu 26.04.1, en
+          +tres
+      182 +  minutos y medio, y en Windows Server 2025, en seis. En los d
+          +os, uv
+      183 +  0.12.13, Node 24.18.0 y npm 11.16.0, y el navegador de Playw
+          +right
+      184 +  descargado desde cero. **Es la primera vez que el proyecto s
+          +e ejecuta
+      185 +  fuera de Windows.**
+      186
+      158 -- La integración continua (`.github/workflows/ci.yml`) está es
+          -crita y **no
+      159 -  se ha ejecutado nunca**: solo puede hacerlo tras subir el re
+          -positorio.
+      160 -  Sería la primera ejecución fuera de Windows.
+      161 -- La instalación desde un clon limpio.
+      187 +**Sin probar**:
+      188
+      189 +- **macOS**: nunca.
+      190 +- **Linux a mano, con un navegador**: allí solo se ha ejecutad
+          +o el oráculo
+      191 +  en la integración continua, sin nadie mirando.
+      192 +- **Los commits de la sesión 13**: las dos pruebas en limpio y
+          + la
+      193 +  integración continua son sobre `3591202`, anterior a ellos.
+          +Solo cambian
+      194 +  documentación, pero el README corregido no se ha vuelto a se
+          +guir desde
+      195 +  un clon, y la integración continua no los verá hasta el próx
+          +imo `push`.
+      196 +
+      197  El detalle de cada día está en la bitácora de [`03-proceso/`](
+           03-proceso/).
+
+● Update(ai-workspace\04-calidad\pruebas-manuales.md)
+  ⎿  Added 1 line, removed 1 line
+      13
+      14  ## Quién, cuándo y con qué
+      15
+      16 -Lo rellena quien ejecuta el guion.
+      16 +Lo rellena quien ejecuta el guion o quien anota a su dictado.
+      17
+      18  | | |
+      19  |---|---|
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\sesion-13.md)
+  ⎿  Added 2 lines
+      115  | 10:48 | — | **Paso 1, el índice**: `conversaciones/README.md
+           `, con la herramienta de edición, de 62 a 63 líneas. La tabla
+           gana la sesión 12 (1.394 líneas) y dice «de la 01 a la 12»; «L
+           o que falta» nombra la sesión 13 en lugar de la 12. «Qué se ha
+            cambiado al publicarlas» no se ha tocado (AL-02). En `ai-work
+           space/README.md`, la fila de `03-proceso` de «Cómo leerlo» dec
+           ía «sesiones 01 a 11» y dice «01 a 12»; era el único sitio (10
+           :47:34). Los 25 destinos de los enlaces del índice existen. `s
+           esion-12.txt` no se ha tocado |
+      116  | 10:50 | `bc4ee0d` | **Paso 1**, 10:49:19 según `git log`: `s
+           esion-12.txt`, el índice y la fila de `ai-workspace/README.md`
+           ; tres ficheros, 1.399 líneas añadidas y 4 quitadas. Antes, or
+           áculo sin `--e2e` de 10:47:52 a 10:49:19, código 0 (23 correct
+           as, 1 inactiva). Después (10:49:19): **`sesion-12.txt` tiene e
+           n el commit la misma huella que el fichero que dejó el Tech Le
+           ad** y el de la carpeta sigue igual; `git ls-files --eol` dice
+            `i/lf w/lf` |
+      117  | 10:50 | — | **Paso 2, el README de la raíz**, con la herrami
+           enta de edición: los cuatro cambios del encargo, 39 líneas aña
+           didas y 12 quitadas (10:49:59). (1) **R-1**: el párrafo de «Ab
+           rir `http://localhost:4200`», reescrito con el hecho B; pasa d
+           e 4 a 7 líneas. (2) **R-2**: en «Tests y oráculo», tres bloque
+           s en lugar de dos, cada uno con una primera línea que dice su
+           carpeta, y la instalación del navegador antes de la orden con
+           `--e2e` (AL-03). (3) **Dónde se ha probado**: «Requisitos» dic
+           e «Probado a mano» y gana un párrafo detrás de la tabla; en «L
+           ímites», la primera fila dice a mano, en la integración contin
+           ua y nunca (AL-04). (4) **La insignia**, bajo el título, y una
+            frase en «Tests y oráculo» con enlace a `.github/workflows/ci
+           .yml` (AL-05). Lo demás del README no se ha tocado: ni las cif
+           ras de tests ni su fecha |
+      118 +| 10:52 | `2a33120` | **Paso 2**, 10:51:44 según `git log`: so
+          +lo `README.md`, 39 líneas añadidas y 12 quitadas. Antes, orácu
+          +lo sin `--e2e` de 10:50:19 a 10:51:44, código 0 (23 correctas,
+          + 1 inactiva) |
+      119 +| 10:52 | — | **Paso 3, `ai-workspace`**, con la herramienta d
+          +e edición. (1) **El «Estado»** de `ai-workspace/README.md`: «a
+          +l cerrar la sesión 13»; el bloque «Pendiente» desaparece y sus
+          + dos líneas pasan a ser dos hechos de la lista, el clon limpio
+          + (las dos pruebas, con fecha, horas y quién) y la integración
+          +continua (hecho C); detrás, un bloque «Sin probar» con macOS,
+          +Linux a mano y los commits de esta sesión (AL-06). (2) **La no
+          +ta**, los tres retoques: «la carpeta de la raíz del repositori
+          +o que git ignora» (N-11); «salieron del borrador de respuesta
+          +de la sesión que audita, no del análisis previo: los redactó e
+          +lla con el Tech Lead» (N-13); y, en la consecuencia de «compro
+          +bado» o «he visto», la prueba en limpio del 16/11 como segundo
+          + ejemplo y la del 17/11 como segunda excepción. Lo demás de la
+          + nota no cambia; su línea más larga sigue en 76 columnas. (3)
+          +**`pruebas-manuales.md`**: «Lo rellena quien ejecuta el guion
+          +o quien anota a su dictado.»; ninguna línea de tabla cambia (1
+          +0:52:30). (4) **En `04-calidad` no se ha tocado nada más**: ni
+          +ngún documento de esa carpeta decía que la CI no se hubiera ej
+          +ecutado ni que solo se hubiera probado en Windows (apartado 3)
+          + |
+      120
+      121  ## 3. Revisiones y decisiones del Tech Lead
+      122
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Los tres pasos están en sus commits (bc4ee0d, 2a33120, e965ce2), todos con el
+  oráculo en código 0. Me falta cerrar la bitácora; antes compruebo dos datos
+  que voy a citar en ella.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Update(ai-workspace\03-proceso\sesion-13.md)
+  ⎿  Added 2 lines
+      117  | 10:50 | — | **Paso 2, el README de la raíz**, con la herrami
+           enta de edición: los cuatro cambios del encargo, 39 líneas aña
+           didas y 12 quitadas (10:49:59). (1) **R-1**: el párrafo de «Ab
+           rir `http://localhost:4200`», reescrito con el hecho B; pasa d
+           e 4 a 7 líneas. (2) **R-2**: en «Tests y oráculo», tres bloque
+           s en lugar de dos, cada uno con una primera línea que dice su
+           carpeta, y la instalación del navegador antes de la orden con
+           `--e2e` (AL-03). (3) **Dónde se ha probado**: «Requisitos» dic
+           e «Probado a mano» y gana un párrafo detrás de la tabla; en «L
+           ímites», la primera fila dice a mano, en la integración contin
+           ua y nunca (AL-04). (4) **La insignia**, bajo el título, y una
+            frase en «Tests y oráculo» con enlace a `.github/workflows/ci
+           .yml` (AL-05). Lo demás del README no se ha tocado: ni las cif
+           ras de tests ni su fecha |
+      118  | 10:52 | `2a33120` | **Paso 2**, 10:51:44 según `git log`: so
+           lo `README.md`, 39 líneas añadidas y 12 quitadas. Antes, orácu
+           lo sin `--e2e` de 10:50:19 a 10:51:44, código 0 (23 correctas,
+            1 inactiva) |
+      119  | 10:52 | — | **Paso 3, `ai-workspace`**, con la herramienta d
+           e edición. (1) **El «Estado»** de `ai-workspace/README.md`: «a
+           l cerrar la sesión 13»; el bloque «Pendiente» desaparece y sus
+            dos líneas pasan a ser dos hechos de la lista, el clon limpio
+            (las dos pruebas, con fecha, horas y quién) y la integración
+           continua (hecho C); detrás, un bloque «Sin probar» con macOS,
+           Linux a mano y los commits de esta sesión (AL-06). (2) **La no
+           ta**, los tres retoques: «la carpeta de la raíz del repositori
+           o que git ignora» (N-11); «salieron del borrador de respuesta
+           de la sesión que audita, no del análisis previo: los redactó e
+           lla con el Tech Lead» (N-13); y, en la consecuencia de «compro
+           bado» o «he visto», la prueba en limpio del 16/11 como segundo
+            ejemplo y la del 17/11 como segunda excepción. Lo demás de la
+            nota no cambia; su línea más larga sigue en 76 columnas. (3)
+           **`pruebas-manuales.md`**: «Lo rellena quien ejecuta el guion
+           o quien anota a su dictado.»; ninguna línea de tabla cambia (1
+           0:52:30). (4) **En `04-calidad` no se ha tocado nada más**: ni
+           ngún documento de esa carpeta decía que la CI no se hubiera ej
+           ecutado ni que solo se hubiera probado en Windows (apartado 3)
+            |
+      120 +| 10:54 | `e965ce2` | **Paso 3**, 10:54:14 según `git log`: `a
+          +i-workspace/README.md` y `pruebas-manuales.md`, 53 líneas añad
+          +idas y 16 quitadas. Antes, oráculo sin `--e2e` de 10:52:49 a 1
+          +0:54:14, código 0 (23 correctas, 1 inactiva). Después (10:54:1
+          +4): entre `3591202` y este commit cambian 6 ficheros, **ningun
+          +o en `backend/`, `frontend/`, `scripts/` ni `.github/`**; nada
+          + escucha en el 8000 ni en el 4200; `backend/data/saas-o-matic.
+          +db`, igual. La IA no ha arrancado ningún servidor ni ha hecho
+          +`push` |
+      121 +| 10:54 | *(este commit)* | **Cierre de esta bitácora para la
+          +parada 1.** Las filas anteriores se han escrito cada una en su
+          + momento, con el fichero sin commit entre la apertura y este c
+          +ierre: los commits de los pasos llevan solo los ficheros de su
+          + paso. La IA para aquí: el Tech Lead revisa los tres pasos, la
+          + tabla de documentos, HE-1 a HE-6 y las precisiones AL-01 a AL
+          +-07. El `push` es suyo. La hora de este commit se ve con `git
+          +log` |
+      122
+      123  ## 3. Revisiones y decisiones del Tech Lead
+      124
+
+● Update(ai-workspace\03-proceso\sesion-13.md)
+  ⎿  Added 1 line, removed 1 line
+       4  |---|---|
+       5  | **Fecha** | 2026-11-17 |
+       6  | **Participantes** | Tech Lead (persona) · IA: Claude Code, mo
+          delo Claude Fable 5.2 |
+       7 -| **Resultado** | Sesión abierta a las 10:40 |
+       7 +| **Resultado** | **Parada 1 alcanzada (10:54): los tres pasos,
+         + hechos, cada uno en su commit y con el oráculo en código 0 ant
+         +es, sin `--e2e`.** No ha cambiado el código de la aplicación, n
+         +ingún test ni el fichero de la CI: entre `3591202` y el último
+         +commit no cambia nada en `backend/`, `frontend/`, `scripts/` ni
+         + `.github/`. **Paso 1** (`bc4ee0d`): `sesion-12.txt`, idéntica
+         +byte a byte a la que dejó el Tech Lead, y el índice al día. **P
+         +aso 2** (`2a33120`): el README de la raíz, con R-1, R-2, dónde
+         +se ha probado y la insignia. **Paso 3** (`e965ce2`): el «Estado
+         +» al cerrar la sesión 13, los tres retoques de la nota y la cab
+         +ecera del guion. **Lo que el Tech Lead tiene que conocer**: (1)
+         + **nada de los hechos A, B y C contradice el repositorio** (HE-
+         +1 a HE-6); (2) **quedan dos textos con frases antiguas que la I
+         +A no ha tocado**, porque están fuera de lo que nombra el encarg
+         +o: ADR-005 dice que Playwright no se ha ejecutado en Linux, y S
+         +PEC-04, 2.9, pone `http://127.0.0.1:4200` como ejemplo de orige
+         +n desde el que se ocultan las respuestas; (3) **la insignia esc
+         +ribe por primera vez el nombre de usuario de GitHub en un fiche
+         +ro versionado**, y mientras el repositorio sea privado no se ve
+         + desde fuera (AL-05); (4) en los bloques de «Tests y oráculo» l
+         +a carpeta va en una línea de comentario, no en un `cd` (AL-03);
+         + (5) el «Estado» gana una línea que el encargo no daba: los com
+         +mits de esta sesión no los ha probado nadie (AL-06). Quedan sin
+         + aprobar AL-01 a AL-07. · Antes, sesión abierta a las 10:40 |
+       8
+       9  Esta bitácora la redacta la IA y la revisa el Tech Lead. Se abr
+          e al empezar
+      10  la sesión y cada revisión se anota en el momento en que ocurre
+          (acuerdo f4 de
+
+● Update(ai-workspace\03-proceso\sesion-13.md)
+  ⎿  Added 46 lines
+      224  | HE-5 | B, R-2: «Arranque» deja en `frontend/` y el bloque de
+           l oráculo no dice su carpeta | Es así: el último bloque de «Ar
+           ranque» empieza por `cd frontend` y el del oráculo no lleva ca
+           rpeta. El guion de pruebas manuales ya avisaba del mismo caso
+           en su paso 30 («`frontend/`, donde acaba el paso 29: la tercer
+           a usa una ruta relativa y desde allí falla») | Nada. Coincide
+           |
+      225  | HE-6 | C: los trabajos se llaman «Oracle (ubuntu-latest)» y
+           «Oracle (windows-latest)», con uv 0.12.13, Node 24.18.0 y npm
+           11.16.0, y descargan el navegador | `ci.yml`: `name: Oracle ($
+           {{ matrix.os }})`, `version: "0.12.13"`, `node-version: "24.18
+           .0"`, sin caché, y un paso que instala el navegador. El límite
+            de cada trabajo es de 20 minutos | Nada. Coincide. **Dos vers
+           iones que el hecho C no da y el fichero no fija**: la revisión
+            de Python 3.12 que eligió uv (el fichero pide «3.12») y el gi
+           t de cada ejecutor. La tabla de «Requisitos» del README dice P
+           ython 3.12.0 y git 2.55.0, que son las de este equipo |
+      226
+      227 +### Los tres pasos · lo hecho
+      228 +
+      229 +| # | Commit | Qué toca |
+      230 +|---|---|---|
+      231 +| 1 · La conversación de la sesión 12 | `bc4ee0d` | `sesion-12
+          +.txt`, tal como la dejó el Tech Lead; `conversaciones/README.m
+          +d`; y una fila de `ai-workspace/README.md` («01 a 12») |
+      232 +| 2 · El README de la raíz | `2a33120` | `README.md`: la insig
+          +nia, «Requisitos», el párrafo de «Abrir `http://localhost:4200
+          +`», «Tests y oráculo» y la primera fila de «Límites» |
+      233 +| 3 · `ai-workspace` | `e965ce2` | `ai-workspace/README.md`: e
+          +l «Estado» y tres frases de la nota. `04-calidad/pruebas-manua
+          +les.md`: una frase de la cabecera |
+      234 +
+      235 +Ningún test nuevo ni cambiado: no hay rojo ni mutación que ano
+          +tar.
+      236 +
+      237 +### Qué documentos decían todavía «no ejecutada» o «solo Windo
+          +ws»
+      238 +
+      239 +Búsqueda en todos los `.md` versionados, sin `.private/` (10:4
+          +2:22 y
+      240 +10:42:50). Fuera de las bitácoras y de los informes de evaluac
+          +ión:
+      241 +
+      242 +| Documento | Qué decía | Qué se ha hecho |
+      243 +|---|---|---|
+      244 +| `README.md` de la raíz, «Requisitos» | «Probado con estas ve
+          +rsiones, y solo con ellas», con Windows 11 en la tabla | **Cor
+          +regido** (paso 2): «Probado a mano…» y un párrafo con la integ
+          +ración continua y macOS |
+      245 +| `README.md` de la raíz, «Límites» | «Solo se ha probado en W
+          +indows 11. En Linux y en macOS no se ha ejecutado nunca» | **C
+          +orregido** (paso 2) |
+      246 +| `ai-workspace/README.md`, «Estado» | La integración continua
+          + «no se ha ejecutado nunca» y «sería la primera ejecución fuer
+          +a de Windows»; pendiente, la instalación desde un clon limpio
+          +| **Corregido** (paso 3) |
+      247 +| `02-arquitectura/ADR-005-dependencias-de-test.md`, «No verif
+          +icado» | Las pruebas de Playwright «pasan en Windows 11 con No
+          +de 24.18.0; **en macOS y en Linux no se han ejecutado**» | **N
+          +ada.** No está en `04-calidad` y el encargo no lo nombra. Con
+          +el hecho C, lo de Linux ya no es verdad; lo de macOS, sí. Ese
+          +apartado se ha puesto al día otras veces tachando la frase ant
+          +igua. Lo decide el Tech Lead |
+      248 +| `04-calidad/` | Ningún documento dice que la CI no se haya e
+          +jecutado ni que solo se haya probado en Windows. `limitaciones
+          +-conocidas.md` no habla de sistemas operativos ni de la CI | *
+          +*Nada que corregir.** De `04-calidad` solo se ha tocado la fra
+          +se de la cabecera de `pruebas-manuales.md`, que es del encargo
+          + |
+      249 +| `04-calidad/pruebas-manuales.md`, paso 30 | Trae las órdenes
+          + de «Linux y macOS». No dice que se hayan ejecutado, y no se h
+          +an ejecutado nunca (AG-12 de la sesión 09) | Nada |
+      250 +| `CLAUDE.md`, regla 4 | El oráculo es un script de Python por
+          +que «funciona igual en Windows, macOS y Linux» | Nada. Es el m
+          +otivo de una decisión, no un resultado. Hoy está visto en Wind
+          +ows y, por la integración continua, en Linux; en macOS, nunca
+          +|
+      251 +| Las bitácoras de las sesiones 03 a 12, en «No verificado» |
+          +«Nada fuera de Windows», «la integración continua no se ha eje
+          +cutado nunca», «un clon limpio, tampoco» | Nada: son el regist
+          +ro de su día |
+      252 +| Los informes de evaluación de `04-calidad/` | — | No se han
+          +mirado para esto: se guardan intactos |
+      253 +
+      254 +Visto de paso en `limitaciones-conocidas.md` y **sin tocar**,
+          +porque no es
+      255 +lo que pedía el encargo: su cabecera dice que el README de la
+          +raíz «se
+      256 +escribirá cuando el proyecto pueda levantarse en local», y L-0
+          +6 dice que
+      257 +«el frontend todavía no existe, así que no hay test». El READM
+          +E existe
+      258 +desde la sesión 09 y hay cuatro ficheros de test del frontend
+          +que citan ese
+      259 +límite (10:54:46).
+      260 +
+      261 +### Precisiones de la IA, **sin aprobar**
+      262 +
+      263 +| # | Precisión | Motivo |
+      264 +|---|---|---|
+      265 +| AL-01 | **La sesión tiene cinco commits**: el de apertura de
+          + la bitácora, los tres pasos y el cierre. En el de apertura so
+          +lo entra `sesion-13.md`; `sesion-12.txt` sigue sin commit hast
+          +a el paso 1 | Es lo que se hizo en las sesiones 09 a 12 y lo a
+          +dmitido en AK-01 |
+      266 +| AL-02 | **Dos cosas del índice.** (1) «Qué se ha cambiado al
+          + publicarlas» **no se ha tocado**: sigue dando las cuentas de
+          +las sustituciones hasta la sesión 11 y no dice nada de la 12.
+          +En `sesion-12.txt` no hay ninguna ruta de usuario ni ningún co
+          +rreo, sustituidos o no: si el original los llevaba, la IA no p
+          +uede saberlo. (2) La entrada de «Lo que falta» decía «la que p
+          +ublica esta versión de los ficheros» y dice «la que publica la
+          + conversación de la 12» | (1) El encargo no pedía tocar ese ap
+          +artado y no daba cuentas, como sí las dio el de la sesión 12.
+          +Si en la 12 no hubo nada que sustituir, el apartado es exacto;
+          + si lo hubo, le falta una cifra que solo tiene el Tech Lead. (
+          +2) En esta sesión no se regenera ningún fichero: solo entra un
+          +o nuevo |
+      267 +| AL-03 | **R-2: la carpeta de cada bloque va en una primera l
+          +ínea de comentario** («# en la raíz del repositorio»), no en u
+          +n `cd`. Son tres bloques: el oráculo sin opciones, con «(desde
+          + frontend/: cd ..)»; la instalación del navegador, que entra e
+          +n `frontend` y acaba con `cd ..`; y el oráculo con `--e2e`. La
+          + frase de encima dice además «no desde `frontend/`, que es don
+          +de deja «Arranque»» | El encargo admitía «un `cd` explícito de
+          +sde la raíz del repositorio o equivalente». Un `cd` no puede n
+          +ombrar la raíz: depende de dónde esté quien lo teclea, que es
+          +justo lo que falló. La línea es un comentario en PowerShell y
+          +en Bash; **pegada en `cmd.exe` da un error de orden no reconoc
+          +ida, sin más efecto**. Si el Tech Lead prefiere otra forma, se
+          + cambia |
+      268 +| AL-04 | **Lo que el README dice ahora de dónde se ha probado
+          +.** «Límites» nombra los sistemas del hecho C («Linux (Ubuntu
+          +26.04)» y «Windows Server 2025») y la primera ejecución («2026
+          +-11-17, en verde»). «Requisitos» dice «con las mismas versione
+          +s de uv, Node.js y npm» y **no dice nada de Python ni de git**
+          + en la integración continua | Los sistemas y la fecha son del
+          +hecho C. Esa frase es una foto del 17/11: la etiqueta `ubuntu-
+          +latest` se mueve y una ejecución futura puede fallar; lo que e
+          +stá al día es la insignia. De Python y de git, HE-6: el hecho
+          +C no da esas versiones |
+      269 +| AL-05 | **La insignia.** La dirección es la de `git remote g
+          +et-url origin` sin el `.git`, con la ruta de GitHub para la in
+          +signia de un workflow (`/actions/workflows/ci.yml/badge.svg`);
+          + enlaza a las ejecuciones de ese workflow y no fija rama. **Mi
+          +entras el repositorio sea privado no se ve desde fuera**: GitH
+          +ub solo sirve la imagen a quien tiene acceso, y los demás ven
+          +una imagen rota o un 404. **Y escribe por primera vez el nombr
+          +e de usuario de GitHub en un fichero versionado**: en la sesió
+          +n 12 se comprobó que las conversaciones no lo llevaban. La IA
+          +no la ha visto dibujada ni ha consultado la red | El encargo m
+          +anda poner la insignia, sacar la dirección del remoto y decir
+          +aquí, no en el README, lo del repositorio privado. Lo del nomb
+          +re de usuario se dice porque es lo contrario de lo que hizo la
+          + sustitución del correo: va con la dirección del repositorio,
+          +que es donde estará quien lo lea, y el encargo lo pide; si no
+          +debe estar, la insignia se quita |
+      270 +| AL-06 | **Tres cosas del «Estado».** (1) El bloque «Pendient
+          +e» pasa a llamarse «Sin probar» y **gana una línea que el enca
+          +rgo no daba: los commits de la sesión 13**. Las dos pruebas en
+          + limpio y la integración continua son sobre `3591202`; el READ
+          +ME corregido no se ha vuelto a seguir desde un clon, y la inte
+          +gración continua no verá estos commits hasta el próximo `push`
+          +. (2) El paréntesis dice «las sesiones 11, 12 y 13 solo han ca
+          +mbiado documentación». (3) **Sus cifras no se han vuelto a con
+          +tar**: son las de la sesión 10 | (1) El encargo pide decir lo
+          +que sigue sin probar, y eso también lo está: el README que hoy
+          + tiene el repositorio no es el que se probó. Si sobra, se quit
+          +a. (2) y (3) Como en AK-04: lo dice `git diff 3591202 HEAD --
+          +backend frontend scripts .github`, vacío; la salida del orácul
+          +o solo enseña los 96 tests de los scripts |
+      271 +| AL-07 | **Dos errores de la IA en esta sesión.** (1) **Una o
+          +rden mal escrita al mirar `sesion-12.txt`**: la primera cuenta
+          + (10:41:25) dio 1.394 líneas con retorno de carro y 40 con esp
+          +acios finales, porque los dos patrones estaban mal escritos; c
+          +ontando los bytes (10:41:47), ninguno. (2) **Las horas de las
+          +filas no salen de una lectura hecha al escribirlas**, sino de
+          +la última lectura anterior: la fila de apertura (10:44) se esc
+          +ribió entre las 10:44:32 y las 10:45:39; las dos de las 10:48,
+          + entre las 10:47:34 y las 10:47:52; las dos de las 10:50, entr
+          +e las 10:49:59 y las 10:50:19; las dos de las 10:52, entre las
+          + 10:52:30 y las 10:52:49. Las dos de las 10:54, con el reloj l
+          +eído justo antes (10:54:53) | (1) No llegó a ningún texto: se
+          +anota porque la comprobación que vale es la segunda. (2) La re
+          +gla 6 pide el reloj en el momento de escribir cada fila. Ningu
+          +na hora está estimada, pero las ocho primeras son el minuto de
+          + la lectura anterior y pueden ir un minuto por detrás |
+      272 +
+      273  ## 4. Comprobaciones hechas en la sesión
+      274
+      275  | Qué | Cómo | Resultado |
+
+● Update(ai-workspace\03-proceso\sesion-13.md)
+  ⎿  Added 77 lines, removed 5 lines
+      288  | Lo que queda de las sustituciones | Búsquedas de rutas de us
+           uario, de `noreply`, de cualquier email, del nombre de usuario
+            de GitHub y de `<usuario>` (10:41:25 a 10:44:32) | Ninguna ru
+           ta de usuario (ni `Users` ni `AppData`); ningún email; el nomb
+           re de usuario de GitHub no aparece. `noreply`, 4 veces, y `<us
+           uario>`, 8: las doce son texto que habla de las sustituciones
+           (el encargo de la sesión 12, el índice y su bitácora), no ruta
+           s ni direcciones |
+      289  | Huella antes del commit | `sha256sum`, guardada fuera del re
+           positorio (10:41:25) | Para compararla con lo que quede en el
+           commit del paso 1 |
+      290
+      291 +Paso 1:
+      292 +
+      293 +| Qué | Cómo | Resultado |
+      294 +|---|---|---|
+      295 +| Que no quede ningún «01 a 11» | Búsqueda en los dos README y
+          + en el índice (10:47:34) | Ninguno |
+      296 +| Los enlaces del índice | `test -e` de sus 25 destinos (10:47
+          +:34) | Existen todos |
+      297 +| **`sesion-12.txt` entra en el commit sin cambiar** | SHA-256
+          + del fichero antes del commit (10:41:25), tal como queda en `b
+          +c4ee0d` (`git show`) y en la carpeta después (10:49:19) | Las
+          +tres, idénticas |
+      298 +| Finales de línea de lo versionado | `git ls-files --eol` del
+          + fichero (10:49:19) | `i/lf w/lf` |
+      299 +
+      300 +Pasos 2 y 3:
+      301 +
+      302 +| Qué | Cómo | Resultado |
+      303 +|---|---|---|
+      304 +| Cuánto cambia el README de la raíz | `git diff --stat` y `gi
+          +t diff -U0` (10:49:59) | 39 líneas añadidas y 12 quitadas, en
+          +12 trozos. Las líneas de más de 80 columnas son la insignia y
+          +seis que ya lo eran (la imagen y filas de tablas) |
+      305 +| El enlace de la frase de la CI | `test -e .github/workflows/
+          +ci.yml` (10:49:59) | Existe |
+      306 +| La línea de comentario de los bloques, en Bash | Un comentar
+          +io seguido de `cd frontend` y `cd ..`, en Git Bash (10:54:46)
+          +| Vuelve a la raíz. **En PowerShell y en `cmd.exe` no se ha pr
+          +obado** |
+      307 +| Qué documentos decían «no ejecutada» o «solo Windows» | Dos
+          +búsquedas en los `.md` versionados, sin `.private/` (10:42:22
+          +y 10:42:50) | La tabla del apartado 3 |
+      308 +| El ancho de la nota y del «Estado» | La línea más larga desd
+          +e «Dos sesiones…» hasta el final (10:52:30) | 76 columnas |
+      309 +| Los enlaces de `ai-workspace/README.md` | `test -e` de sus 3
+          +1 destinos (10:52:30) | Existen todos, con los dos nuevos: `..
+          +/README.md` y `../.github/workflows/ci.yml` |
+      310 +| Que no queden las frases antiguas | Búsqueda de «este mismo
+          +directorio», «ese borrador», «no se ha ejecutado nunca» y «Pen
+          +diente» en `ai-workspace/README.md` (10:52:30) | Ninguna |
+      311 +| En el guion no cambia ninguna tabla | `git diff -U0` de `pru
+          +ebas-manuales.md`, contando las líneas cambiadas que empiezan
+          +por «\|» (10:52:30) | Ninguna: cambia una línea de texto |
+      312 +| **El código, los tests y la CI no han cambiado** | `git diff
+          + --stat 3591202 HEAD -- backend frontend scripts .github` (10:
+          +54:14) | Vacío. Desde `3591202`, 6 ficheros: esta bitácora, `s
+          +esion-12.txt`, el índice, los dos README y `pruebas-manuales.m
+          +d` |
+      313 +| Los mensajes de los commits | `git log 3591202..HEAD` (10:54
+          +:14) | Cuatro commits, sin trailers de coautoría |
+      314 +
+      315 +Oráculo:
+      316 +
+      317 +| Qué | Cómo | Resultado |
+      318 +|---|---|---|
+      319 +| **Antes de cada commit** | `uv run scripts/check.py`, sin `-
+          +-e2e`; la salida, a un fichero fuera del repositorio, y el com
+          +mit en la misma orden, solo con código 0 | Código 0 en las cua
+          +tro pasadas anteriores a este cierre (10:45:39, 10:47:52, 10:5
+          +0:19 y 10:52:49): 23 correctas, 0 con fallo y 1 inactiva, Play
+          +wright |
+      320 +| Puertos y base local al cerrar | `netstat` y un listado de `
+          +backend/data/` (10:54:14) | Ninguno en escucha; 28.672 bytes,
+          +2026-11-14 18:37, como al empezar. La IA no ha arrancado ningú
+          +n servidor |
+      321 +
+      322  ## 5. No verificado
+      323
+      293 -*(Se escribe al cerrar.)*
+      324 +Al llegar a la parada 1:
+      325
+      326 +- **Los hechos A, B y C**: son del Tech Lead y la IA no ha com
+          +probado
+      327 +  ninguno. No ha visto los clones, ni la ejecución de la integ
+          +ración
+      328 +  continua, ni su salida, ni Chrome con `http://127.0.0.1:4200
+          +` o con
+      329 +  `http://[::1]:4200`. Lo que el README y el «Estado» dicen de
+          + ellos es lo
+      330 +  que dice el encargo. Lo único contrastado es la tabla HE-1 a
+          + HE-6.
+      331 +- **Nada de lo que se dice de la sesión que audita**, como en
+          +las sesiones
+      332 +  11 y 12: tampoco que hiciera la prueba en limpio del 16/11.
+      333 +- **El README corregido no lo ha seguido nadie.** Los tres blo
+          +ques de
+      334 +  «Tests y oráculo» no se han ejecutado tal como están escrito
+          +s desde un
+      335 +  clon: la orden sin opciones es la que el oráculo ha pasado c
+          +uatro veces,
+      336 +  desde la raíz; la instalación del navegador y la orden con `
+          +--e2e` no se
+      337 +  han ejecutado en esta sesión. La línea de comentario, solo e
+          +n Git Bash
+      338 +  (AL-03).
+      339 +- **La insignia**: ni que la dirección sea la que GitHub sirve
+          + para ese
+      340 +  workflow, ni cómo se ve, ni qué enseña mientras el repositor
+          +io es
+      341 +  privado (AL-05). La IA no ha consultado la red.
+      342 +- **La revisión de Python 3.12 y la versión de git de la integ
+          +ración
+      343 +  continua** (HE-6).
+      344 +- **Que `sesion-12.txt` sea la conversación entera de la sesió
+          +n 12 y qué
+      345 +  se le ha sustituido**: es un fichero nuevo y la IA no tiene
+          +con qué
+      346 +  compararlo. Ha mirado su principio, su final y las búsquedas
+          + del
+      347 +  apartado 4; no lo ha leído entero.
+      348 +- **Si las conversaciones llevan contenido de los ficheros de
+      349 +  `.private/`**: sigue como en las sesiones 11 y 12.
+      350 +- **Las cifras del «Estado»** (741, 569, 18 y 96 tests, 140 re
+          +quisitos,
+      351 +  siete evaluaciones, once limitaciones): no se han vuelto a c
+          +ontar, salvo
+      352 +  los 96 tests de los scripts, que salen en el oráculo (AL-06)
+          +.
+      353 +- **Cómo se ven los ficheros una vez publicados**: las anclas,
+          + los enlaces
+      354 +  relativos nuevos y los de los `.txt`.
+      355 +- **Ningún evaluador ha mirado los cambios de esta sesión**, n
+          +i los de las
+      356 +  sesiones 09 a 12.
+      357 +- **Sin pasada con `--e2e`**, por el encargo: Playwright sale
+          +inactivo en
+      358 +  las cuatro. Los tests no se han tocado.
+      359 +- **macOS**, nunca; **Linux a mano con un navegador**, tampoco
+          +; y **la
+      360 +  integración continua sobre los commits de esta sesión**, has
+          +ta el
+      361 +  próximo `push`.
+      362 +
+      363  ## 6. Tareas pendientes
+      364
+      365  | Tarea | Cuándo |
+      366  |---|---|
+      299 -| Paso 1: `sesion-12.txt` y el índice al día | En curso |
+      300 -| Paso 2: el README de la raíz, cuatro cambios | Después |
+      301 -| Paso 3: `ai-workspace` (el «Estado», la nota, la cabecera de
+          -l guion y lo que diga «no ejecutada» en `04-calidad`) | Despué
+          -s |
+      302 -| Parada 1 | Al acabar el paso 3 |
+      367 +| ~~Paso 1: `sesion-12.txt` y el índice al día~~ | Hecho (`bc4
+          +ee0d`) |
+      368 +| ~~Paso 2: el README de la raíz, cuatro cambios~~ | Hecho (`2
+          +a33120`) |
+      369 +| ~~Paso 3: el «Estado», la nota, la cabecera del guion y `04-
+          +calidad`~~ | Hecho (`e965ce2`) |
+      370 +| **Parada 1: el Tech Lead revisa** los tres pasos, HE-1 a HE-
+          +6 y las precisiones AL-01 a AL-07. En particular: **si ADR-005
+          + se pone al día** con la ejecución en Linux; **si el ejemplo d
+          +e SPEC-04, 2.9, se queda** (HE-4); **si la línea de comentario
+          + de los bloques vale** como carpeta (AL-03); **si el nombre de
+          + usuario de GitHub puede estar en el README** (AL-05); y **si
+          +la línea de los commits de la sesión 13 se queda en el «Estado
+          +»** (AL-06) | Ahora |
+      371 +| El `push` de los commits de esta sesión, y ver la integració
+          +n continua sobre ellos | Del Tech Lead |
+      372 +| La conversación de la sesión 13 no está publicada: el índice
+          + lo dice | A decidir por el Tech Lead |
+      373 +| La cabecera de `limitaciones-conocidas.md` y la frase de L-0
+          +6, que hablan de un README y de un frontend que «todavía» no e
+          +xisten | A decidir por el Tech Lead |
+      374 +| Pendientes heredados que esta sesión no toca: L-07 y los avi
+          +sos de `npm audit`, los cuatro scripts de instalación sin apro
+          +bar, las fechas del fichero de bloqueo en el oráculo y los de
+          +la sesión 06 | A decidir por el Tech Lead |
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Parada 1 de la sesión 13 alcanzada. Los tres pasos están hechos, cada uno en
+  su commit y con el oráculo en código 0 antes (sin --e2e: 23 correctas, 1
+  inactiva). No he hecho push: main va 5 commits por delante de origin/main.
+
+  ┌─────────┬───────────────────────────────────┐
+  │ Commit  │                Qué                │
+  ├─────────┼───────────────────────────────────┤
+  │ e3e2c61 │ Apertura de la bitácora           │
+  ├─────────┼───────────────────────────────────┤
+  │ bc4ee0d │ Paso 1: sesion-12.txt y el índice │
+  ├─────────┼───────────────────────────────────┤
+  │ 2a33120 │ Paso 2: el README de la raíz      │
+  ├─────────┼───────────────────────────────────┤
+  │ e965ce2 │ Paso 3: ai-workspace              │
+  ├─────────┼───────────────────────────────────┤
+  │ c06630c │ Cierre de la bitácora             │
+  └─────────┴───────────────────────────────────┘
+
+  Entre 3591202 y el último commit no cambia nada en backend/, frontend/,
+  scripts/ ni .github/. Los puertos 8000 y 4200 siguen libres y tu base local no
+  se ha tocado.
+
+  Qué cambió
+
+  - Paso 1. sesion-12.txt entra idéntica byte a byte a la que dejaste. El índice
+    gana la sesión 12 y dice que falta la 13. En ai-workspace/README.md, «01 a
+    11» pasa a «01 a 12»; era el único sitio.
+  - Paso 2. Los cuatro cambios del README:
+    - R-1: el párrafo de «Abrir http://localhost:4200» dice ahora lo del hecho
+      B.
+    - R-2: hay tres bloques en «Tests y oráculo», cada uno con su carpeta, y la
+      instalación del navegador va antes del --e2e.
+    - Dónde se ha probado: «Requisitos» y «Límites» distinguen a mano
+      (Windows 11), en la integración continua (Linux y Windows Server) y nunca
+      (macOS).
+    - Insignia: está bajo el título, con una frase en «Tests y oráculo» que
+      enlaza a .github/workflows/ci.yml.
+  - Paso 3. El «Estado» pasa los dos pendientes a hechos, con fechas, horas y
+    quién, y gana un bloque «Sin probar». La nota lleva los tres retoques (N-11,
+    N-13 y las dos pruebas en limpio). La cabecera del guion dice «o quien
+    anota a su dictado»; ninguna línea de tabla cambia.
+
+  Documentos que decían «no ejecutada» o «solo Windows»
+
+  - Corregidos: el README de la raíz («Requisitos» y «Límites») y el «Estado» de
+    ai-workspace/README.md.
+  - 04-calidad: ningún documento lo decía. Solo he tocado la frase de la
+    cabecera de pruebas-manuales.md.
+  - Sin tocar, porque está fuera de lo que nombraba el encargo: ADR-005, en «No
+    verificado», sigue diciendo que las pruebas de Playwright «en macOS y en
+    Linux no se han ejecutado». Con el hecho C, lo de Linux ya no es verdad.
+  - Sin tocar, por ser registros: las bitácoras antiguas y los informes de
+    evaluación.
+
+  Los hechos A, B y C frente al repositorio
+
+  Nada los contradice. Los commits, las cuentas del oráculo, la línea literal
+  «ORÁCULO EN VERDE…», los nombres de los trabajos y las versiones de ci.yml
+  coinciden. La sesión 09 ya anotaba que ng serve escucha solo en [::1]:4200.
+
+  Queda un texto con la frase antigua de R-1 que no he tocado: SPEC-04, 2.9,
+  pone http://127.0.0.1:4200 como ejemplo de origen desde el que se ocultan las
+  respuestas. Es una spec aprobada.
+
+  Decisiones para ti
+
+  1. La carpeta de los bloques (AL-03). Va en una línea de comentario (# en la
+     raíz del repositorio), no en un cd, porque un cd no puede nombrar la raíz
+     sin saber dónde está quien teclea. Pegada en cmd.exe da un error
+     inofensivo. Solo la he probado en Git Bash.
+  2. La insignia (AL-05). Escribe por primera vez tu nombre de usuario de GitHub
+     en un fichero versionado. Lo hice porque el encargo lo pedía; si no debe
+     estar, se quita. Lo del repositorio privado está en la bitácora, no en el
+     README.
+  3. Una línea del «Estado» que no pedías (AL-06). Dice que los commits de esta
+     sesión no los ha probado nadie: el README corregido no se ha seguido desde
+     un clon y la CI no los verá hasta tu push.
+  4. El índice (AL-02). No he tocado «Qué se ha cambiado al publicarlas»: en
+     sesion-12.txt no hay rutas ni correos, y no puedo saber si el original los
+     llevaba.
+  5. ADR-005 y SPEC-04, 2.9. Si se ponen al día o se quedan.
+
+  De paso vi dos frases caducadas en limitaciones-conocidas.md y no las toqué:
+  la cabecera dice que el README «se escribirá» y L-06 que «el frontend todavía
+  no existe».
+
+  No verificado
+
+  - Los hechos A, B y C en sí: son tuyos y no he comprobado ninguno.
+  - La insignia: ni la dirección ni cómo se ve; no he consultado la red.
+  - Los bloques nuevos del README tal como están escritos: la instalación del
+    navegador y la orden con --e2e no se han ejecutado en esta sesión.
+  - La revisión de Python y la versión de git de la CI: el hecho C no las da y
+    el README no las afirma.
+
+  Una imprecisión mía en la bitácora ya cerrada: en el apartado 4 digo que
+  ai-workspace/README.md tiene «dos» enlaces nuevos y son tres (falta contar el
+  de sesion-13.md). Los 31 destinos existen. No la he enmendado; dime si quieres
+  un --amend anotado.
+
+  Las precisiones AL-01 a AL-07 quedan sin aprobar.
+
+  <!-- buddy: *asoma la cabeza* cinco commits en verde y el ADR-005 aún jura que
+  Linux no existe -->
+
+✻ Sautéed for 17m 27s · done 10:58 AM
+
+※ recap: Sesión 13: cierre de documentación tras la prueba en limpio y la primera CI; los tres pasos y la bitácora están en cinco commits, parada 1 alcanzada. Te toca revisar las precisiones AL-01 a AL-07 y hacer el push.
+
+  <!-- buddy: *parpadea despacio* cinco commits esperando en la orilla, y el push es tuyo --> (turn off recaps in /config)

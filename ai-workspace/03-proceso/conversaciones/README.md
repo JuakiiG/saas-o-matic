@@ -7,7 +7,7 @@ decisiones; esto es lo que hay debajo.
 
 ## Los ficheros
 
-Uno por sesión, de la 01 a la 12:
+Uno por sesión, de la 01 a la 13:
 
 | Fichero | Líneas | Sesión y bitácora | Fecha |
 |---|---|---|---|
@@ -22,6 +22,7 @@ Uno por sesión, de la 01 a la 12:
 | [`sesion-10.txt`](sesion-10.txt) | 1.437 | [Sesión 10](../sesion-10.md) · Cierre tras la pasada manual | 2026-11-16 |
 | [`sesion-11.txt`](sesion-11.txt) | 1.379 | [Sesión 11](../sesion-11.md) · Las conversaciones publicadas y la nota de método | 2026-11-16 |
 | [`sesion-12.txt`](sesion-12.txt) | 1.394 | [Sesión 12](../sesion-12.md) · La nota de método corregida y las conversaciones sin rutas de usuario ni correo | 2026-11-16 |
+| [`sesion-13.txt`](sesion-13.txt) | 1.341 | [Sesión 13](../sesion-13.md) · Cierre de documentación tras la prueba en limpio y la primera integración continua | 2026-11-17 |
 
 Lo que falta:
 
@@ -29,9 +30,9 @@ Lo que falta:
   fichero, que empieza a mitad de la 06 (14/11, hacia las 10:47): la
   conversación se había compactado y lo anterior no se pudo exportar. Lo
   que falta está en la [bitácora de la sesión 06](../sesion-06.md).
-- **La sesión 13**, la que publica la conversación de la 12: no puede
+- **La sesión 14**, la que publica la conversación de la 13: no puede
   exportarse a sí misma antes de acabar. Su bitácora es
-  [`sesion-13.md`](../sesion-13.md).
+  [`sesion-14.md`](../sesion-14.md).
 
 ## Cómo leerlas
 
@@ -56,6 +57,11 @@ Lo que se ve y conviene saber:
   `<usuario>`: 19 veces, en las sesiones 05, 06-07, 08 y 09, y 3 en la 11.
 - El correo `noreply` del autor de los commits, sustituido por una marca:
   7 veces, en la 01.
+- En la 12 y en la 13 no hubo nada que sustituir: los originales no
+  llevaban rutas de usuario ni correos. Solo cambian los finales de línea
+  y los espacios finales. La 13 lleva dos veces el nombre de usuario de
+  GitHub del Tech Lead, en las dos líneas de la insignia: es el mismo que
+  está en el `README.md` de la raíz y se queda.
 
 Nada más: el contenido de la interacción no se ha tocado.
 
