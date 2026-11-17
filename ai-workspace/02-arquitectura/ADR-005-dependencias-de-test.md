@@ -122,8 +122,10 @@ ADR-007.
 - `python-stdnum` y `httpx2` están instalados desde el 2026-11-13. Con
   `python-stdnum` no se ha ejecutado nada todavía. ~~Playwright no se ha
   instalado.~~ Playwright está instalado desde el 2026-11-15 y sus pruebas
-  pasan en Windows 11 con Node 24.18.0; **en macOS y en Linux no se han
-  ejecutado**.
+  pasan en Windows 11 con Node 24.18.0; ~~**en macOS y en Linux no se han
+  ejecutado**.~~ Desde el 2026-11-17 pasan también en Ubuntu 26.04 y en
+  Windows Server 2025, en la integración continua; **en macOS no se han
+  ejecutado nunca**.
 - Qué declara `fastapi` en sus extras: solo se ha leído el extra `full` de
   `starlette`.
 - **Qué acepta `python-stdnum` para el CIF.** SPEC-01 espera que acepte todo
